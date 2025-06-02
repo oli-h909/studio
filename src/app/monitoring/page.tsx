@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Activity, AlertTriangle, Info, ShieldX, RotateCw, Users, FileLock2, Network, Server } from 'lucide-react';
+import { Activity, AlertTriangle, Info, ShieldX, RotateCw, Users, FileLock2, Network, Server, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -266,3 +266,4 @@ export default function MonitoringPage() {
     </div>
   );
 }
+
