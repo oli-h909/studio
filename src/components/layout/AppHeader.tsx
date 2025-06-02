@@ -23,18 +23,18 @@ export function AppHeader() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10 border-2 border-primary">
-              <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="user avatar" />
-              <AvatarFallback>CG</AvatarFallback>
+              <AvatarImage src="https://placehold.co/100x100.png" alt="Аватар користувача" data-ai-hint="user avatar" />
+              <AvatarFallback>КС</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>Мій обліковий запис</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <DropdownMenuItem>Профіль</DropdownMenuItem>
+          <DropdownMenuItem>Налаштування</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Logout</DropdownMenuItem>
+          <DropdownMenuItem>Вийти</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

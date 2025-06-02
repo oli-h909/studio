@@ -16,15 +16,16 @@ import * as z from "zod";
 import { PlusCircle, Edit3, Trash2, ShieldAlert, ListChecks, AlertTriangle } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { cn } from '@/lib/utils';
 
 const assetFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Назва обов'язкова"),
   type: z.enum(assetTypes),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().min(1, "Опис обов'язковий"),
 });
 
 const weaknessFormSchema = z.object({
-  description: z.string().min(1, "Description is required"),
+  description: z.string().min(1, "Опис обов'язковий"),
   severity: z.enum(weaknessSeverities),
 });
 
@@ -51,19 +52,19 @@ export default function AssetsPage() {
   
   const assetForm = useForm<z.infer<typeof assetFormSchema>>({
     resolver: zodResolver(assetFormSchema),
-    defaultValues: { name: "", type: "Hardware", description: "" },
+    defaultValues: { name: "", type: "Обладнання", description: "" },
   });
 
   const weaknessForm = useForm<z.infer<typeof weaknessFormSchema>>({
     resolver: zodResolver(weaknessFormSchema),
-    defaultValues: { description: "", severity: "Medium" },
+    defaultValues: { description: "", severity: "Середня" },
   });
 
   useEffect(() => {
     if (editingAsset) {
       assetForm.reset(editingAsset);
     } else {
-      assetForm.reset({ name: "", type: "Hardware", description: "" });
+      assetForm.reset({ name: "", type: "Обладнання", description: "" });
     }
   }, [editingAsset, assetForm]);
 
@@ -71,7 +72,7 @@ export default function AssetsPage() {
     if (editingWeakness) {
       weaknessForm.reset(editingWeakness);
     } else {
-      weaknessForm.reset({ description: "", severity: "Medium" });
+      weaknessForm.reset({ description: "", severity: "Середня" });
     }
   }, [editingWeakness, weaknessForm]);
 
@@ -108,7 +109,7 @@ export default function AssetsPage() {
 
   const openAddAssetDialog = () => {
     setEditingAsset(null);
-    assetForm.reset({ name: "", type: "Hardware", description: "" });
+    assetForm.reset({ name: "", type: "Обладнання", description: "" });
     setIsAssetDialogOpen(true);
   };
 
@@ -125,7 +126,7 @@ export default function AssetsPage() {
   const openAddWeaknessDialog = (asset: Asset) => {
     setAssetToManageWeakness(asset);
     setEditingWeakness(null);
-    weaknessForm.reset({ description: "", severity: "Medium" });
+    weaknessForm.reset({ description: "", severity: "Середня" });
     setIsWeaknessDialogOpen(true);
   };
 
@@ -149,10 +150,10 @@ export default function AssetsPage() {
 
   const severityBadgeColor = (severity: Weakness['severity']) => {
     switch (severity) {
-      case 'Critical': return 'bg-red-600 hover:bg-red-700';
-      case 'High': return 'bg-orange-500 hover:bg-orange-600';
-      case 'Medium': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
-      case 'Low': return 'bg-green-500 hover:bg-green-600';
+      case 'Критична': return 'bg-red-600 hover:bg-red-700';
+      case 'Висока': return 'bg-orange-500 hover:bg-orange-600';
+      case 'Середня': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
+      case 'Низька': return 'bg-green-500 hover:bg-green-600';
       default: return 'bg-gray-500 hover:bg-gray-600';
     }
   };
@@ -160,20 +161,20 @@ export default function AssetsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-headline">Asset Registry</h1>
-        <Button onClick={openAddAssetDialog}><PlusCircle className="mr-2 h-4 w-4" /> Add Asset</Button>
+        <h1 className="text-3xl font-headline">Реєстр активів</h1>
+        <Button onClick={openAddAssetDialog}><PlusCircle className="mr-2 h-4 w-4" /> Додати актив</Button>
       </div>
-      <CardDescription>Catalog hardware, software, information, and personnel assets within your organization.</CardDescription>
+      <CardDescription>Каталогізуйте обладнання, програмне забезпечення, інформаційні та кадрові активи вашої організації.</CardDescription>
 
       {assets.length === 0 ? (
         <Card className="text-center py-12">
           <CardHeader>
             <ListChecks className="mx-auto h-12 w-12 text-muted-foreground" />
-            <CardTitle className="mt-4">No Assets Yet</CardTitle>
+            <CardTitle className="mt-4">Активів ще немає</CardTitle>
           </CardHeader>
           <CardContent>
-            <CardDescription>Start by adding your first asset to the registry.</CardDescription>
-            <Button onClick={openAddAssetDialog} className="mt-4"><PlusCircle className="mr-2 h-4 w-4" /> Add Asset</Button>
+            <CardDescription>Почніть з додавання вашого першого активу до реєстру.</CardDescription>
+            <Button onClick={openAddAssetDialog} className="mt-4"><PlusCircle className="mr-2 h-4 w-4" /> Додати актив</Button>
           </CardContent>
         </Card>
       ) : (
@@ -199,7 +200,7 @@ export default function AssetsPage() {
                     <AccordionTrigger className="text-base">
                       <div className="flex items-center">
                         <ShieldAlert className="mr-2 h-5 w-5 text-primary" />
-                        Weaknesses ({asset.weaknesses?.length || 0})
+                        Вразливості ({asset.weaknesses?.length || 0})
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -219,10 +220,10 @@ export default function AssetsPage() {
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-sm text-muted-foreground mt-2">No weaknesses identified for this asset.</p>
+                        <p className="text-sm text-muted-foreground mt-2">Для цього активу вразливостей не виявлено.</p>
                       )}
                       <Button variant="outline" size="sm" className="mt-4" onClick={() => openAddWeaknessDialog(asset)}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Weakness
+                        <PlusCircle className="mr-2 h-4 w-4" /> Додати вразливість
                       </Button>
                     </AccordionContent>
                   </AccordionItem>
@@ -236,7 +237,7 @@ export default function AssetsPage() {
       <Dialog open={isAssetDialogOpen} onOpenChange={setIsAssetDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingAsset ? "Edit Asset" : "Add New Asset"}</DialogTitle>
+            <DialogTitle>{editingAsset ? "Редагувати актив" : "Додати новий актив"}</DialogTitle>
           </DialogHeader>
           <Form {...assetForm}>
             <form onSubmit={assetForm.handleSubmit(handleAssetSubmit)} className="space-y-4">
@@ -245,8 +246,8 @@ export default function AssetsPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Asset Name</FormLabel>
-                    <FormControl><Input placeholder="e.g., Main Web Server" {...field} /></FormControl>
+                    <FormLabel>Назва активу</FormLabel>
+                    <FormControl><Input placeholder="напр., Головний веб-сервер" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -256,9 +257,9 @@ export default function AssetsPage() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Asset Type</FormLabel>
+                    <FormLabel>Тип активу</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select asset type" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Виберіть тип активу" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {assetTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                       </SelectContent>
@@ -272,15 +273,15 @@ export default function AssetsPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl><Textarea placeholder="Describe the asset" {...field} /></FormControl>
+                    <FormLabel>Опис</FormLabel>
+                    <FormControl><Textarea placeholder="Опишіть актив" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-                <Button type="submit">{editingAsset ? "Save Changes" : "Add Asset"}</Button>
+                <DialogClose asChild><Button type="button" variant="outline">Скасувати</Button></DialogClose>
+                <Button type="submit">{editingAsset ? "Зберегти зміни" : "Додати актив"}</Button>
               </DialogFooter>
             </form>
           </Form>
@@ -290,7 +291,7 @@ export default function AssetsPage() {
       <Dialog open={isWeaknessDialogOpen} onOpenChange={setIsWeaknessDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingWeakness ? "Edit Weakness" : "Add New Weakness"} for {assetToManageWeakness?.name}</DialogTitle>
+            <DialogTitle>{editingWeakness ? "Редагувати вразливість" : "Додати нову вразливість"} для {assetToManageWeakness?.name}</DialogTitle>
           </DialogHeader>
            <Form {...weaknessForm}>
             <form onSubmit={weaknessForm.handleSubmit(handleWeaknessSubmit)} className="space-y-4">
@@ -299,8 +300,8 @@ export default function AssetsPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Weakness Description</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., Outdated OS version" {...field} /></FormControl>
+                    <FormLabel>Опис вразливості</FormLabel>
+                    <FormControl><Textarea placeholder="напр., Застаріла версія ОС" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -310,9 +311,9 @@ export default function AssetsPage() {
                 name="severity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Severity</FormLabel>
+                    <FormLabel>Серйозність</FormLabel>
                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select severity" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Виберіть серйозність" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {weaknessSeverities.map(sev => <SelectItem key={sev} value={sev}>{sev}</SelectItem>)}
                       </SelectContent>
@@ -322,8 +323,8 @@ export default function AssetsPage() {
                 )}
               />
               <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-                <Button type="submit">{editingWeakness ? "Save Changes" : "Add Weakness"}</Button>
+                <DialogClose asChild><Button type="button" variant="outline">Скасувати</Button></DialogClose>
+                <Button type="submit">{editingWeakness ? "Зберегти зміни" : "Додати вразливість"}</Button>
               </DialogFooter>
             </form>
           </Form>

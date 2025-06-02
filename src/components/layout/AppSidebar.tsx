@@ -27,13 +27,13 @@ import {
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/assets', label: 'Asset Registry', icon: Archive },
-  { href: '/monitoring', label: 'Monitoring', icon: Activity },
-  { href: '/threat-analyzer', label: 'Threat Analyzer', icon: BrainCircuit },
-  { href: '/risk-calculator', label: 'Risk Calculator', icon: Calculator },
-  { href: '/security-advisor', label: 'Security Advisor', icon: UserCheck },
-  { href: '/reporting', label: 'Reporting', icon: FileText },
+  { href: '/', label: 'Інформаційна панель', icon: LayoutDashboard },
+  { href: '/assets', label: 'Реєстр активів', icon: Archive },
+  { href: '/monitoring', label: 'Моніторинг', icon: Activity },
+  { href: '/threat-analyzer', label: 'Аналізатор загроз', icon: BrainCircuit },
+  { href: '/risk-calculator', label: 'Калькулятор ризиків', icon: Calculator },
+  { href: '/security-advisor', label: 'Радник з безпеки', icon: UserCheck },
+  { href: '/reporting', label: 'Звіти', icon: FileText },
 ];
 
 export function AppSidebar() {
@@ -67,16 +67,16 @@ export function AppSidebar() {
          <SidebarMenu>
             <SidebarMenuItem>
                  <Link href="https://github.com/FirebaseExtended/ai-apps" target="_blank" legacyBehavior passHref>
-                    <SidebarMenuButton tooltip={{ children: "View on GitHub", className: "font-body"}} className="font-body">
+                    <SidebarMenuButton tooltip={{ children: "Переглянути на GitHub", className: "font-body"}} className="font-body">
                         <Github className="h-5 w-5" />
                         <span>GitHub</span>
                     </SidebarMenuButton>
                 </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{ children: "Settings", className: "font-body"}} className="font-body">
+                <SidebarMenuButton tooltip={{ children: "Налаштування", className: "font-body"}} className="font-body">
                     <Settings className="h-5 w-5" />
-                    <span>Settings</span>
+                    <span>Налаштування</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
          </SidebarMenu>

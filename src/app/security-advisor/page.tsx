@@ -10,8 +10,8 @@ import { Loader2, UserCheck, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function SecurityAdvisorPage() {
-  const [currentSecurityState, setCurrentSecurityState] = useState<string>('Current state: \n- Endpoints have basic antivirus, but no EDR solution.\n- Firewall rules are managed manually and infrequently updated.\n- Employee security training was last conducted 2 years ago.\n- Multi-factor authentication is only enforced for admin accounts.');
-  const [desiredSecurityState, setDesiredSecurityState] = useState<string>('Desired state: \n- All endpoints protected by EDR with centralized monitoring.\n- Firewall rules automated and dynamically updated based on threat intelligence.\n- Quarterly security awareness training for all employees.\n- MFA enforced for all user accounts and critical systems.');
+  const [currentSecurityState, setCurrentSecurityState] = useState<string>('Поточний стан: \n- Кінцеві точки мають базовий антивірус, але немає рішення EDR.\n- Правила брандмауера керуються вручну та рідко оновлюються.\n- Навчання співробітників з безпеки востаннє проводилося 2 роки тому.\n- Багатофакторна автентифікація застосовується лише для облікових записів адміністраторів.');
+  const [desiredSecurityState, setDesiredSecurityState] = useState<string>('Бажаний стан: \n- Усі кінцеві точки захищені EDR з централізованим моніторингом.\n- Правила брандмауера автоматизовані та динамічно оновлюються на основі даних про загрози.\n- Щоквартальне навчання з питань безпеки для всіх співробітників.\n- MFA застосовується для всіх облікових записів користувачів та критичних систем.');
   const [result, setResult] = useState<SecurityRecommendationsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export default function SecurityAdvisorPage() {
       setResult(output);
     } catch (err) {
       console.error("Security Advisor Error:", err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching recommendations.');
+      setError(err instanceof Error ? err.message : 'Сталася невідома помилка під час отримання рекомендацій.');
     } finally {
       setIsLoading(false);
     }
@@ -36,38 +36,38 @@ export default function SecurityAdvisorPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-headline">AI Security Advisor</h1>
+        <h1 className="text-3xl font-headline">Радник з безпеки ШІ</h1>
         <UserCheck className="h-8 w-8 text-primary" />
       </div>
       <CardDescription>
-        Describe your current and desired security states. The AI will provide actionable recommendations to bridge the gap.
+        Опишіть ваш поточний та бажаний стани безпеки. ШІ надасть дієві рекомендації для подолання розриву.
       </CardDescription>
 
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Get Security Recommendations</CardTitle>
-            <CardDescription>Detail your current posture and future goals.</CardDescription>
+            <CardTitle>Отримати рекомендації з безпеки</CardTitle>
+            <CardDescription>Деталізуйте вашу поточну ситуацію та майбутні цілі.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <Label htmlFor="currentSecurityState" className="text-sm font-medium">Current Security State</Label>
+              <Label htmlFor="currentSecurityState" className="text-sm font-medium">Поточний стан безпеки</Label>
               <Textarea
                 id="currentSecurityState"
                 value={currentSecurityState}
                 onChange={(e) => setCurrentSecurityState(e.target.value)}
-                placeholder="Describe your current security measures, vulnerabilities, recent incidents, etc."
+                placeholder="Опишіть ваші поточні заходи безпеки, вразливості, нещодавні інциденти тощо."
                 className="mt-1 min-h-[150px] font-code text-sm"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="desiredSecurityState" className="text-sm font-medium">Desired Security State</Label>
+              <Label htmlFor="desiredSecurityState" className="text-sm font-medium">Бажаний стан безпеки</Label>
               <Textarea
                 id="desiredSecurityState"
                 value={desiredSecurityState}
                 onChange={(e) => setDesiredSecurityState(e.target.value)}
-                placeholder="Describe your target security posture, compliance goals, risk appetite, etc."
+                placeholder="Опишіть вашу цільову позицію безпеки, цілі відповідності, апетит до ризику тощо."
                 className="mt-1 min-h-[150px] font-code text-sm"
                 required
               />
@@ -77,10 +77,10 @@ export default function SecurityAdvisorPage() {
             <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating Advice...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Генерація порад...
                 </>
               ) : (
-                "Get Recommendations"
+                "Отримати рекомендації"
               )}
             </Button>
           </CardFooter>
@@ -92,7 +92,7 @@ export default function SecurityAdvisorPage() {
           <CardHeader>
             <CardTitle className="flex items-center text-destructive">
               <AlertTriangle className="mr-2 h-5 w-5" />
-              Error Generating Recommendations
+              Помилка генерації рекомендацій
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -106,7 +106,7 @@ export default function SecurityAdvisorPage() {
           <CardHeader>
             <CardTitle className="flex items-center text-primary">
               <CheckCircle2 className="mr-2 h-5 w-5" />
-              Actionable Recommendations
+              Дієві рекомендації
             </CardTitle>
           </CardHeader>
           <CardContent>

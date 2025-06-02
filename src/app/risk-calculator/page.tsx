@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from 'react'; // Imported React for React.createElement
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,40 +14,44 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from '@/lib/utils';
 
-const likelihoodLevels = ["Low", "Medium", "High"] as const;
-const impactLevels = ["Low", "Medium", "High"] as const;
+const likelihoodLevels = ["Низька", "Середня", "Висока"] as const;
+const impactLevels = ["Низька", "Середня", "Висока"] as const;
+
+type LikelihoodLevelUk = typeof likelihoodLevels[number];
+type ImpactLevelUk = typeof impactLevels[number];
+
 
 const riskFormSchema = z.object({
-  assetName: z.string().min(1, "Asset name is required"),
-  vulnerability: z.string().min(1, "Vulnerability description is required"),
+  assetName: z.string().min(1, "Назва активу обов'язкова"),
+  vulnerability: z.string().min(1, "Опис вразливості обов'язковий"),
   likelihood: z.enum(likelihoodLevels),
   impact: z.enum(impactLevels),
 });
 
-type RiskLevel = "Low" | "Medium" | "High" | "Critical";
+type RiskLevel = "Low" | "Medium" | "High" | "Critical"; // Internal representation
 
-// Simplified SCAP-like risk calculation
-const calculateRisk = (likelihood: typeof likelihoodLevels[number], impact: typeof impactLevels[number]): RiskLevel => {
-  if (impact === "High") {
-    if (likelihood === "High") return "Critical";
-    if (likelihood === "Medium") return "High";
+// Simplified SCAP-like risk calculation, works with Ukrainian inputs
+const calculateRisk = (likelihood: LikelihoodLevelUk, impact: ImpactLevelUk): RiskLevel => {
+  if (impact === "Висока") {
+    if (likelihood === "Висока") return "Critical";
+    if (likelihood === "Середня") return "High";
     return "Medium";
   }
-  if (impact === "Medium") {
-    if (likelihood === "High") return "High";
-    if (likelihood === "Medium") return "Medium";
+  if (impact === "Середня") {
+    if (likelihood === "Висока") return "High";
+    if (likelihood === "Середня") return "Medium";
     return "Low";
   }
-  // impact === "Low"
-  if (likelihood === "High") return "Medium";
+  // impact === "Низька"
+  if (likelihood === "Висока") return "Medium";
   return "Low";
 };
 
 const riskLevelConfig: Record<RiskLevel, { color: string; icon: React.ElementType, label: string }> = {
-  Low: { color: "bg-green-500", icon: ShieldCheck, label: "Low Risk" },
-  Medium: { color: "bg-yellow-500 text-black", icon: ShieldAlert, label: "Medium Risk" },
-  High: { color: "bg-orange-500", icon: AlertTriangle, label: "High Risk" },
-  Critical: { color: "bg-red-600", icon: AlertTriangle, label: "Critical Risk" },
+  Low: { color: "bg-green-500", icon: ShieldCheck, label: "Низький ризик" },
+  Medium: { color: "bg-yellow-500 text-black", icon: ShieldAlert, label: "Середній ризик" },
+  High: { color: "bg-orange-500", icon: AlertTriangle, label: "Високий ризик" },
+  Critical: { color: "bg-red-600", icon: AlertTriangle, label: "Критичний ризик" },
 };
 
 export default function RiskCalculatorPage() {
@@ -55,7 +60,7 @@ export default function RiskCalculatorPage() {
 
   const form = useForm<z.infer<typeof riskFormSchema>>({
     resolver: zodResolver(riskFormSchema),
-    defaultValues: { assetName: "", vulnerability: "", likelihood: "Medium", impact: "Medium" },
+    defaultValues: { assetName: "", vulnerability: "", likelihood: "Середня", impact: "Середня" },
   });
 
   const onSubmit = (values: z.infer<typeof riskFormSchema>) => {
@@ -67,12 +72,12 @@ export default function RiskCalculatorPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-headline">Risk Calculator</h1>
+        <h1 className="text-3xl font-headline">Калькулятор ризиків</h1>
         <Calculator className="h-8 w-8 text-primary" />
       </div>
       <CardDescription>
-        Evaluate potential risks and exposures using a simplified SCAP-like methodology.
-        Enter asset and vulnerability details to calculate a risk level.
+        Оцінюйте потенційні ризики та вразливості за допомогою спрощеної методології, подібної до SCAP.
+        Введіть деталі активу та вразливості, щоб розрахувати рівень ризику.
       </CardDescription>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -80,8 +85,8 @@ export default function RiskCalculatorPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <CardHeader>
-                <CardTitle>Calculate Risk</CardTitle>
-                <CardDescription>Enter details to assess the risk.</CardDescription>
+                <CardTitle>Розрахувати ризик</CardTitle>
+                <CardDescription>Введіть дані для оцінки ризику.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -89,8 +94,8 @@ export default function RiskCalculatorPage() {
                   name="assetName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Asset Name/ID</FormLabel>
-                      <FormControl><Input placeholder="e.g., Web Server 01, Employee Database" {...field} /></FormControl>
+                      <FormLabel>Назва/ID активу</FormLabel>
+                      <FormControl><Input placeholder="напр., Веб-сервер 01, База даних співробітників" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -100,8 +105,8 @@ export default function RiskCalculatorPage() {
                   name="vulnerability"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Vulnerability Description</FormLabel>
-                      <FormControl><Input placeholder="e.g., Unpatched OS, Weak Password Policy" {...field} /></FormControl>
+                      <FormLabel>Опис вразливості</FormLabel>
+                      <FormControl><Input placeholder="напр., Невиправлена ОС, Слабка політика паролів" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -111,9 +116,9 @@ export default function RiskCalculatorPage() {
                   name="likelihood"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Likelihood of Exploitation</FormLabel>
+                      <FormLabel>Ймовірність експлуатації</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select likelihood" /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Виберіть ймовірність" /></SelectTrigger></FormControl>
                         <SelectContent>
                           {likelihoodLevels.map(level => <SelectItem key={level} value={level}>{level}</SelectItem>)}
                         </SelectContent>
@@ -127,9 +132,9 @@ export default function RiskCalculatorPage() {
                   name="impact"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Potential Impact</FormLabel>
+                      <FormLabel>Потенційний вплив</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select impact" /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Виберіть вплив" /></SelectTrigger></FormControl>
                         <SelectContent>
                           {impactLevels.map(level => <SelectItem key={level} value={level}>{level}</SelectItem>)}
                         </SelectContent>
@@ -140,7 +145,7 @@ export default function RiskCalculatorPage() {
                 />
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full sm:w-auto">Calculate Risk Score</Button>
+                <Button type="submit" className="w-full sm:w-auto">Розрахувати оцінку ризику</Button>
               </CardFooter>
             </form>
           </Form>
@@ -154,18 +159,18 @@ export default function RiskCalculatorPage() {
                 <ShieldQuestion className="h-24 w-24 mx-auto text-muted-foreground mb-4" />
             )}
             <CardTitle className={cn("text-4xl font-headline", calculatedRisk ? 'text-primary-foreground' : 'text-foreground')}>
-              {calculatedRisk ? riskLevelConfig[calculatedRisk].label : "Awaiting Calculation"}
+              {calculatedRisk ? riskLevelConfig[calculatedRisk].label : "Очікування розрахунку"}
             </CardTitle>
           </CardHeader>
           <CardContent className={cn("text-center", calculatedRisk ? 'text-primary-foreground/90' : 'text-muted-foreground')}>
             {riskDetails && calculatedRisk ? (
               <>
                 <p className="font-semibold">{riskDetails.assetName}</p>
-                <p className="text-sm">Vulnerability: {riskDetails.vulnerability}</p>
-                <p className="text-sm mt-2">Likelihood: {riskDetails.likelihood} | Impact: {riskDetails.impact}</p>
+                <p className="text-sm">Вразливість: {riskDetails.vulnerability}</p>
+                <p className="text-sm mt-2">Ймовірність: {riskDetails.likelihood} | Вплив: {riskDetails.impact}</p>
               </>
             ) : (
-              <p>The calculated risk level will appear here once you submit the form.</p>
+              <p>Розрахований рівень ризику з'явиться тут після надсилання форми.</p>
             )}
           </CardContent>
         </Card>

@@ -7,8 +7,8 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'CyberGuard AI',
-  description: 'Advanced Cybersecurity Management Platform',
+  title: 'КіберСтраж AI',
+  description: 'Передова платформа для управління кібербезпекою',
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark"> {/* Force dark theme as base theme */}
+    <html lang="uk" className="dark"> {/* Force dark theme as base theme */}
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -5,12 +5,12 @@ import { Archive, Activity, BrainCircuit, Calculator, UserCheck, FileText, Arrow
 import Image from 'next/image';
 
 const featureCards = [
-  { title: 'Asset Registry', description: 'Catalog your corporate assets.', icon: Archive, href: '/assets', cta: 'Manage Assets' },
-  { title: 'Real-time Monitoring', description: 'View simulated network event data.', icon: Activity, href: '/monitoring', cta: 'View Events' },
-  { title: 'AI Threat Analyzer', description: 'Analyze potential threats with AI.', icon: BrainCircuit, href: '/threat-analyzer', cta: 'Analyze Threats' },
-  { title: 'Risk Calculator', description: 'Evaluate risks and exposures.', icon: Calculator, href: '/risk-calculator', cta: 'Calculate Risks' },
-  { title: 'AI Security Advisor', description: 'Get AI-driven security advice.', icon: UserCheck, href: '/security-advisor', cta: 'Get Advice' },
-  { title: 'Reporting Panel', description: 'Generate security reports.', icon: FileText, href: '/reporting', cta: 'View Reports' },
+  { title: 'Реєстр активів', description: 'Каталогізуйте свої корпоративні активи.', icon: Archive, href: '/assets', cta: 'Керувати активами' },
+  { title: 'Моніторинг у реальному часі', description: 'Перегляд симульованих даних про мережеві події.', icon: Activity, href: '/monitoring', cta: 'Переглянути події' },
+  { title: 'Аналізатор загроз ШІ', description: 'Аналізуйте потенційні загрози за допомогою ШІ.', icon: BrainCircuit, href: '/threat-analyzer', cta: 'Аналізувати загрози' },
+  { title: 'Калькулятор ризиків', description: 'Оцінюйте ризики та вразливості.', icon: Calculator, href: '/risk-calculator', cta: 'Розрахувати ризики' },
+  { title: 'Радник з безпеки ШІ', description: 'Отримуйте поради з безпеки на основі ШІ.', icon: UserCheck, href: '/security-advisor', cta: 'Отримати пораду' },
+  { title: 'Панель звітів', description: 'Створюйте звіти про безпеку.', icon: FileText, href: '/reporting', cta: 'Переглянути звіти' },
 ];
 
 export default function DashboardPage() {
@@ -19,15 +19,15 @@ export default function DashboardPage() {
       <Card className="overflow-hidden">
         <div className="md:flex">
           <div className="md:w-1/2 p-8 flex flex-col justify-center">
-            <h1 className="text-4xl font-bold tracking-tight text-primary">Welcome to CyberGuard AI</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-primary">Ласкаво просимо до КіберСтраж AI</h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Your intelligent partner in navigating the complex landscape of cybersecurity.
-              Monitor, analyze, and fortify your digital defenses with cutting-edge AI.
+              Ваш інтелектуальний партнер у навігації складним ландшафтом кібербезпеки.
+              Відстежуйте, аналізуйте та зміцнюйте свій цифровий захист за допомогою передового ШІ.
             </p>
             <div className="mt-6">
               <Link href="/assets">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                  Розпочати <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             </div>
@@ -35,7 +35,7 @@ export default function DashboardPage() {
           <div className="md:w-1/2 relative h-64 md:h-auto">
             <Image
               src="https://placehold.co/800x600.png"
-              alt="Cybersecurity Dashboard Illustration"
+              alt="Ілюстрація панелі кібербезпеки"
               layout="fill"
               objectFit="cover"
               data-ai-hint="cybersecurity abstract"

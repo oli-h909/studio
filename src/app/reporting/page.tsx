@@ -11,12 +11,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
 export default function ReportingPage() {
-  const [currentProfile, setCurrentProfile] = useState<string>('Current state: \n- Endpoints have basic antivirus, but no EDR solution.\n- Firewall rules are managed manually and infrequently updated.\n- Employee security training was last conducted 2 years ago.\n- Multi-factor authentication is only enforced for admin accounts.');
-  const [targetProfile, setTargetProfile] = useState<string>('Desired state: \n- All endpoints protected by EDR with centralized monitoring.\n- Firewall rules automated and dynamically updated based on threat intelligence.\n- Quarterly security awareness training for all employees.\n- MFA enforced for all user accounts and critical systems.');
+  const [currentProfile, setCurrentProfile] = useState<string>('Поточний стан: \n- Кінцеві точки мають базовий антивірус, але немає рішення EDR.\n- Правила брандмауера керуються вручну та рідко оновлюються.\n- Навчання співробітників з безпеки востаннє проводилося 2 роки тому.\n- Багатофакторна автентифікація застосовується лише для облікових записів адміністраторів.');
+  const [targetProfile, setTargetProfile] = useState<string>('Бажаний стан: \n- Усі кінцеві точки захищені EDR з централізованим моніторингом.\n- Правила брандмауера автоматизовані та динамічно оновлюються на основі даних про загрози.\n- Щоквартальне навчання з питань безпеки для всіх співробітників.\n- MFA застосовується для всіх облікових записів користувачів та критичних систем.');
   const [recommendations, setRecommendations] = useState<SecurityRecommendationsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reportGenerated, setReportGenerated] useState(false);
+  const [reportGenerated, setReportGenerated] = useState(false);
 
   const handleGenerateReport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +26,12 @@ export default function ReportingPage() {
     setReportGenerated(false);
     try {
       const input: SecurityRecommendationsInput = { currentSecurityState: currentProfile, desiredSecurityState: targetProfile };
-      const output = await getSecurityRecommendations(input); // Using security advisor AI for recommendations
+      const output = await getSecurityRecommendations(input); 
       setRecommendations(output);
       setReportGenerated(true);
     } catch (err) {
       console.error("Report Generation Error:", err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred while generating the report.');
+      setError(err instanceof Error ? err.message : 'Сталася невідома помилка під час генерації звіту.');
     } finally {
       setIsLoading(false);
     }
@@ -46,39 +46,39 @@ export default function ReportingPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-headline">Reporting Panel</h1>
+        <h1 className="text-3xl font-headline">Панель звітів</h1>
         <FileText className="h-8 w-8 text-primary" />
       </div>
       <CardDescription>
-        Generate a report comparing current and target security profiles, including AI-driven recommendations.
+        Створіть звіт, що порівнює поточний та цільовий профілі безпеки, включаючи рекомендації на основі ШІ.
       </CardDescription>
 
       {!reportGenerated ? (
         <Card>
           <form onSubmit={handleGenerateReport}>
             <CardHeader>
-              <CardTitle>Generate Security Report</CardTitle>
-              <CardDescription>Define the profiles for your report.</CardDescription>
+              <CardTitle>Створити звіт про безпеку</CardTitle>
+              <CardDescription>Визначте профілі для вашого звіту.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="currentProfile" className="text-sm font-medium">Current Security Profile</Label>
+                <Label htmlFor="currentProfile" className="text-sm font-medium">Поточний профіль безпеки</Label>
                 <Textarea
                   id="currentProfile"
                   value={currentProfile}
                   onChange={(e) => setCurrentProfile(e.target.value)}
-                  placeholder="Describe the current security profile..."
+                  placeholder="Опишіть поточний профіль безпеки..."
                   className="mt-1 min-h-[150px] font-code text-sm"
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="targetProfile" className="text-sm font-medium">Target Security Profile</Label>
+                <Label htmlFor="targetProfile" className="text-sm font-medium">Цільовий профіль безпеки</Label>
                 <Textarea
                   id="targetProfile"
                   value={targetProfile}
                   onChange={(e) => setTargetProfile(e.target.value)}
-                  placeholder="Describe the target security profile..."
+                  placeholder="Опишіть цільовий профіль безпеки..."
                   className="mt-1 min-h-[150px] font-code text-sm"
                   required
                 />
@@ -88,14 +88,14 @@ export default function ReportingPage() {
               <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating Report...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Генерація звіту...
                   </>
                 ) : (
-                  "Generate Report"
+                  "Створити звіт"
                 )}
               </Button>
                <p className="text-xs text-muted-foreground mt-2 sm:mt-0">
-                Note: PDF generation is simulated. Use browser print for a physical copy.
+                Примітка: Генерація PDF симулюється. Використовуйте друк у браузері для отримання фізичної копії.
               </p>
             </CardFooter>
           </form>
@@ -107,7 +107,7 @@ export default function ReportingPage() {
           <CardHeader>
             <CardTitle className="flex items-center text-destructive">
               <AlertTriangle className="mr-2 h-5 w-5" />
-              Error Generating Report
+              Помилка генерації звіту
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -120,21 +120,21 @@ export default function ReportingPage() {
         <>
         <div className="flex justify-end gap-2 mb-4 print:hidden">
             <Button variant="outline" onClick={() => { setReportGenerated(false); setRecommendations(null); setError(null); }}>
-                Create New Report
+                Створити новий звіт
             </Button>
             <Button onClick={handlePrint}>
-                <Printer className="mr-2 h-4 w-4" /> Print Report (Simulated PDF)
+                <Printer className="mr-2 h-4 w-4" /> Роздрукувати звіт (симульований PDF)
             </Button>
         </div>
         <Card className="p-6 print:shadow-none print:border-none" id="report-content">
           <CardHeader className="text-center print:pb-2">
-            <h2 className="text-2xl font-headline text-primary">CyberGuard AI Security Report</h2>
-            <CardDescription>Generated on: {new Date().toLocaleDateString()}</CardDescription>
+            <h2 className="text-2xl font-headline text-primary">Звіт про безпеку КіберСтраж AI</h2>
+            <CardDescription>Згенеровано: {new Date().toLocaleDateString()}</CardDescription>
           </CardHeader>
           
           <CardContent className="space-y-6">
             <section>
-              <h3 className="text-xl font-headline mb-2 border-b pb-1">Current Security Profile</h3>
+              <h3 className="text-xl font-headline mb-2 border-b pb-1">Поточний профіль безпеки</h3>
               <ScrollArea className="h-[200px] w-full rounded-md border p-3 bg-muted/20 print:h-auto print:border-none print:p-0">
                 <pre className="whitespace-pre-wrap text-sm font-code">{currentProfile}</pre>
               </ScrollArea>
@@ -143,7 +143,7 @@ export default function ReportingPage() {
             <Separator className="my-6" />
 
             <section>
-              <h3 className="text-xl font-headline mb-2 border-b pb-1">Target Security Profile</h3>
+              <h3 className="text-xl font-headline mb-2 border-b pb-1">Цільовий профіль безпеки</h3>
               <ScrollArea className="h-[200px] w-full rounded-md border p-3 bg-muted/20 print:h-auto print:border-none print:p-0">
                 <pre className="whitespace-pre-wrap text-sm font-code">{targetProfile}</pre>
               </ScrollArea>
@@ -155,7 +155,7 @@ export default function ReportingPage() {
               <section>
                 <h3 className="text-xl font-headline mb-2 border-b pb-1 flex items-center text-primary">
                   <CheckCircle2 className="mr-2 h-5 w-5" />
-                  AI-Driven Recommendations
+                  Рекомендації на основі ШІ
                 </h3>
                 <ScrollArea className="h-[300px] w-full rounded-md border p-3 bg-muted/20 print:h-auto print:border-none print:p-0">
                   <pre className="whitespace-pre-wrap text-sm">{recommendations.recommendations}</pre>
@@ -167,7 +167,7 @@ export default function ReportingPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center text-destructive">
                     <AlertTriangle className="mr-2 h-5 w-5" />
-                    Error in Recommendations
+                    Помилка в рекомендаціях
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -178,7 +178,7 @@ export default function ReportingPage() {
           </CardContent>
           <CardFooter className="print:hidden">
             <p className="text-xs text-muted-foreground text-center w-full">
-              This is a system-generated report. For actual PDF export, use the browser's print functionality.
+              Це системно згенерований звіт. Для фактичного експорту в PDF використовуйте функцію друку браузера.
             </p>
           </CardFooter>
         </Card>

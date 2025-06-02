@@ -11,15 +11,21 @@ import { Activity, AlertTriangle, Info, ShieldX, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
+const initialEventTypesUk = {
+  firewallBlock: 'Блокування брандмауером',
+  loginAttempt: 'Спроба входу',
+  systemUpdate: 'Оновлення системи',
+};
+
 const initialEvents: NetworkEvent[] = [
-  { id: '1', timestamp: new Date(Date.now() - 5000).toISOString(), type: 'Firewall Block', sourceIp: '192.168.1.100', destinationIp: '10.0.0.5', details: 'Blocked outgoing connection to suspicious IP', severity: 'Warning' },
-  { id: '2', timestamp: new Date(Date.now() - 10000).toISOString(), type: 'Login Attempt', sourceIp: '203.0.113.45', destinationIp: '172.16.0.10', details: 'Failed login for user "admin"', severity: 'Error' },
-  { id: '3', timestamp: new Date(Date.now() - 15000).toISOString(), type: 'System Update', sourceIp: 'N/A', destinationIp: '172.16.0.20', details: 'Patch KB202345 applied successfully', severity: 'Info' },
+  { id: '1', timestamp: new Date(Date.now() - 5000).toISOString(), type: initialEventTypesUk.firewallBlock, sourceIp: '192.168.1.100', destinationIp: '10.0.0.5', details: 'Заблоковано вихідне з’єднання з підозрілою IP-адресою', severity: 'Попередження' },
+  { id: '2', timestamp: new Date(Date.now() - 10000).toISOString(), type: initialEventTypesUk.loginAttempt, sourceIp: '203.0.113.45', destinationIp: '172.16.0.10', details: 'Невдала спроба входу для користувача "admin"', severity: 'Помилка' },
+  { id: '3', timestamp: new Date(Date.now() - 15000).toISOString(), type: initialEventTypesUk.systemUpdate, sourceIp: 'N/A', destinationIp: '172.16.0.20', details: 'Патч KB202345 успішно застосовано', severity: 'Інформація' },
 ];
 
 const generateMockEvent = (id: string): NetworkEvent => {
-  const types = ['Login Attempt', 'Firewall Block', 'Malware Detected', 'System Update', 'Network Scan'];
-  const severities = networkEventSeverities;
+  const types = ['Спроба входу', 'Блокування брандмауером', 'Виявлено шкідливе ПЗ', 'Оновлення системи', 'Сканування мережі'];
+  const severities = networkEventSeverities; // Already Ukrainian from types.ts
   const randomType = types[Math.floor(Math.random() * types.length)];
   const randomSeverity = severities[Math.floor(Math.random() * severities.length)];
   const randomIp = () => `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
@@ -28,9 +34,9 @@ const generateMockEvent = (id: string): NetworkEvent => {
     id,
     timestamp: new Date().toISOString(),
     type: randomType,
-    sourceIp: randomType !== 'System Update' ? randomIp() : 'N/A',
+    sourceIp: randomType !== 'Оновлення системи' ? randomIp() : 'N/A',
     destinationIp: randomIp(),
-    details: `Simulated event: ${randomType} with ${randomSeverity} severity.`,
+    details: `Симульована подія: ${randomType} з рівнем серйозності ${randomSeverity}.`,
     severity: randomSeverity,
   };
 };
@@ -39,7 +45,6 @@ export default function MonitoringPage() {
   const [events, setEvents] = useState<NetworkEvent[]>(initialEvents);
   const [isSimulating, setIsSimulating] = useState(true);
   
-  // Hydration-safe unique ID generation for events
   const [nextEventId, setNextEventId] = useState(0);
   useEffect(() => {
     setNextEventId(Date.now()); 
@@ -57,36 +62,36 @@ export default function MonitoringPage() {
     if (isSimulating) {
       intervalId = setInterval(() => {
         setEvents(prevEvents => [generateMockEvent(getUniqueEventId()), ...prevEvents.slice(0, 99)]);
-      }, 3000); // Add a new event every 3 seconds
+      }, 3000); 
     }
     return () => clearInterval(intervalId);
   }, [isSimulating, getUniqueEventId]);
 
   const severityConfig: Record<NetworkEvent['severity'], { icon: React.ElementType, color: string, badgeVariant: "default" | "secondary" | "destructive" | "outline" }> = {
-    Info: { icon: Info, color: 'text-blue-400', badgeVariant: 'outline' },
-    Warning: { icon: AlertTriangle, color: 'text-yellow-400', badgeVariant: 'secondary' },
-    Error: { icon: ShieldX, color: 'text-orange-400', badgeVariant: 'destructive' },
-    Critical: { icon: ShieldX, color: 'text-red-500', badgeVariant: 'destructive' },
+    'Інформація': { icon: Info, color: 'text-blue-400', badgeVariant: 'outline' },
+    'Попередження': { icon: AlertTriangle, color: 'text-yellow-400', badgeVariant: 'secondary' },
+    'Помилка': { icon: ShieldX, color: 'text-orange-400', badgeVariant: 'destructive' },
+    'Критична': { icon: ShieldX, color: 'text-red-500', badgeVariant: 'destructive' },
   };
 
   return (
     <div className="space-y-6 h-full flex flex-col">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-headline">Real-time Monitoring</h1>
+        <h1 className="text-3xl font-headline">Моніторинг у реальному часі</h1>
         <Button onClick={() => setIsSimulating(!isSimulating)} variant="outline">
           <RotateCw className={cn("mr-2 h-4 w-4", isSimulating && "animate-spin")} />
-          {isSimulating ? 'Pause Simulation' : 'Resume Simulation'}
+          {isSimulating ? 'Призупинити симуляцію' : 'Відновити симуляцію'}
         </Button>
       </div>
-      <CardDescription>Centralized sensors collect network event data in real-time (simulated).</CardDescription>
+      <CardDescription>Централізовані сенсори збирають дані про мережеві події в реальному часі (симуляція).</CardDescription>
       
       <Card className="flex-1 flex flex-col overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Activity className="mr-2 h-6 w-6 text-primary" />
-            Network Event Feed
+            Стрічка мережевих подій
           </CardTitle>
-          <CardDescription>Displaying the latest {events.length} events.</CardDescription>
+          <CardDescription>Відображення останніх {events.length} подій.</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
           <ScrollArea className="h-full">
@@ -94,12 +99,12 @@ export default function MonitoringPage() {
               <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow>
                   <TableHead className="w-[50px]"></TableHead>
-                  <TableHead className="w-[180px]">Timestamp</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Source IP</TableHead>
-                  <TableHead>Destination IP</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead className="text-right w-[100px]">Severity</TableHead>
+                  <TableHead className="w-[180px]">Часова мітка</TableHead>
+                  <TableHead>Тип</TableHead>
+                  <TableHead>IP-адреса джерела</TableHead>
+                  <TableHead>IP-адреса призначення</TableHead>
+                  <TableHead>Деталі</TableHead>
+                  <TableHead className="text-right w-[100px]">Серйозність</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
