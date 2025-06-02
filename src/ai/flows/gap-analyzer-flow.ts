@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to analyze gaps between current and target security profiles and provide recommendations.
@@ -10,13 +11,13 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const GapAnalysisInputSchema = z.object({
+const GapAnalysisInputSchema = z.object({
   currentProfileSummary: z.string().describe("A detailed summary of the current security profile, including identified threats (potentially multiple), vulnerabilities, implemented controls, and relevant asset information for each threat."),
   targetProfileSummary: z.string().describe("A detailed summary of the desired target security profile, including target identifiers (potentially multiple), desired implementation levels, and types of assets it applies to.")
 });
 export type GapAnalysisInput = z.infer<typeof GapAnalysisInputSchema>;
 
-export const GapAnalysisOutputSchema = z.object({
+const GapAnalysisOutputSchema = z.object({
   gapAnalysis: z.string().describe("A concise analysis identifying the key gaps between the current and target security profiles. This should highlight discrepancies in controls, implementation levels, and coverage for the specified threats and target identifiers."),
   recommendations: z.array(
     z.object({
