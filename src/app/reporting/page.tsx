@@ -1,8 +1,9 @@
 
 "use client";
 
+import * as React from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { analyzeSecurityGaps, GapAnalysisInput, GapAnalysisOutput } from '@/ai/flows/gap-analyzer-flow';
+import { analyzeSecurityGaps, type GapAnalysisInput, type GapAnalysisOutput } from '@/ai/flows/gap-analyzer-flow';
 import type { Asset } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
@@ -31,22 +32,22 @@ const implementationStatusOptions = ["Реалізовано", "Не реалі�
 const implementationLevelOptions = ["1", "2", "3", "4"] as const;
 
 const relatedThreatOptions = [
+  "Несанкціонований доступ до бази користувачів",
+  "Шкідливе програмне забезпечення",
+  "Фішинг",
+  "DoS-атака на портал",
+  "Порушення політики безпеки",
+  "Витік даних",
+  "Соціальна інженерія",
+  "Недостатній контроль доступу",
   "SQL Injection на сервері БД",
   "XSS у WordPress",
-  "Атака через шкідливі вкладення",
-  "Використання уразливого компоненту СМS",
-  "Витік даних",
-  "DoS-атака на портал",
-  "Збереження паролів у відкритому вигляді",
   "Незахищене ліцензування CRM",
-  "Несанкціонований доступ до бази користувачів",
-  "Недостатній контроль доступу",
+  "Атака через шкідливі вкладення",
   "Обхід автентифікації",
-  "Порушення політики безпеки",
-  "Соціальна інженерія",
-  "Фішинг",
   "Фішинг-посилання у CRM",
-  "Шкідливе програмне забезпечення",
+  "Збереження паролів у відкритому вигляді",
+  "Використання уразливого компоненту СМS",
   "Інше"
 ].sort((a, b) => a === "Інше" ? 1 : b === "Інше" ? -1 : a.localeCompare(b)) as const;
 
@@ -74,7 +75,7 @@ const threatConfigurations: Record<string, { identifier: string; }> = {
 };
 
 const singleCurrentProfileThreatSchema = z.object({
-  id: z.string(), 
+  id: z.string(),
   identifier: z.string().optional(),
   implementationStatus: z.string().optional(),
   implementationLevel: z.string().optional(),
@@ -90,7 +91,7 @@ const singleCurrentProfileThreatSchema = z.object({
 type SingleCurrentProfileThreatValues = z.infer<typeof singleCurrentProfileThreatSchema>;
 
 const targetProfileIdentifierSchema = z.object({
-  id: z.string(), 
+  id: z.string(),
   value: z.string().min(1, "Ідентифікатор не може бути порожнім"),
 });
 
@@ -111,11 +112,11 @@ const reportPageFormSchema = z.object({
 type ReportPageFormValues = z.infer<typeof reportPageFormSchema>;
 
 const defaultThreatValues: SingleCurrentProfileThreatValues = {
-  id: Date.now().toString(), 
+  id: Date.now().toString(),
+  relatedThreat: 'Несанкціонований доступ до бази користувачів',
   identifier: 'ID.AM-3',
   implementationStatus: 'Реалізовано',
   implementationLevel: '3',
-  relatedThreat: 'Несанкціонований доступ до бази користувачів',
   software: '-',
   hardware: '-',
   informationResource: '-',
@@ -130,7 +131,7 @@ const defaultTargetIdentifierValue = { id: Date.now().toString(), value: 'ID.AM-
 
 const formatCurrentProfileDataToString = (data: SingleCurrentProfileThreatValues[]): string => {
   if (!data || data.length === 0) return "Поточний профіль безпеки: Інформація не надана\n";
-  
+
   let summary = "Поточний профіль безпеки (виявлені загрози та їх деталі):\n\n";
   data.forEach((threat, index) => {
     summary += `Загроза ${index + 1}:\n`;
@@ -158,7 +159,7 @@ const formatTargetProfileDataToString = (data: z.infer<typeof targetProfileDetai
     summary += `- Цільові ідентифікатори: не вказано\n`;
   }
   if (data.implementationLevel) summary += `- Рівень впровадження: ${data.implementationLevel}\n`;
-  
+
   const selectedAssets: string[] = [];
   if (data.appliesToSoftware) selectedAssets.push("Програмне забезпечення");
   if (data.appliesToHardware) selectedAssets.push("Апаратне забезпечення");
@@ -170,7 +171,7 @@ const formatTargetProfileDataToString = (data: z.infer<typeof targetProfileDetai
   } else {
     summary += `- Активи не обрані\n`;
   }
-  
+
   if (summary.trim() === `Цільовий профіль безпеки:`) {
     summary += "- Інформація не надана\n";
   }
@@ -255,7 +256,7 @@ export default function ReportingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportGenerated, setReportGenerated] = useState(false);
-  
+
   const [displayedCurrentProfile, setDisplayedCurrentProfile] = useState<string>('');
   const [displayedTargetProfile, setDisplayedTargetProfile] = useState<string>('');
 
@@ -263,13 +264,10 @@ export default function ReportingPage() {
   const [softwareOptions, setSoftwareOptions] = useState<string[]>([...baseAssetOptions]);
   const [hardwareOptions, setHardwareOptions] = useState<string[]>([...baseAssetOptions]);
   const [informationResourceOptions, setInformationResourceOptions] = useState<string[]>([...baseAssetOptions]);
-  // Assuming ICS tools are also assets and can be fetched or managed similarly.
-  // For now, let's assume they are also a type of asset.
-  // If they are predefined, this part can be adjusted.
   const [icsToolOptions, setIcsToolOptions] = useState<string[]>([...baseAssetOptions]);
 
   const { toast } = useToast();
-  
+
   const reportPrintRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
     content: () => reportPrintRef.current,
@@ -309,19 +307,16 @@ export default function ReportingPage() {
       setAllAssets(assetsList);
 
       const sw = assetsList.filter(a => a.type === 'Програмне забезпечення').map(a => a.name);
-      setSoftwareOptions(prev => [...new Set([...sw, ...baseAssetOptions])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? 1 : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
-      
-      const hw = assetsList.filter(a => a.type === 'Обладнання').map(a => a.name);
-      setHardwareOptions(prev => [...new Set([...hw, ...baseAssetOptions])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? 1 : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
-      
-      const ir = assetsList.filter(a => a.type === 'Інформація').map(a => a.name);
-      setInformationResourceOptions(prev => [...new Set([...ir, ...baseAssetOptions])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? 1 : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+      setSoftwareOptions(prev => [...new Set([...baseAssetOptions, ...sw])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
 
-      // For ICS Tools, assuming they might be categorized as 'Обладнання' or 'Програмне забезпечення' or need a specific type
-      // For simplicity, let's pull from both and allow user to decide, or add a specific 'ICS Tool' asset type later.
-      // This example will pull from hardware and software types for ICS tools.
-      const ics = assetsList.filter(a => a.type === 'Обладнання' || a.type === 'Програмне забезпечення').map(a => a.name); // Simplified for example
-      setIcsToolOptions(prev => [...new Set([...ics, ...baseAssetOptions])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? 1 : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+      const hw = assetsList.filter(a => a.type === 'Обладнання').map(a => a.name);
+      setHardwareOptions(prev => [...new Set([...baseAssetOptions, ...hw])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+
+      const ir = assetsList.filter(a => a.type === 'Інформація').map(a => a.name);
+      setInformationResourceOptions(prev => [...new Set([...baseAssetOptions, ...ir])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+
+      const ics = assetsList.filter(a => a.type === 'Обладнання' || a.type === 'Програмне забезпечення').map(a => a.name);
+      setIcsToolOptions(prev => [...new Set([...baseAssetOptions, ...ics])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
 
     } catch (error) {
       console.error("Error fetching assets for report: ", error);
@@ -348,8 +343,7 @@ export default function ReportingPage() {
           if (currentIdentifier !== config.identifier) {
             form.setValue(`currentProfileDetails.${index}.identifier`, config.identifier, { shouldValidate: true });
           }
-          // Asset fields (software, hardware etc.) are now manually selected by user from dynamic lists.
-          // No automatic setting here, or reset to '-' if not already set by user for this new threat item.
+
           if (form.getValues(`currentProfileDetails.${index}.software`) === undefined) form.setValue(`currentProfileDetails.${index}.software`, '-', { shouldValidate: false });
           if (form.getValues(`currentProfileDetails.${index}.hardware`) === undefined) form.setValue(`currentProfileDetails.${index}.hardware`, '-', { shouldValidate: false });
           if (form.getValues(`currentProfileDetails.${index}.informationResource`) === undefined) form.setValue(`currentProfileDetails.${index}.informationResource`, '-', { shouldValidate: false });
@@ -368,22 +362,22 @@ export default function ReportingPage() {
 
     const currentProfileString = formatCurrentProfileDataToString(values.currentProfileDetails);
     const targetProfileString = formatTargetProfileDataToString(values.targetProfileDetails);
-    
+
     setDisplayedCurrentProfile(currentProfileString);
     setDisplayedTargetProfile(targetProfileString);
 
     try {
-      const input: GapAnalysisInput = { 
-        currentProfileSummary: currentProfileString, 
-        targetProfileSummary: targetProfileString 
+      const input: GapAnalysisInput = {
+        currentProfileSummary: currentProfileString,
+        targetProfileSummary: targetProfileString
       };
-      const output = await analyzeSecurityGaps(input); 
+      const output = await analyzeSecurityGaps(input);
       setAiAnalysisResult(output);
       setReportGenerated(true);
     } catch (err) {
       console.error("Report Generation Error:", err);
       setError(err instanceof Error ? err.message : 'Сталася невідома помилка під час генерації звіту.');
-      setReportGenerated(true); 
+      setReportGenerated(true);
     } finally {
       setIsLoading(false);
     }
@@ -393,9 +387,9 @@ export default function ReportingPage() {
   const renderCurrentProfileThreatFields = (threatIndex: number) => {
     return (
     <CardContent className="space-y-4 p-4 border rounded-md bg-card/80 shadow-sm mb-4 relative">
-       <Button 
-          type="button" 
-          variant="ghost" 
+       <Button
+          type="button"
+          variant="ghost"
           size="icon"
           className="absolute top-2 right-2 h-7 w-7 text-destructive hover:bg-destructive/10"
           onClick={() => currentThreatFields.length > 1 ? removeCurrentThreat(threatIndex) : toast({title: "Помилка", description:"Має бути принаймні одна загроза.", variant: "destructive"})}
@@ -566,7 +560,7 @@ export default function ReportingPage() {
   const renderTargetProfileFields = () => (
     <div className="space-y-4 p-4 border rounded-md bg-card shadow-sm">
       <h3 className="text-lg font-medium text-primary">Цільовий профіль безпеки</h3>
-      
+
       <FormLabel>Цільові ідентифікатори</FormLabel>
       {targetIdentifierFields.map((field, index) => (
         <div key={field.id} className="flex items-center gap-2">
@@ -580,9 +574,9 @@ export default function ReportingPage() {
               </FormItem>
             )}
           />
-          <Button 
-            type="button" 
-            variant="ghost" 
+          <Button
+            type="button"
+            variant="ghost"
             size="icon"
             className="h-9 w-9 text-destructive hover:bg-destructive/10"
             onClick={() => targetIdentifierFields.length > 1 ? removeTargetIdentifier(index) : toast({title: "Помилка", description: "Має бути принаймні один цільовий ідентифікатор.", variant: "destructive"})}
@@ -591,10 +585,10 @@ export default function ReportingPage() {
           </Button>
         </div>
       ))}
-      <Button 
-        type="button" 
-        variant="outline" 
-        size="sm" 
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
         onClick={() => appendTargetIdentifier({ id: Date.now().toString(), value: ''})}
         className="mt-1"
       >
@@ -694,9 +688,9 @@ export default function ReportingPage() {
                       {renderCurrentProfileThreatFields(index)}
                     </div>
                   ))}
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => appendCurrentThreat({...defaultThreatValues, id: Date.now().toString()})}
                     className="mt-2"
                   >
@@ -726,7 +720,7 @@ export default function ReportingPage() {
         </Card>
       ) : null}
 
-      {error && !isLoading && ( 
+      {error && !isLoading && (
         <Card className="border-destructive bg-destructive/10">
           <CardHeader>
             <CardTitle className="flex items-center text-destructive">
@@ -752,10 +746,10 @@ export default function ReportingPage() {
                 <Printer className="mr-2 h-4 w-4" /> Роздрукувати/Зберегти PDF
             </Button>
         </div>
-        
+
         <div style={{ display: "none" }}>
-          <PrintableReport 
-            ref={reportPrintRef} 
+          <PrintableReport
+            ref={reportPrintRef}
             currentProfileSummary={displayedCurrentProfile}
             targetProfileSummary={displayedTargetProfile}
             aiAnalysis={aiAnalysisResult}
@@ -767,7 +761,7 @@ export default function ReportingPage() {
             <h2 className="text-2xl font-headline text-primary">Звіт про безпеку "КіберСтраж AI"</h2>
             <CardDescription>Згенеровано: {new Date().toLocaleDateString('uk-UA')} {new Date().toLocaleTimeString('uk-UA')}</CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-6">
             <section>
               <h3 className="text-xl font-headline mb-2 border-b pb-1">Поточний профіль безпеки</h3>
@@ -786,7 +780,7 @@ export default function ReportingPage() {
             </section>
 
             <Separator className="my-6" />
-            
+
             {isLoading && !aiAnalysisResult && (
                 <div className="text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
@@ -835,7 +829,7 @@ export default function ReportingPage() {
                 </section>
               </>
             )}
-            
+
           </CardContent>
           <CardFooter className="print:hidden">
             <p className="text-xs text-muted-foreground text-center w-full">
@@ -849,3 +843,5 @@ export default function ReportingPage() {
   );
 }
 
+
+    
