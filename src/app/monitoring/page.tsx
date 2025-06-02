@@ -50,7 +50,7 @@ const generateMockNetworkEvent = (id: string): NetworkEvent => {
     type: randomType,
     sourceIp: randomType !== initialEventTypesUk.systemUpdate ? randomIp() : 'N/A',
     destinationIp: randomIp(),
-    details: `Симульована подія: ${randomType}. ${relatedAsset ? 'Стосується активу: ' + relatedAsset + '.' : ''}`,
+    details: `Симульована подія: ${randomType}. ${relatedAsset ? 'Стосується активу: ' + relatedAsset + '.' : ''} Додаткові деталі можуть бути досить довгими, щоб перевірити перенос тексту та ширину колонки.`,
     riskPresence: riskPresence,
     relatedAsset: relatedAsset,
   };
@@ -204,7 +204,7 @@ export default function MonitoringPage() {
                         <TableCell>{event.type}</TableCell>
                         <TableCell className="font-mono text-xs">{event.sourceIp}</TableCell>
                         <TableCell className="font-mono text-xs">{event.destinationIp}</TableCell>
-                        <TableCell className="text-sm max-w-[200px] truncate" title={event.details}>{event.details}</TableCell>
+                        <TableCell className="text-sm max-w-sm truncate" title={event.details}>{event.details}</TableCell>
                         <TableCell className="text-right">
                           <Badge variant={config.badgeVariant} className={cn(config.color, 'border-current')}>{event.riskPresence}</Badge>
                         </TableCell>
