@@ -1,8 +1,11 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { analyzeSecurityGaps, GapAnalysisInput, GapAnalysisOutput } from '@/ai/flows/gap-analyzer-flow';
+import type { Asset } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,13 +17,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, FileText, Printer, AlertTriangle, PlusCircle, Trash2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, FileText, Printer, AlertTriangle, PlusCircle, Trash2, Sparkles } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useReactToPrint } from 'react-to-print';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useToast } from "@/hooks/use-toast";
+
 
 const implementationStatusOptions = ["Реалізовано", "Не реалізовано", "Частково реалізовано", "Не застосовується"] as const;
 const implementationLevelOptions = ["1", "2", "3", "4"] as const;
@@ -46,124 +51,30 @@ const relatedThreatOptions = [
 ].sort((a, b) => a === "Інше" ? 1 : b === "Інше" ? -1 : a.localeCompare(b)) as const;
 
 
-const softwareOptions = [
-  "1C Бухгалтерія",
-  "WordPress CMS",
-  "Антивірусне ПЗ",
-  "База даних SQL",
-  "Будь-яке ПЗ з автентифікацією",
-  "Веб-портал",
-  "Власна CRM система",
-  "Операційна система Windows",
-  "Поштовий клієнт",
-  "Система автентифікації",
-  "Файловий сервер",
-  "Інше",
-  "-"
-].sort((a, b) => (a === "Інше" || a === "-") ? 1 : (b === "Інше" || b === "-") ? -1 : a.localeCompare(b)) as const;
+const baseAssetOptions = ["-", "Інше"] as const;
 
-const hardwareOptions = [
-  "Веб-сервер",
-  "Мережеве обладнання (маршрутизатори, комутатори)",
-  "Пошта сервер",
-  "Робочі станції",
-  "Сервер баз даних",
-  "Інше",
-  "-"
-].sort((a, b) => (a === "Інше" || a === "-") ? 1 : (b === "Інше" || b === "-") ? -1 : a.localeCompare(b)) as const;
-
-const informationResourceOptions = [
-  "База даних клієнтів",
-  "Веб-сайт компанії",
-  "Внутрішні ресурси компанії",
-  "Електронна пошта",
-  "Конфіденційні документи",
-  "Ліцензійні ключі ПЗ",
-  "Облікові дані користувачів",
-  "Персональні дані співробітників",
-  "Політика безпеки компанії",
-  "Файловий сервер",
-  "Інше",
-  "-"
-].sort((a, b) => (a === "Інше" || a === "-") ? 1 : (b === "Інше" || b === "-") ? -1 : a.localeCompare(b)) as const;
-
-const icsToolOptions = [
-  "DLP система",
-  "SIEM система",
-  "WAF ModSecurity",
-  "Антивірус Касперського",
-  "Менеджер паролів",
-  "Навчальні платформи з кібербезпеки",
-  "Сканер вразливостей",
-  "Система виявлення вторгнень (IDS)",
-  "Система захисту від DDoS",
-  "Система управління активами",
-  "Система управління ідентифікацією (IDM)",
-  "Фільтр електронної пошти",
-  "Інше",
-  "-"
-].sort((a, b) => (a === "Інше" || a === "-") ? 1 : (b === "Інше" || b === "-") ? -1 : a.localeCompare(b)) as const;
-
-const threatConfigurations: Record<string, {
-  identifier: string;
-  software: typeof softwareOptions[number];
-  hardware: typeof hardwareOptions[number];
-  informationResource: typeof informationResourceOptions[number];
-  icsTool: typeof icsToolOptions[number];
-}> = {
-  "Несанкціонований доступ до бази користувачів": { 
-    identifier: 'ID.AM-3', software: 'Власна CRM система', hardware: 'Пошта сервер', informationResource: 'База даних клієнтів', icsTool: 'WAF ModSecurity',
-  },
-  "Шкідливе програмне забезпечення": {
-    identifier: 'ID.AM-1', software: 'Антивірусне ПЗ', hardware: 'Робочі станції', informationResource: '-', icsTool: 'Система виявлення вторгнень (IDS)',
-  },
-  "Фішинг": {
-    identifier: 'ID.AM-2', software: '-', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Фільтр електронної пошти',
-  },
-  "DoS-атака на портал": { 
-    identifier: 'ID.AM-5', software: 'Веб-портал', hardware: 'Мережеве обладнання (маршрутизатори, комутатори)', informationResource: 'Веб-сайт компанії', icsTool: 'Система захисту від DDoS',
-  },
-  "Порушення політики безпеки": {
-    identifier: 'ID.AM-1', software: 'Операційна система Windows', hardware: '-', informationResource: 'Політика безпеки компанії', icsTool: 'SIEM система',
-  },
-  "Витік даних": {
-    identifier: 'ID.AM-3', software: 'База даних SQL', hardware: 'Сервер баз даних', informationResource: 'Конфіденційні документи', icsTool: 'DLP система',
-  },
-  "Соціальна інженерія": {
-    identifier: 'ID.AM-2', software: '-', hardware: '-', informationResource: 'Персональні дані співробітників', icsTool: 'Навчальні платформи з кібербезпеки',
-  },
-  "Недостатній контроль доступу": {
-    identifier: 'ID.AM-3', software: 'Файловий сервер', hardware: '-', informationResource: 'Внутрішні ресурси компанії', icsTool: 'Система управління ідентифікацією (IDM)',
-  },
-  "SQL Injection на сервері БД": {
-    identifier: 'ID.AM-3', software: 'База даних SQL', hardware: 'Сервер баз даних', informationResource: 'База даних клієнтів', icsTool: 'WAF ModSecurity',
-  },
-  "XSS у WordPress": {
-    identifier: 'ID.AM-4', software: 'WordPress CMS', hardware: 'Веб-сервер', informationResource: 'Веб-сайт компанії', icsTool: 'WAF ModSecurity',
-  },
-  "Незахищене ліцензування CRM": {
-    identifier: 'ID.AM-1', software: 'Власна CRM система', hardware: '-', informationResource: 'Ліцензійні ключі ПЗ', icsTool: 'Система управління активами',
-  },
-  "Атака через шкідливі вкладення": {
-    identifier: 'ID.AM-1', software: 'Поштовий клієнт', hardware: 'Робочі станції', informationResource: 'Електронна пошта', icsTool: 'Фільтр електронної пошти',
-  },
-  "Обхід автентифікації": {
-    identifier: 'ID.AM-3', software: 'Система автентифікації', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Система управління ідентифікацією (IDM)',
-  },
-  "Фішинг-посилання у CRM": {
-    identifier: 'ID.AM-2', software: 'Власна CRM система', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Фільтр електронної пошти',
-  },
-  "Збереження паролів у відкритому вигляді": {
-    identifier: 'ID.AM-3', software: 'Будь-яке ПЗ з автентифікацією', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Менеджер паролів',
-  },
-  "Використання уразливого компоненту СМS": {
-    identifier: 'ID.AM-1', software: 'WordPress CMS', hardware: 'Веб-сервер', informationResource: 'Веб-сайт компанії', icsTool: 'Сканер вразливостей',
-  },
-  "Інше": { identifier: 'N/A', software: '-', hardware: '-', informationResource: '-', icsTool: '-', }
+const threatConfigurations: Record<string, { identifier: string; }> = {
+  "Несанкціонований доступ до бази користувачів": { identifier: 'ID.AM-3' },
+  "Шкідливе програмне забезпечення": { identifier: 'ID.AM-1' },
+  "Фішинг": { identifier: 'ID.AM-2' },
+  "DoS-атака на портал": { identifier: 'ID.AM-5' },
+  "Порушення політики безпеки": { identifier: 'ID.AM-1' },
+  "Витік даних": { identifier: 'ID.AM-3' },
+  "Соціальна інженерія": { identifier: 'ID.AM-2' },
+  "Недостатній контроль доступу": { identifier: 'ID.AM-3' },
+  "SQL Injection на сервері БД": { identifier: 'ID.AM-3' },
+  "XSS у WordPress": { identifier: 'ID.AM-4' },
+  "Незахищене ліцензування CRM": { identifier: 'ID.AM-1' },
+  "Атака через шкідливі вкладення": { identifier: 'ID.AM-1' },
+  "Обхід автентифікації": { identifier: 'ID.AM-3' },
+  "Фішинг-посилання у CRM": { identifier: 'ID.AM-2' },
+  "Збереження паролів у відкритому вигляді": { identifier: 'ID.AM-3' },
+  "Використання уразливого компоненту СМS": { identifier: 'ID.AM-1' },
+  "Інше": { identifier: 'N/A' }
 };
 
 const singleCurrentProfileThreatSchema = z.object({
-  id: z.string(), // for useFieldArray key
+  id: z.string(), 
   identifier: z.string().optional(),
   implementationStatus: z.string().optional(),
   implementationLevel: z.string().optional(),
@@ -179,7 +90,7 @@ const singleCurrentProfileThreatSchema = z.object({
 type SingleCurrentProfileThreatValues = z.infer<typeof singleCurrentProfileThreatSchema>;
 
 const targetProfileIdentifierSchema = z.object({
-  id: z.string(), // for useFieldArray key
+  id: z.string(), 
   value: z.string().min(1, "Ідентифікатор не може бути порожнім"),
 });
 
@@ -200,18 +111,18 @@ const reportPageFormSchema = z.object({
 type ReportPageFormValues = z.infer<typeof reportPageFormSchema>;
 
 const defaultThreatValues: SingleCurrentProfileThreatValues = {
-  id: Date.now().toString(), // Simple unique ID for new fields
+  id: Date.now().toString(), 
   identifier: 'ID.AM-3',
   implementationStatus: 'Реалізовано',
   implementationLevel: '3',
   relatedThreat: 'Несанкціонований доступ до бази користувачів',
-  software: 'Власна CRM система',
-  hardware: 'Пошта сервер',
-  informationResource: 'База даних клієнтів',
-  icsTool: 'WAF ModSecurity',
-  threatDescription: 'Недостатній контроль доступу до баз даних користувачів.',
-  ttpDescription: 'OWASP A5 - Broken Access Control: відсутність або обхід обмежень на доступ до об\'єктів.',
-  comment: 'Кінцеві точки мають базовий антивірус, але немає рішення EDR.',
+  software: '-',
+  hardware: '-',
+  informationResource: '-',
+  icsTool: '-',
+  threatDescription: 'Недостатній контроль доступу до баз даних користувачів, що може призвести до несанкціонованого перегляду, зміни або видалення даних.',
+  ttpDescription: 'OWASP A5 - Broken Access Control: Використання прямих посилань на об\'єкти без належної перевірки прав, відсутність перевірки прав на рівні бізнес-логіки.',
+  comment: 'Кінцеві точки мають базовий антивірус, але немає рішення EDR. Регулярні оновлення ОС та ПЗ проводяться.',
 };
 
 const defaultTargetIdentifierValue = { id: Date.now().toString(), value: 'ID.AM-3 Target' };
@@ -227,10 +138,10 @@ const formatCurrentProfileDataToString = (data: SingleCurrentProfileThreatValues
     if (threat.identifier) summary += `  - Ідентифікатор: ${threat.identifier}\n`;
     if (threat.implementationStatus) summary += `  - Статус реалізації: ${threat.implementationStatus}\n`;
     if (threat.implementationLevel) summary += `  - Рівень впровадження: ${threat.implementationLevel}\n`;
-    if (threat.software && threat.software !== '-') summary += `  - Програмне забезпечення: ${threat.software}\n`;
-    if (threat.hardware && threat.hardware !== '-') summary += `  - Апаратне забезпечення: ${threat.hardware}\n`;
-    if (threat.informationResource && threat.informationResource !== '-') summary += `  - Інформаційний ресурс: ${threat.informationResource}\n`;
-    if (threat.icsTool && threat.icsTool !== '-') summary += `  - Засіб ІКЗ: ${threat.icsTool}\n`;
+    if (threat.software && threat.software !== '-') summary += `  - Програмне забезпечення (Актив): ${threat.software}\n`;
+    if (threat.hardware && threat.hardware !== '-') summary += `  - Апаратне забезпечення (Актив): ${threat.hardware}\n`;
+    if (threat.informationResource && threat.informationResource !== '-') summary += `  - Інформаційний ресурс (Актив): ${threat.informationResource}\n`;
+    if (threat.icsTool && threat.icsTool !== '-') summary += `  - Засіб ІКЗ (Актив): ${threat.icsTool}\n`;
     if (threat.threatDescription) summary += `  - Опис загрози: ${threat.threatDescription}\n`;
     if (threat.ttpDescription) summary += `  - Опис ТТР: ${threat.ttpDescription}\n`;
     if (threat.comment && threat.comment.trim() !== '') summary += `  - Коментар: ${threat.comment}\n`;
@@ -275,7 +186,6 @@ const RecommendationPriorityBadge = ({ priority }: { priority: "High" | "Medium"
   return <Badge className={cn(PColors[priority])}>{priority}</Badge>;
 };
 
-// Component for printing
 const PrintableReport = React.forwardRef<HTMLDivElement, {
   currentProfileSummary: string;
   targetProfileSummary: string;
@@ -348,6 +258,17 @@ export default function ReportingPage() {
   
   const [displayedCurrentProfile, setDisplayedCurrentProfile] = useState<string>('');
   const [displayedTargetProfile, setDisplayedTargetProfile] = useState<string>('');
+
+  const [allAssets, setAllAssets] = useState<Asset[]>([]);
+  const [softwareOptions, setSoftwareOptions] = useState<string[]>([...baseAssetOptions]);
+  const [hardwareOptions, setHardwareOptions] = useState<string[]>([...baseAssetOptions]);
+  const [informationResourceOptions, setInformationResourceOptions] = useState<string[]>([...baseAssetOptions]);
+  // Assuming ICS tools are also assets and can be fetched or managed similarly.
+  // For now, let's assume they are also a type of asset.
+  // If they are predefined, this part can be adjusted.
+  const [icsToolOptions, setIcsToolOptions] = useState<string[]>([...baseAssetOptions]);
+
+  const { toast } = useToast();
   
   const reportPrintRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -380,6 +301,38 @@ export default function ReportingPage() {
     name: "targetProfileDetails.identifiers",
   });
 
+  const fetchAssets = useCallback(async () => {
+    try {
+      const assetsCollectionRef = collection(db, 'assets');
+      const assetSnapshot = await getDocs(assetsCollectionRef);
+      const assetsList = assetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
+      setAllAssets(assetsList);
+
+      const sw = assetsList.filter(a => a.type === 'Програмне забезпечення').map(a => a.name);
+      setSoftwareOptions(prev => [...new Set([...sw, ...baseAssetOptions])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? 1 : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+      
+      const hw = assetsList.filter(a => a.type === 'Обладнання').map(a => a.name);
+      setHardwareOptions(prev => [...new Set([...hw, ...baseAssetOptions])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? 1 : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+      
+      const ir = assetsList.filter(a => a.type === 'Інформація').map(a => a.name);
+      setInformationResourceOptions(prev => [...new Set([...ir, ...baseAssetOptions])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? 1 : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+
+      // For ICS Tools, assuming they might be categorized as 'Обладнання' or 'Програмне забезпечення' or need a specific type
+      // For simplicity, let's pull from both and allow user to decide, or add a specific 'ICS Tool' asset type later.
+      // This example will pull from hardware and software types for ICS tools.
+      const ics = assetsList.filter(a => a.type === 'Обладнання' || a.type === 'Програмне забезпечення').map(a => a.name); // Simplified for example
+      setIcsToolOptions(prev => [...new Set([...ics, ...baseAssetOptions])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? 1 : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+
+    } catch (error) {
+      console.error("Error fetching assets for report: ", error);
+      toast({ title: "Помилка", description: "Не вдалося завантажити активи для звітів.", variant: "destructive" });
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchAssets();
+  }, [fetchAssets]);
+
 
   const watchedThreats = useWatch({
     control: form.control,
@@ -392,13 +345,16 @@ export default function ReportingPage() {
         if (threat.relatedThreat) {
           const config = threatConfigurations[threat.relatedThreat] || threatConfigurations["Інше"];
           const currentIdentifier = form.getValues(`currentProfileDetails.${index}.identifier`);
-          const currentSoftware = form.getValues(`currentProfileDetails.${index}.software`);
-          // Only update if the config is different to prevent infinite loops if a field triggers the watch
-          if (currentIdentifier !== config.identifier) form.setValue(`currentProfileDetails.${index}.identifier`, config.identifier, { shouldValidate: true });
-          if (currentSoftware !== config.software) form.setValue(`currentProfileDetails.${index}.software`, config.software, { shouldValidate: true });
-          form.setValue(`currentProfileDetails.${index}.hardware`, config.hardware, { shouldValidate: true });
-          form.setValue(`currentProfileDetails.${index}.informationResource`, config.informationResource, { shouldValidate: true });
-          form.setValue(`currentProfileDetails.${index}.icsTool`, config.icsTool, { shouldValidate: true });
+          if (currentIdentifier !== config.identifier) {
+            form.setValue(`currentProfileDetails.${index}.identifier`, config.identifier, { shouldValidate: true });
+          }
+          // Asset fields (software, hardware etc.) are now manually selected by user from dynamic lists.
+          // No automatic setting here, or reset to '-' if not already set by user for this new threat item.
+          if (form.getValues(`currentProfileDetails.${index}.software`) === undefined) form.setValue(`currentProfileDetails.${index}.software`, '-', { shouldValidate: false });
+          if (form.getValues(`currentProfileDetails.${index}.hardware`) === undefined) form.setValue(`currentProfileDetails.${index}.hardware`, '-', { shouldValidate: false });
+          if (form.getValues(`currentProfileDetails.${index}.informationResource`) === undefined) form.setValue(`currentProfileDetails.${index}.informationResource`, '-', { shouldValidate: false });
+          if (form.getValues(`currentProfileDetails.${index}.icsTool`) === undefined) form.setValue(`currentProfileDetails.${index}.icsTool`, '-', { shouldValidate: false });
+
         }
       });
     }
@@ -427,7 +383,7 @@ export default function ReportingPage() {
     } catch (err) {
       console.error("Report Generation Error:", err);
       setError(err instanceof Error ? err.message : 'Сталася невідома помилка під час генерації звіту.');
-      setReportGenerated(true); // Still show the basic report even if AI fails
+      setReportGenerated(true); 
     } finally {
       setIsLoading(false);
     }
@@ -435,7 +391,6 @@ export default function ReportingPage() {
 
 
   const renderCurrentProfileThreatFields = (threatIndex: number) => {
-    const currentThreat = form.watch(`currentProfileDetails.${threatIndex}.relatedThreat`);
     return (
     <CardContent className="space-y-4 p-4 border rounded-md bg-card/80 shadow-sm mb-4 relative">
        <Button 
@@ -443,7 +398,7 @@ export default function ReportingPage() {
           variant="ghost" 
           size="icon"
           className="absolute top-2 right-2 h-7 w-7 text-destructive hover:bg-destructive/10"
-          onClick={() => currentThreatFields.length > 1 ? removeCurrentThreat(threatIndex) : alert("Має бути принаймні одна загроза.")}
+          onClick={() => currentThreatFields.length > 1 ? removeCurrentThreat(threatIndex) : toast({title: "Помилка", description:"Має бути принаймні одна загроза.", variant: "destructive"})}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -480,9 +435,9 @@ export default function ReportingPage() {
         name={`currentProfileDetails.${threatIndex}.software`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Програмне забезпечення</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!currentThreat || currentThreat === "Інше"}>
-              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть ПЗ" /></SelectTrigger></FormControl>
+            <FormLabel>Програмне забезпечення (Актив)</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть ПЗ з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
                 {softwareOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
@@ -496,9 +451,9 @@ export default function ReportingPage() {
         name={`currentProfileDetails.${threatIndex}.hardware`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Апаратне забезпечення</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!currentThreat || currentThreat === "Інше"}>
-              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть апаратне забезпечення" /></SelectTrigger></FormControl>
+            <FormLabel>Апаратне забезпечення (Актив)</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть апаратне забезпечення з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
                 {hardwareOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
@@ -512,9 +467,9 @@ export default function ReportingPage() {
         name={`currentProfileDetails.${threatIndex}.informationResource`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Інформаційний ресурс</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!currentThreat || currentThreat === "Інше"}>
-              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть інформаційний ресурс" /></SelectTrigger></FormControl>
+            <FormLabel>Інформаційний ресурс (Актив)</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть інформаційний ресурс з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
                 {informationResourceOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
@@ -528,9 +483,9 @@ export default function ReportingPage() {
         name={`currentProfileDetails.${threatIndex}.icsTool`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Засіб ІКЗ</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!currentThreat || currentThreat === "Інше"}>
-              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть засіб ІКЗ" /></SelectTrigger></FormControl>
+            <FormLabel>Засіб ІКЗ (Актив)</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть засіб ІКЗ з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
                 {icsToolOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
@@ -630,7 +585,7 @@ export default function ReportingPage() {
             variant="ghost" 
             size="icon"
             className="h-9 w-9 text-destructive hover:bg-destructive/10"
-            onClick={() => targetIdentifierFields.length > 1 ? removeTargetIdentifier(index) : alert("Має бути принаймні один цільовий ідентифікатор.")}
+            onClick={() => targetIdentifierFields.length > 1 ? removeTargetIdentifier(index) : toast({title: "Помилка", description: "Має бути принаймні один цільовий ідентифікатор.", variant: "destructive"})}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -720,6 +675,7 @@ export default function ReportingPage() {
       </div>
       <CardDescription>
         Створіть звіт, що порівнює поточний та цільовий профілі безпеки, та отримайте рекомендації від ШІ.
+        Актуальні активи підтягуються з Реєстру активів.
       </CardDescription>
 
       {!reportGenerated ? (
@@ -770,7 +726,7 @@ export default function ReportingPage() {
         </Card>
       ) : null}
 
-      {error && !isLoading && ( // Show error only if not loading and error exists
+      {error && !isLoading && ( 
         <Card className="border-destructive bg-destructive/10">
           <CardHeader>
             <CardTitle className="flex items-center text-destructive">
@@ -796,7 +752,7 @@ export default function ReportingPage() {
                 <Printer className="mr-2 h-4 w-4" /> Роздрукувати/Зберегти PDF
             </Button>
         </div>
-        {/* Hidden component for printing */}
+        
         <div style={{ display: "none" }}>
           <PrintableReport 
             ref={reportPrintRef} 
@@ -806,7 +762,6 @@ export default function ReportingPage() {
           />
         </div>
 
-        {/* Displayed report on page */}
         <Card className="p-6 print:shadow-none print:border-none" id="report-content-display">
           <CardHeader className="text-center print:pb-2">
             <h2 className="text-2xl font-headline text-primary">Звіт про безпеку "КіберСтраж AI"</h2>
@@ -893,3 +848,4 @@ export default function ReportingPage() {
     </div>
   );
 }
+
