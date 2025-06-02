@@ -52,6 +52,7 @@ const seedInitialAssets = async () => {
   const assetsCollectionRef = collection(db, 'assets');
 
   const initialAssetsData: Omit<Asset, 'id'>[] = [
+    // Existing Assets
     {
       name: "Головний Сервер Сховища",
       type: "Обладнання",
@@ -91,6 +92,129 @@ const seedInitialAssets = async () => {
       description: "Обслуговує корпоративний веб-сайт.",
       weaknesses: [
         { id: "seed_w_sw2", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Дозволено лістинг директорій", severity: "Низька" }
+      ]
+    },
+    // New Hardware Assets (5)
+    {
+      name: "Мережевий Брандмауер Рівня Підприємства",
+      type: "Обладнання",
+      description: "Центральний пристрій фільтрації мережевого трафіку для захисту периметра.",
+      weaknesses: [
+        { id: "seed_w_hw_new1", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Правила фільтрації не оновлювалися більше 6 місяців", severity: "Висока" }
+      ]
+    },
+    {
+      name: "Система Виявлення/Запобігання Вторгнень (IDS/IPS)",
+      type: "Обладнання",
+      description: "Апаратний комплекс для моніторингу та блокування підозрілої активності в мережі.",
+      weaknesses: [
+        { id: "seed_w_hw_new2", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Сигнатури атак застарілі, не оновлювалися 3 місяці", severity: "Висока" }
+      ]
+    },
+    {
+      name: "Резервний Дизель-Генератор",
+      type: "Обладнання",
+      description: "Забезпечує безперебійне живлення критичних систем у разі відключення електроенергії.",
+      weaknesses: [
+        { id: "seed_w_hw_new3", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Планове технічне обслуговування прострочено на 1 місяць", severity: "Середня" }
+      ]
+    },
+    {
+      name: "Промисловий Контролер (PLC)",
+      type: "Обладнання",
+      description: "Керує технологічними процесами на виробничій лінії.",
+      weaknesses: [
+        { id: "seed_w_hw_new4", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Доступ до інтерфейсу керування PLC не захищений паролем", severity: "Критична" }
+      ]
+    },
+    {
+      name: "Сервер Управління SCADA",
+      type: "Обладнання",
+      description: "Центральний сервер для системи диспетчерського управління та збору даних.",
+      weaknesses: [
+        { id: "seed_w_hw_new5", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Операційна система сервера SCADA не отримує оновлень безпеки (End-of-Life)", severity: "Критична" }
+      ]
+    },
+    // New Software Assets (5)
+    {
+      name: "Програмне Забезпечення SCADA HMI",
+      type: "Програмне забезпечення",
+      description: "Інтерфейс людино-машинної взаємодії для операторів системи SCADA.",
+      weaknesses: [
+        { id: "seed_w_sw_new1", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Використання стандартних облікових даних для доступу до HMI ('operator'/'password')", severity: "Критична" }
+      ]
+    },
+    {
+      name: "СУБД для Історичних Даних (Historian)",
+      type: "Програмне забезпечення",
+      description: "Система управління базами даних для зберігання та аналізу історичних даних процесів.",
+      weaknesses: [
+        { id: "seed_w_sw_new2", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Відсутнє шифрування даних при передачі до Historian", severity: "Середня" }
+      ]
+    },
+    {
+      name: "Прошивка Мережевих Комутаторів",
+      type: "Програмне забезпечення",
+      description: "Вбудоване програмне забезпечення, що керує роботою промислових мережевих комутаторів.",
+      weaknesses: [
+        { id: "seed_w_sw_new3", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Наявна відома вразливість у поточній версії прошивки (CVE-2023-12345)", severity: "Висока" }
+      ]
+    },
+    {
+      name: "Система Централізованого Логування (SIEM)",
+      type: "Програмне забезпечення",
+      description: "Платформа для збору, аналізу та кореляції подій безпеки з різних джерел.",
+      weaknesses: [
+        { id: "seed_w_sw_new4", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Недостатній обсяг сховища для логів, старі логи перезаписуються кожні 7 днів", severity: "Середня" }
+      ]
+    },
+    {
+      name: "Програмне Забезпечення для VPN-Доступу",
+      type: "Програмне забезпечення",
+      description: "Клієнтське та серверне ПЗ для організації захищеного віддаленого доступу.",
+      weaknesses: [
+        { id: "seed_w_sw_new5", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Використання застарілого протоколу шифрування для VPN (напр. PPTP)", severity: "Висока" }
+      ]
+    },
+    // New Information Assets (5)
+    {
+      name: "Схеми Технологічних Процесів",
+      type: "Інформація",
+      description: "Детальні діаграми, що описують роботу критичних технологічних процесів.",
+      weaknesses: [
+        { id: "seed_w_info_new1", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Доступ до схем не обмежений, доступні всім співробітникам через загальну теку", severity: "Середня" }
+      ]
+    },
+    {
+      name: "Конфігураційні Файли Мережевого Обладнання",
+      type: "Інформація",
+      description: "Файли з налаштуваннями брандмауерів, комутаторів, маршрутизаторів.",
+      weaknesses: [
+        { id: "seed_w_info_new2", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Резервні копії конфігурацій зберігаються на незахищеному файловому сервері без шифрування", severity: "Висока" }
+      ]
+    },
+    {
+      name: "Дані телеметрії з промислових датчиків",
+      type: "Інформація",
+      description: "Потоки даних від датчиків температури, тиску, рівня тощо.",
+      weaknesses: [
+        { id: "seed_w_info_new3", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Відсутня перевірка цілісності та автентичності даних телеметрії", severity: "Середня" }
+      ]
+    },
+    {
+      name: "Облікові Дані для Доступу до Систем Управління",
+      type: "Інформація",
+      description: "Логіни та паролі для адміністративних інтерфейсів PLC, SCADA, HMI.",
+      weaknesses: [
+        { id: "seed_w_info_new4", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Паролі зберігаються у текстовому файлі на робочій станції оператора", severity: "Критична" }
+      ]
+    },
+    {
+      name: "Плани Реагування на Інціденти Безпеки (ІБ)",
+      type: "Інформація",
+      description: "Документовані процедури для дій у разі виникнення інцидентів ІБ.",
+      weaknesses: [
+        { id: "seed_w_info_new5", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Плани не тестувалися та не оновлювалися більше року", severity: "Висока" }
       ]
     }
   ];
@@ -154,7 +278,7 @@ export default function AssetsPage() {
           const newSnapshot = await getDocs(assetsCollectionRef);
           const assetsList = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
           setAssets(assetsList);
-          toast({ title: "Вітаємо!", description: "Додано декілька прикладів активів для початку." });
+          toast({ title: "Вітаємо!", description: "Додано приклади активів для початку." });
         } else {
            setAssets([]); // Set to empty if seeding failed but snapshot was empty
         }
@@ -244,7 +368,7 @@ export default function AssetsPage() {
       await fetchAssets(true); 
       setIsWeaknessDialogOpen(false);
       setEditingWeakness(null);
-      setAssetToManageWeakness(null);
+      setAssetToManageWeakness(null); // Clear assetToManageWeakness after submission
     } catch (error) {
       console.error("Error submitting weakness: ", error);
       toast({ title: "Помилка", description: "Не вдалося зберегти вразливість.", variant: "destructive" });
@@ -307,6 +431,8 @@ export default function AssetsPage() {
         await updateDoc(assetRef, { weaknesses: arrayRemove(weaknessToDelete) });
         toast({ title: "Успіх", description: "Вразливість видалено." });
         await fetchAssets(true); 
+        // If the assetToManageWeakness was the one we just modified, we should update its state too
+        // or simply refetch assets which will handle this. For now, fetchAssets(true) handles it.
     } catch (error) {
         console.error("Error deleting weakness: ", error);
         toast({ title: "Помилка", description: "Не вдалося видалити вразливість.", variant: "destructive" });
@@ -459,12 +585,18 @@ export default function AssetsPage() {
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value} // This value is now correctly set by useEffect or when editing
-                      disabled={!!editingAsset} // Disable if editing an existing asset to prevent changing type across categories
+                      disabled={!!editingAsset || !!displayCategoryMap[currentCategory]} // Disable if editing or if category selection dictates type
                     >
                       <FormControl><SelectTrigger><SelectValue placeholder="Виберіть тип активу" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {Object.entries(displayCategoryMap).map(([displayName, actualType]) => (
-                          <SelectItem key={actualType} value={actualType} disabled={actualType !== displayCategoryMap[currentCategory] && !editingAsset}>
+                          <SelectItem 
+                            key={actualType} 
+                            value={actualType} 
+                            // Disable if this type doesn't match the current category (for new assets)
+                            // OR if editing (type shouldn't change)
+                            disabled={(actualType !== displayCategoryMap[currentCategory] && !editingAsset) || (!!editingAsset && field.value !== actualType) }
+                          >
                             {displayName} ({actualType})
                           </SelectItem>
                         ))}
@@ -473,7 +605,7 @@ export default function AssetsPage() {
                     <FormMessage />
                     {editingAsset ? (
                          <p className="text-xs text-muted-foreground pt-1">
-                            Тип активу не можна змінити після створення, щоб уникнути переміщення між категоріями.
+                            Тип активу не можна змінити після створення. Поточний тип: {editingAsset.type}
                         </p>
                     ) : (
                         <p className="text-xs text-muted-foreground pt-1">
@@ -555,3 +687,4 @@ export default function AssetsPage() {
     </div>
   );
 }
+
