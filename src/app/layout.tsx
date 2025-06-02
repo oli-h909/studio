@@ -7,7 +7,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'КіберСтраж AI',
+  title: 'КіберСтраж',
   description: 'Передова платформа для управління кібербезпекою',
 };
 

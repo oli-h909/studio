@@ -1,15 +1,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Archive, Activity, Calculator, FileText, ArrowRight } from 'lucide-react'; // Removed BrainCircuit, UserCheck
+import { Archive, Activity, Calculator, FileText, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
 const featureCards = [
   { title: 'Реєстр активів', description: 'Каталогізуйте свої корпоративні активи.', icon: Archive, href: '/assets', cta: 'Керувати активами' },
   { title: 'Моніторинг у реальному часі', description: 'Перегляд симульованих даних про мережеві події.', icon: Activity, href: '/monitoring', cta: 'Переглянути події' },
-  // { title: 'Аналізатор загроз ШІ', description: 'Аналізуйте потенційні загрози за допомогою ШІ.', icon: BrainCircuit, href: '/threat-analyzer', cta: 'Аналізувати загрози' }, // Removed
   { title: 'Калькулятор ризиків', description: 'Оцінюйте ризики та вразливості.', icon: Calculator, href: '/risk-calculator', cta: 'Розрахувати ризики' },
-  // { title: 'Радник з безпеки ШІ', description: 'Отримуйте поради з безпеки на основі ШІ.', icon: UserCheck, href: '/security-advisor', cta: 'Отримати пораду' }, // Removed
   { title: 'Панель звітів', description: 'Створюйте звіти про безпеку.', icon: FileText, href: '/reporting', cta: 'Переглянути звіти' },
 ];
 
@@ -19,7 +17,7 @@ export default function DashboardPage() {
       <Card className="overflow-hidden">
         <div className="md:flex">
           <div className="md:w-1/2 p-8 flex flex-col justify-center">
-            <h1 className="text-4xl font-bold tracking-tight text-primary">Ласкаво просимо до КіберСтраж AI</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-primary">Ласкаво просимо до КіберСтраж</h1>
             <p className="mt-4 text-lg text-muted-foreground">
               Ваш інтелектуальний партнер у навігації складним ландшафтом кібербезпеки.
               Відстежуйте, аналізуйте та зміцнюйте свій цифровий захист.
