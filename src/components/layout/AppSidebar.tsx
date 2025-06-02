@@ -17,9 +17,9 @@ import {
   LayoutDashboard,
   Archive,
   Activity,
-  BrainCircuit,
+  // BrainCircuit, // Removed
   Calculator,
-  UserCheck,
+  // UserCheck, // Removed
   FileText,
   Github,
   Settings,
@@ -30,9 +30,9 @@ const navItems = [
   { href: '/', label: 'Інформаційна панель', icon: LayoutDashboard },
   { href: '/assets', label: 'Реєстр активів', icon: Archive },
   { href: '/monitoring', label: 'Моніторинг', icon: Activity },
-  { href: '/threat-analyzer', label: 'Аналізатор загроз', icon: BrainCircuit },
+  // { href: '/threat-analyzer', label: 'Аналізатор загроз', icon: BrainCircuit }, // Removed
   { href: '/risk-calculator', label: 'Калькулятор ризиків', icon: Calculator },
-  { href: '/security-advisor', label: 'Радник з безпеки', icon: UserCheck },
+  // { href: '/security-advisor', label: 'Радник з безпеки', icon: UserCheck }, // Removed
   { href: '/reporting', label: 'Звіти', icon: FileText },
 ];
 

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getSecurityRecommendations, SecurityRecommendationsInput, SecurityRecommendationsOutput } from '@/ai/flows/security-advisor';
+// import { getSecurityRecommendations, SecurityRecommendationsInput, SecurityRecommendationsOutput } from '@/ai/flows/security-advisor'; // Removed AI flow
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -107,7 +107,7 @@ const threatConfigurations: Record<string, {
   informationResource: typeof informationResourceOptions[number];
   icsTool: typeof icsToolOptions[number];
 }> = {
-  "Несанкціонований доступ до бази користувачів": { // Updated from "Несанкціонований доступ до даних"
+  "Несанкціонований доступ до бази користувачів": { 
     identifier: 'ID.AM-3', software: 'Власна CRM система', hardware: 'Пошта сервер', informationResource: 'База даних клієнтів', icsTool: 'WAF ModSecurity',
   },
   "Шкідливе програмне забезпечення": {
@@ -116,7 +116,7 @@ const threatConfigurations: Record<string, {
   "Фішинг": {
     identifier: 'ID.AM-2', software: '-', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Фільтр електронної пошти',
   },
-  "DoS-атака на портал": { // Updated from "Відмова в обслуговуванні (DoS/DDoS)"
+  "DoS-атака на портал": { 
     identifier: 'ID.AM-5', software: 'Веб-портал', hardware: 'Мережеве обладнання (маршрутизатори, комутатори)', informationResource: 'Веб-сайт компанії', icsTool: 'Система захисту від DDoS',
   },
   "Порушення політики безпеки": {
@@ -234,7 +234,7 @@ const formatTargetProfileDataToString = (data: z.infer<typeof targetProfileDetai
 
 
 export default function ReportingPage() {
-  const [recommendations, setRecommendations] = useState<SecurityRecommendationsOutput | null>(null);
+  // const [recommendations, setRecommendations] = useState<SecurityRecommendationsOutput | null>(null); // Removed AI recommendations
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -288,7 +288,7 @@ export default function ReportingPage() {
   const handleGenerateReport = async (values: ReportPageFormValues) => {
     setIsLoading(true);
     setError(null);
-    setRecommendations(null);
+    // setRecommendations(null); // AI recommendations removed
     setReportGenerated(false);
 
     const currentProfileString = formatCurrentProfileDataToString(values.currentProfileDetails);
@@ -297,20 +297,22 @@ export default function ReportingPage() {
     setDisplayedCurrentProfile(currentProfileString);
     setDisplayedTargetProfile(targetProfileString);
 
-    try {
-      const input: SecurityRecommendationsInput = { 
-        currentSecurityState: currentProfileString, 
-        desiredSecurityState: targetProfileString 
-      };
-      const output = await getSecurityRecommendations(input); 
-      setRecommendations(output);
-      setReportGenerated(true);
-    } catch (err) {
-      console.error("Report Generation Error:", err);
-      setError(err instanceof Error ? err.message : 'Сталася невідома помилка під час генерації звіту.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Removed AI call
+    // try {
+    //   const input: SecurityRecommendationsInput = { 
+    //     currentSecurityState: currentProfileString, 
+    //     desiredSecurityState: targetProfileString 
+    //   };
+    //   const output = await getSecurityRecommendations(input); 
+    //   setRecommendations(output);
+    // } catch (err) {
+    //   console.error("Report Generation Error:", err);
+    //   setError(err instanceof Error ? err.message : 'Сталася невідома помилка під час генерації звіту.');
+    // } finally {
+    //   setIsLoading(false);
+    // }
+    setReportGenerated(true); // Report is generated based on form data now
+    setIsLoading(false);
   };
 
   const handlePrint = () => {
@@ -566,7 +568,7 @@ export default function ReportingPage() {
         <FileText className="h-8 w-8 text-primary" />
       </div>
       <CardDescription>
-        Створіть звіт, що порівнює поточний та цільовий профілі безпеки, включаючи рекомендації на основі ШІ.
+        Створіть звіт, що порівнює поточний та цільовий профілі безпеки.
       </CardDescription>
 
       {!reportGenerated ? (
@@ -617,7 +619,7 @@ export default function ReportingPage() {
       {reportGenerated && (
         <>
         <div className="flex justify-end gap-2 mb-4 print:hidden">
-            <Button variant="outline" onClick={() => { setReportGenerated(false); setRecommendations(null); setError(null); }}>
+            <Button variant="outline" onClick={() => { setReportGenerated(false); setError(null); }}>
                 Створити новий звіт
             </Button>
             <Button onClick={handlePrint}>
@@ -647,40 +649,8 @@ export default function ReportingPage() {
               </ScrollArea>
             </section>
 
-            <Separator className="my-6" />
-
-            {isLoading && !recommendations && (
-                 <div className="flex items-center justify-center py-6">
-                    <Loader2 className="mr-2 h-8 w-8 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Завантаження рекомендацій...</p>
-                 </div>
-            )}
-
-            {error && (
-                <Card className="border-destructive bg-destructive/10 mt-4">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-destructive">
-                    <AlertTriangle className="mr-2 h-5 w-5" />
-                    Помилка в рекомендаціях
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-destructive">{error}</p>
-                </CardContent>
-                </Card>
-            )}
+            {/* Removed AI Recommendations Section */}
             
-            {recommendations && !error && (
-              <section>
-                <h3 className="text-xl font-headline mb-2 border-b pb-1 flex items-center text-primary">
-                  <CheckCircle2 className="mr-2 h-5 w-5" />
-                  Рекомендації на основі ШІ
-                </h3>
-                <ScrollArea className="h-auto max-h-[400px] w-full rounded-md border p-3 bg-muted/20 print:h-auto print:border-none print:p-0">
-                  <pre className="whitespace-pre-wrap text-sm">{recommendations.recommendations}</pre>
-                </ScrollArea>
-              </section>
-            )}
           </CardContent>
           <CardFooter className="print:hidden">
             <p className="text-xs text-muted-foreground text-center w-full">
