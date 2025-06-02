@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Asset, Weakness } from '@/lib/types';
-import { assetTypes, weaknessSeverities } from '@/lib/types';
+import { weaknessSeverities } from '@/lib/types'; // Removed assetTypes as it's not directly used here anymore
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,7 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 
 const displayCategoryMap = {
@@ -47,6 +47,77 @@ const categoryIcons: Record<DisplayCategoryKey, React.ElementType> = {
   'Інформаційні ресурси': Database,
 };
 
+const seedInitialAssets = async () => {
+  const batch = writeBatch(db);
+  const assetsCollectionRef = collection(db, 'assets');
+
+  const initialAssetsData: Omit<Asset, 'id'>[] = [
+    {
+      name: "Головний Сервер Сховища",
+      type: "Обладнання",
+      description: "Сервер для зберігання критично важливих даних компанії.",
+      weaknesses: [
+        { id: "seed_w_hw1", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Відсутність фізичного замка на серверній кімнаті", severity: "Висока" }
+      ]
+    },
+    {
+      name: "CRM Система \"КлієнтПлюс\"",
+      type: "Програмне забезпечення",
+      description: "Система управління взаємовідносинами з клієнтами.",
+      weaknesses: [
+        { id: "seed_w_sw1", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Використання стандартного паролю адміністратора 'admin/admin'", severity: "Критична" }
+      ]
+    },
+    {
+      name: "База Даних Клієнтів",
+      type: "Інформація",
+      description: "Містить персональні дані та історію замовлень клієнтів.",
+      weaknesses: [
+        { id: "seed_w_info1", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Резервні копії не шифруються належним чином", severity: "Середня" }
+      ]
+    },
+     {
+      name: "Корпоративний Ноутбук Менеджера",
+      type: "Обладнання",
+      description: "Ноутбук Dell XPS 15, використовується для доступу до корпоративних ресурсів.",
+      weaknesses: [
+        { id: "seed_w_hw2", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Відсутнє шифрування жорсткого диска", severity: "Висока" },
+        { id: "seed_w_hw3", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Застаріла версія антивірусу", severity: "Середня" }
+      ]
+    },
+    {
+      name: "Веб-сервер Apache",
+      type: "Програмне забезпечення",
+      description: "Обслуговує корпоративний веб-сайт.",
+      weaknesses: [
+        { id: "seed_w_sw2", assetId: "AUTO_GENERATED_BY_FIRESTORE", description: "Дозволено лістинг директорій", severity: "Низька" }
+      ]
+    }
+  ];
+
+  initialAssetsData.forEach(assetData => {
+    const assetRef = doc(collection(db, 'assets')); // Create a new doc ref to get ID
+    
+    // For embedded weaknesses, update the placeholder assetId with the actual ID
+    const weaknessesWithActualAssetId = assetData.weaknesses?.map(w => ({
+      ...w,
+      assetId: assetRef.id // Use the generated ID of the parent asset
+    })) || [];
+
+    batch.set(assetRef, { ...assetData, weaknesses: weaknessesWithActualAssetId });
+  });
+
+  try {
+    await batch.commit();
+    console.log("Initial assets seeded successfully.");
+    return true; // Indicate seeding was done
+  } catch (error) {
+    console.error("Error seeding initial assets: ", error);
+    return false; // Indicate seeding failed or was not needed
+  }
+};
+
+
 export default function AssetsPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoadingAssets, setIsLoadingAssets] = useState(true);
@@ -70,32 +141,48 @@ export default function AssetsPage() {
     defaultValues: { description: "", severity: "Середня" },
   });
 
-  const fetchAssets = useCallback(async () => {
+  const fetchAssets = useCallback(async (forceRefresh = false) => {
     setIsLoadingAssets(true);
     try {
-      const assetsCollection = collection(db, 'assets');
-      const assetSnapshot = await getDocs(assetsCollection);
-      const assetsList = assetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
-      setAssets(assetsList);
+      const assetsCollectionRef = collection(db, 'assets');
+      const assetSnapshot = await getDocs(assetsCollectionRef);
+      
+      if (assetSnapshot.empty && !forceRefresh) { // Only seed if empty and not a forced refresh after seeding
+        const seeded = await seedInitialAssets();
+        if (seeded) {
+          // Re-fetch after seeding
+          const newSnapshot = await getDocs(assetsCollectionRef);
+          const assetsList = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
+          setAssets(assetsList);
+          toast({ title: "Вітаємо!", description: "Додано декілька прикладів активів для початку." });
+        } else {
+           setAssets([]); // Set to empty if seeding failed but snapshot was empty
+        }
+      } else {
+        const assetsList = assetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
+        setAssets(assetsList);
+      }
     } catch (error) {
       console.error("Error fetching assets: ", error);
       toast({ title: "Помилка", description: "Не вдалося завантажити активи.", variant: "destructive" });
     } finally {
       setIsLoadingAssets(false);
     }
-  }, [toast]);
+  }, [toast]); // Removed currentCategory from dependencies, type is fixed in dialog
 
   useEffect(() => {
     fetchAssets();
   }, [fetchAssets]);
 
   useEffect(() => {
-    if (editingAsset) {
-      assetForm.reset(editingAsset);
-    } else {
+    // Update default type in form when category changes AND when dialog opens for a new asset
+    if (!editingAsset) {
       assetForm.reset({ name: "", type: displayCategoryMap[currentCategory], description: "" });
+    } else {
+      assetForm.reset(editingAsset); // For editing, keep the asset's original type
     }
   }, [editingAsset, assetForm, currentCategory]);
+
 
   useEffect(() => {
     if (editingWeakness) {
@@ -113,10 +200,11 @@ export default function AssetsPage() {
         await updateDoc(assetDocRef, values);
         toast({ title: "Успіх", description: "Актив оновлено." });
       } else {
+        // For new assets, the type is correctly set from currentCategory by the useEffect above
         await addDoc(collection(db, "assets"), { ...values, weaknesses: [] });
         toast({ title: "Успіх", description: "Актив додано." });
       }
-      fetchAssets();
+      await fetchAssets(true); // Force refresh to show changes
       setIsAssetDialogOpen(false);
       setEditingAsset(null);
     } catch (error) {
@@ -133,23 +221,30 @@ export default function AssetsPage() {
     
     try {
       const assetDocRef = doc(db, "assets", assetToManageWeakness.id);
-      if (editingWeakness) {
-        
+      if (editingWeakness) { // Editing existing weakness
+        // To edit an item in an array, we remove the old one and add the new one.
+        // First, find the full old weakness object to remove.
         const weaknessToRemove = assetToManageWeakness.weaknesses?.find(w => w.id === editingWeakness.id);
         if (weaknessToRemove) {
             await updateDoc(assetDocRef, { weaknesses: arrayRemove(weaknessToRemove) });
         }
-        const updatedWeakness = { ...values, id: editingWeakness.id, assetId: assetToManageWeakness.id };
+        // Then, add the updated weakness object.
+        const updatedWeakness = { ...editingWeakness, ...values }; // Preserve id and assetId, update other values
         await updateDoc(assetDocRef, { weaknesses: arrayUnion(updatedWeakness) });
         toast({ title: "Успіх", description: "Вразливість оновлено." });
-      } else {
-        const newWeakness = { ...values, id: Date.now().toString(), assetId: assetToManageWeakness.id };
+      } else { // Adding new weakness
+        const newWeakness: Weakness = { 
+            ...values, 
+            id: doc(collection(db, 'weakness_ids')).id, // Generate a unique ID for the weakness
+            assetId: assetToManageWeakness.id 
+        };
         await updateDoc(assetDocRef, { weaknesses: arrayUnion(newWeakness) });
         toast({ title: "Успіх", description: "Вразливість додано." });
       }
-      fetchAssets(); 
+      await fetchAssets(true); 
       setIsWeaknessDialogOpen(false);
       setEditingWeakness(null);
+      setAssetToManageWeakness(null);
     } catch (error) {
       console.error("Error submitting weakness: ", error);
       toast({ title: "Помилка", description: "Не вдалося зберегти вразливість.", variant: "destructive" });
@@ -160,22 +255,25 @@ export default function AssetsPage() {
 
   const openAddAssetDialog = () => {
     setEditingAsset(null);
+    // useEffect for assetForm will correctly set the type based on currentCategory
     assetForm.reset({ name: "", type: displayCategoryMap[currentCategory], description: "" });
     setIsAssetDialogOpen(true);
   };
 
   const openEditAssetDialog = (asset: Asset) => {
     setEditingAsset(asset);
-    assetForm.reset(asset);
+    assetForm.reset(asset); // This will set the form type to the asset's current type
     setIsAssetDialogOpen(true);
   };
 
   const deleteAsset = async (assetId: string) => {
-    if (!confirm("Ви впевнені, що хочете видалити цей актив?")) return;
+    // Find the asset to confirm its name
+    const assetToDelete = assets.find(a => a.id === assetId);
+    if (!confirm(`Ви впевнені, що хочете видалити актив "${assetToDelete?.name || assetId}"? Цю дію не можна буде скасувати.`)) return;
     try {
       await deleteDoc(doc(db, "assets", assetId));
-      toast({ title: "Успіх", description: "Актив видалено." });
-      fetchAssets();
+      toast({ title: "Успіх", description: `Актив "${assetToDelete?.name || assetId}" видалено.` });
+      await fetchAssets(true);
     } catch (error) {
       console.error("Error deleting asset: ", error);
       toast({ title: "Помилка", description: "Не вдалося видалити актив.", variant: "destructive" });
@@ -196,24 +294,19 @@ export default function AssetsPage() {
     setIsWeaknessDialogOpen(true);
   };
   
-  const deleteWeakness = async (assetId: string, weaknessId: string) => {
-    if (!confirm("Ви впевнені, що хочете видалити цю вразливість?")) return;
+  const deleteWeakness = async (targetAsset: Asset, weaknessId: string) => {
+    const weaknessToDelete = targetAsset.weaknesses?.find(w => w.id === weaknessId);
+    if (!weaknessToDelete) {
+        toast({ title: "Помилка", description: "Вразливість не знайдено для видалення.", variant: "destructive" });
+        return;
+    }
+    if (!confirm(`Ви впевнені, що хочете видалити вразливість "${weaknessToDelete.description}" для активу "${targetAsset.name}"?`)) return;
     
     try {
-        const assetRef = doc(db, "assets", assetId);
-        const targetAsset = assets.find(a => a.id === assetId);
-        if (!targetAsset || !targetAsset.weaknesses) {
-            toast({ title: "Помилка", description: "Актив не знайдено.", variant: "destructive" });
-            return;
-        }
-        const weaknessToRemove = targetAsset.weaknesses.find(w => w.id === weaknessId);
-        if (!weaknessToRemove) {
-            toast({ title: "Помилка", description: "Вразливість не знайдено.", variant: "destructive" });
-            return;
-        }
-        await updateDoc(assetRef, { weaknesses: arrayRemove(weaknessToRemove) });
+        const assetRef = doc(db, "assets", targetAsset.id);
+        await updateDoc(assetRef, { weaknesses: arrayRemove(weaknessToDelete) });
         toast({ title: "Успіх", description: "Вразливість видалено." });
-        fetchAssets(); 
+        await fetchAssets(true); 
     } catch (error) {
         console.error("Error deleting weakness: ", error);
         toast({ title: "Помилка", description: "Не вдалося видалити вразливість.", variant: "destructive" });
@@ -282,7 +375,7 @@ export default function AssetsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"> {/* Added xl:grid-cols-3 for better layout on large screens */}
           {displayedAssets.map(asset => (
             <Card key={asset.id} className="flex flex-col">
               <CardHeader>
@@ -292,16 +385,16 @@ export default function AssetsPage() {
                     <Badge variant="secondary" className="mt-1">{asset.type}</Badge>
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => openEditAssetDialog(asset)}><Edit3 className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteAsset(asset.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => openEditAssetDialog(asset)} aria-label={`Редагувати ${asset.name}`}><Edit3 className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteAsset(asset.id)} aria-label={`Видалити ${asset.name}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
                 </div>
                 <CardDescription className="pt-2">{asset.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="weaknesses">
-                    <AccordionTrigger className="text-base">
+                  <AccordionItem value={`weaknesses-${asset.id}`}>
+                    <AccordionTrigger className="text-base hover:no-underline">
                       <div className="flex items-center">
                         <ShieldAlert className="mr-2 h-5 w-5 text-primary" />
                         Вразливості ({asset.weaknesses?.length || 0})
@@ -311,14 +404,14 @@ export default function AssetsPage() {
                       {asset.weaknesses && asset.weaknesses.length > 0 ? (
                         <ul className="space-y-2 mt-2">
                           {asset.weaknesses.map(weakness => (
-                            <li key={weakness.id} className="p-3 rounded-md border bg-card/50 flex justify-between items-start">
-                              <div>
-                                <p className="font-semibold">{weakness.description}</p>
-                                <Badge className={cn("text-xs", severityBadgeColor(weakness.severity))}>{weakness.severity}</Badge>
+                            <li key={weakness.id} className="p-3 rounded-md border bg-card/50 flex justify-between items-start gap-2">
+                              <div className="flex-1">
+                                <p className="font-semibold break-words">{weakness.description}</p>
+                                <Badge className={cn("text-xs mt-1", severityBadgeColor(weakness.severity))}>{weakness.severity}</Badge>
                               </div>
                               <div className="flex space-x-1">
-                                <Button variant="ghost" size="sm" onClick={() => openEditWeaknessDialog(asset, weakness)}><Edit3 className="h-3 w-3" /></Button>
-                                <Button variant="ghost" size="sm" onClick={() => deleteWeakness(asset.id, weakness.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditWeaknessDialog(asset, weakness)} aria-label={`Редагувати вразливість ${weakness.description}`}><Edit3 className="h-3.5 w-3.5" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteWeakness(asset, weakness.id)} aria-label={`Видалити вразливість ${weakness.description}`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                               </div>
                             </li>
                           ))}
@@ -338,7 +431,8 @@ export default function AssetsPage() {
         </div>
       )}
 
-      <Dialog open={isAssetDialogOpen} onOpenChange={setIsAssetDialogOpen}>
+      {/* Asset Dialog */}
+      <Dialog open={isAssetDialogOpen} onOpenChange={(isOpen) => { setIsAssetDialogOpen(isOpen); if (!isOpen) setEditingAsset(null); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingAsset ? "Редагувати актив" : `Додати новий актив до "${currentCategory}"`}</DialogTitle>
@@ -364,18 +458,28 @@ export default function AssetsPage() {
                     <FormLabel>Тип активу</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      value={field.value}
-                      disabled={true} 
+                      value={field.value} // This value is now correctly set by useEffect or when editing
+                      disabled={!!editingAsset} // Disable if editing an existing asset to prevent changing type across categories
                     >
                       <FormControl><SelectTrigger><SelectValue placeholder="Виберіть тип активу" /></SelectTrigger></FormControl>
                       <SelectContent>
-                        {Object.values(displayCategoryMap).map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                        {Object.entries(displayCategoryMap).map(([displayName, actualType]) => (
+                          <SelectItem key={actualType} value={actualType} disabled={actualType !== displayCategoryMap[currentCategory] && !editingAsset}>
+                            {displayName} ({actualType})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                     <p className="text-xs text-muted-foreground pt-1">
-                      Тип встановлено як "{assetForm.getValues("type")}" для поточної категорії.
-                    </p>
+                    {editingAsset ? (
+                         <p className="text-xs text-muted-foreground pt-1">
+                            Тип активу не можна змінити після створення, щоб уникнути переміщення між категоріями.
+                        </p>
+                    ) : (
+                        <p className="text-xs text-muted-foreground pt-1">
+                            Тип автоматично встановлено як "{currentCategory}" ({assetForm.getValues("type")}).
+                        </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -402,10 +506,11 @@ export default function AssetsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isWeaknessDialogOpen} onOpenChange={setIsWeaknessDialogOpen}>
+      {/* Weakness Dialog */}
+      <Dialog open={isWeaknessDialogOpen} onOpenChange={(isOpen) => { setIsWeaknessDialogOpen(isOpen); if (!isOpen) { setEditingWeakness(null); setAssetToManageWeakness(null); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingWeakness ? "Редагувати вразливість" : "Додати нову вразливість"} для {assetToManageWeakness?.name}</DialogTitle>
+            <DialogTitle>{editingWeakness ? "Редагувати вразливість" : "Додати нову вразливість"} для активу "{assetToManageWeakness?.name}"</DialogTitle>
           </DialogHeader>
            <Form {...weaknessForm}>
             <form onSubmit={weaknessForm.handleSubmit(handleWeaknessSubmit)} className="space-y-4">
@@ -450,4 +555,3 @@ export default function AssetsPage() {
     </div>
   );
 }
-
