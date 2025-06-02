@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Asset, Weakness } from '@/lib/types';
 import { assetTypes, weaknessSeverities } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { PlusCircle, Edit3, Trash2, ShieldAlert, ListChecks, Server, Laptop, Database } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, ShieldAlert, ListChecks, Server, Laptop, Database, Loader2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { useToast } from "@/hooks/use-toast";
+
 
 const assetFormSchema = z.object({
   name: z.string().min(1, "Назва обов'язкова"),
-  type: z.enum(assetTypes), // assetTypes includes 'Персонал'
+  type: z.enum(Object.values(displayCategoryMap) as [Asset['type'], ...Asset['type'][]]),
   description: z.string().min(1, "Опис обов'язковий"),
 });
 
@@ -46,24 +50,17 @@ const categoryIcons: Record<DisplayCategoryKey, React.ElementType> = {
 
 export default function AssetsPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(true);
+  const [isSubmittingAsset, setIsSubmittingAsset] = useState(false);
+  const [isSubmittingWeakness, setIsSubmittingWeakness] = useState(false);
   const [isAssetDialogOpen, setIsAssetDialogOpen] = useState(false);
   const [isWeaknessDialogOpen, setIsWeaknessDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [editingWeakness, setEditingWeakness] = useState<Weakness | null>(null);
   const [assetToManageWeakness, setAssetToManageWeakness] = useState<Asset | null>(null);
   const [currentCategory, setCurrentCategory] = useState<DisplayCategoryKey>(categoryKeys[0]);
+  const { toast } = useToast();
 
-  const [nextId, setNextId] = useState(0);
-  useEffect(() => {
-    setNextId(Date.now()); 
-  }, []);
-
-  const getUniqueId = () => {
-    const currentId = nextId;
-    setNextId(prev => prev + 1);
-    return currentId.toString();
-  };
-  
   const assetForm = useForm<z.infer<typeof assetFormSchema>>({
     resolver: zodResolver(assetFormSchema),
     defaultValues: { name: "", type: displayCategoryMap[currentCategory], description: "" },
@@ -74,11 +71,29 @@ export default function AssetsPage() {
     defaultValues: { description: "", severity: "Середня" },
   });
 
+  const fetchAssets = useCallback(async () => {
+    setIsLoadingAssets(true);
+    try {
+      const assetsCollection = collection(db, 'assets');
+      const assetSnapshot = await getDocs(assetsCollection);
+      const assetsList = assetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
+      setAssets(assetsList);
+    } catch (error) {
+      console.error("Error fetching assets: ", error);
+      toast({ title: "Помилка", description: "Не вдалося завантажити активи.", variant: "destructive" });
+    } finally {
+      setIsLoadingAssets(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchAssets();
+  }, [fetchAssets]);
+
   useEffect(() => {
     if (editingAsset) {
       assetForm.reset(editingAsset);
     } else {
-      // When adding, ensure type is set by currentCategory
       assetForm.reset({ name: "", type: displayCategoryMap[currentCategory], description: "" });
     }
   }, [editingAsset, assetForm, currentCategory]);
@@ -91,35 +106,59 @@ export default function AssetsPage() {
     }
   }, [editingWeakness, weaknessForm]);
 
-  const handleAssetSubmit = (values: z.infer<typeof assetFormSchema>) => {
-    if (editingAsset) {
-      setAssets(assets.map(asset => asset.id === editingAsset.id ? { ...asset, ...values } : asset));
-    } else {
-      setAssets([...assets, { ...values, id: getUniqueId(), weaknesses: [] }]);
+  const handleAssetSubmit = async (values: z.infer<typeof assetFormSchema>) => {
+    setIsSubmittingAsset(true);
+    try {
+      if (editingAsset) {
+        const assetDocRef = doc(db, "assets", editingAsset.id);
+        await updateDoc(assetDocRef, values);
+        toast({ title: "Успіх", description: "Актив оновлено." });
+      } else {
+        await addDoc(collection(db, "assets"), { ...values, weaknesses: [] });
+        toast({ title: "Успіх", description: "Актив додано." });
+      }
+      fetchAssets();
+      setIsAssetDialogOpen(false);
+      setEditingAsset(null);
+    } catch (error) {
+      console.error("Error submitting asset: ", error);
+      toast({ title: "Помилка", description: "Не вдалося зберегти актив.", variant: "destructive" });
+    } finally {
+      setIsSubmittingAsset(false);
     }
-    setIsAssetDialogOpen(false);
-    setEditingAsset(null);
   };
 
-  const handleWeaknessSubmit = (values: z.infer<typeof weaknessFormSchema>) => {
+  const handleWeaknessSubmit = async (values: z.infer<typeof weaknessFormSchema>) => {
     if (!assetToManageWeakness) return;
-
-    const newWeakness = { ...values, id: getUniqueId(), assetId: assetToManageWeakness.id };
+    setIsSubmittingWeakness(true);
     
-    setAssets(prevAssets => 
-      prevAssets.map(asset => {
-        if (asset.id === assetToManageWeakness.id) {
-          const updatedWeaknesses = editingWeakness 
-            ? (asset.weaknesses || []).map(w => w.id === editingWeakness.id ? newWeakness : w)
-            : [...(asset.weaknesses || []), newWeakness];
-          return { ...asset, weaknesses: updatedWeaknesses };
+    try {
+      const assetDocRef = doc(db, "assets", assetToManageWeakness.id);
+      if (editingWeakness) {
+        // To edit a weakness, we remove the old one and add the new one.
+        // This is simpler than finding and updating in place in an array if order doesn't matter.
+        // If order matters or for very large arrays, a more complex update might be needed.
+        const weaknessToRemove = assetToManageWeakness.weaknesses?.find(w => w.id === editingWeakness.id);
+        if (weaknessToRemove) {
+            await updateDoc(assetDocRef, { weaknesses: arrayRemove(weaknessToRemove) });
         }
-        return asset;
-      })
-    );
-    
-    setIsWeaknessDialogOpen(false);
-    setEditingWeakness(null);
+        const updatedWeakness = { ...values, id: editingWeakness.id, assetId: assetToManageWeakness.id };
+        await updateDoc(assetDocRef, { weaknesses: arrayUnion(updatedWeakness) });
+        toast({ title: "Успіх", description: "Вразливість оновлено." });
+      } else {
+        const newWeakness = { ...values, id: Date.now().toString(), assetId: assetToManageWeakness.id };
+        await updateDoc(assetDocRef, { weaknesses: arrayUnion(newWeakness) });
+        toast({ title: "Успіх", description: "Вразливість додано." });
+      }
+      fetchAssets(); // Refetch to get the updated asset
+      setIsWeaknessDialogOpen(false);
+      setEditingWeakness(null);
+    } catch (error) {
+      console.error("Error submitting weakness: ", error);
+      toast({ title: "Помилка", description: "Не вдалося зберегти вразливість.", variant: "destructive" });
+    } finally {
+      setIsSubmittingWeakness(false);
+    }
   };
 
   const openAddAssetDialog = () => {
@@ -130,13 +169,20 @@ export default function AssetsPage() {
 
   const openEditAssetDialog = (asset: Asset) => {
     setEditingAsset(asset);
-    // Type of asset being edited might not match currentCategory, that's fine
     assetForm.reset(asset);
     setIsAssetDialogOpen(true);
   };
 
-  const deleteAsset = (assetId: string) => {
-    setAssets(assets.filter(asset => asset.id !== assetId));
+  const deleteAsset = async (assetId: string) => {
+    if (!confirm("Ви впевнені, що хочете видалити цей актив?")) return;
+    try {
+      await deleteDoc(doc(db, "assets", assetId));
+      toast({ title: "Успіх", description: "Актив видалено." });
+      fetchAssets();
+    } catch (error) {
+      console.error("Error deleting asset: ", error);
+      toast({ title: "Помилка", description: "Не вдалося видалити актив.", variant: "destructive" });
+    }
   };
   
   const openAddWeaknessDialog = (asset: Asset) => {
@@ -153,15 +199,28 @@ export default function AssetsPage() {
     setIsWeaknessDialogOpen(true);
   };
   
-  const deleteWeakness = (assetId: string, weaknessId: string) => {
-    setAssets(prevAssets => 
-      prevAssets.map(asset => {
-        if (asset.id === assetId) {
-          return { ...asset, weaknesses: (asset.weaknesses || []).filter(w => w.id !== weaknessId) };
+  const deleteWeakness = async (assetId: string, weaknessId: string) => {
+    if (!confirm("Ви впевнені, що хочете видалити цю вразливість?")) return;
+    
+    try {
+        const assetRef = doc(db, "assets", assetId);
+        const targetAsset = assets.find(a => a.id === assetId);
+        if (!targetAsset || !targetAsset.weaknesses) {
+            toast({ title: "Помилка", description: "Актив не знайдено.", variant: "destructive" });
+            return;
         }
-        return asset;
-      })
-    );
+        const weaknessToRemove = targetAsset.weaknesses.find(w => w.id === weaknessId);
+        if (!weaknessToRemove) {
+            toast({ title: "Помилка", description: "Вразливість не знайдено.", variant: "destructive" });
+            return;
+        }
+        await updateDoc(assetRef, { weaknesses: arrayRemove(weaknessToRemove) });
+        toast({ title: "Успіх", description: "Вразливість видалено." });
+        fetchAssets(); // Refetch to update UI
+    } catch (error) {
+        console.error("Error deleting weakness: ", error);
+        toast({ title: "Помилка", description: "Не вдалося видалити вразливість.", variant: "destructive" });
+    }
   };
 
   const severityBadgeColor = (severity: Weakness['severity']) => {
@@ -182,7 +241,7 @@ export default function AssetsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-headline">Реєстр активів</h1>
       </div>
-      <CardDescription>Каталогізуйте обладнання, програмне забезпечення та інформаційні активи вашої організації за категоріями.</CardDescription>
+      <CardDescription>Каталогізуйте обладнання, програмне забезпечення та інформаційні активи вашої організації за категоріями. Дані зберігаються у Firestore.</CardDescription>
 
       <div className="flex space-x-2 mb-6 border-b pb-2">
         {categoryKeys.map(categoryName => {
@@ -209,7 +268,12 @@ export default function AssetsPage() {
         <Button onClick={openAddAssetDialog}><PlusCircle className="mr-2 h-4 w-4" /> Додати до "{currentCategory}"</Button>
       </div>
 
-      {displayedAssets.length === 0 ? (
+      {isLoadingAssets ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-4 text-lg">Завантаження активів...</p>
+        </div>
+      ) : displayedAssets.length === 0 ? (
         <Card className="text-center py-12">
           <CardHeader>
             <ListChecks className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -303,17 +367,17 @@ export default function AssetsPage() {
                     <FormLabel>Тип активу</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      value={field.value} // Ensure value is controlled
-                      // defaultValue={displayCategoryMap[currentCategory]} // This is handled by form.reset
+                      value={field.value}
+                      disabled={true} // Type is determined by category when adding/editing
                     >
                       <FormControl><SelectTrigger><SelectValue placeholder="Виберіть тип активу" /></SelectTrigger></FormControl>
                       <SelectContent>
-                        {assetTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                        {Object.values(displayCategoryMap).map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                    <p className="text-xs text-muted-foreground pt-1">
-                      Тип встановлено як "{displayCategoryMap[currentCategory]}" для поточної категорії. Ви можете змінити його, якщо потрібно.
+                     <p className="text-xs text-muted-foreground pt-1">
+                      Тип встановлено як "{assetForm.getValues("type")}" для поточної категорії.
                     </p>
                   </FormItem>
                 )}
@@ -330,8 +394,11 @@ export default function AssetsPage() {
                 )}
               />
               <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="outline">Скасувати</Button></DialogClose>
-                <Button type="submit">{editingAsset ? "Зберегти зміни" : "Додати актив"}</Button>
+                <DialogClose asChild><Button type="button" variant="outline" disabled={isSubmittingAsset}>Скасувати</Button></DialogClose>
+                <Button type="submit" disabled={isSubmittingAsset}>
+                  {isSubmittingAsset && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editingAsset ? "Зберегти зміни" : "Додати актив"}
+                </Button>
               </DialogFooter>
             </form>
           </Form>
@@ -373,8 +440,11 @@ export default function AssetsPage() {
                 )}
               />
               <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="outline">Скасувати</Button></DialogClose>
-                <Button type="submit">{editingWeakness ? "Зберегти зміни" : "Додати вразливість"}</Button>
+                <DialogClose asChild><Button type="button" variant="outline" disabled={isSubmittingWeakness}>Скасувати</Button></DialogClose>
+                <Button type="submit" disabled={isSubmittingWeakness}>
+                  {isSubmittingWeakness && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editingWeakness ? "Зберегти зміни" : "Додати вразливість"}
+                </Button>
               </DialogFooter>
             </form>
           </Form>
@@ -383,5 +453,3 @@ export default function AssetsPage() {
     </div>
   );
 }
-
-    
