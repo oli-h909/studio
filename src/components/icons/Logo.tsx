@@ -7,7 +7,7 @@ export function CyberGuardLogo({ className, size = "md" }: { className?: string,
     <div className={cn("flex items-center gap-2 text-primary-foreground", className)}>
       <ShieldCheck className={cn("text-primary", isSmall ? "h-6 w-6" : "h-8 w-8")} />
       <span className={cn("font-headline font-bold", isSmall ? "text-xl" : "text-2xl")}>
-        КіберСтраж AI
+        КіберСтраж
       </span>
     </div>
   );
