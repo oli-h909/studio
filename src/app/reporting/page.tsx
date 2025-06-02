@@ -20,22 +20,85 @@ import { Separator } from '@/components/ui/separator';
 
 const implementationStatusOptions = ["Реалізовано", "Не реалізовано", "Частково реалізовано", "Не застосовується"] as const;
 const implementationLevelOptions = ["1", "2", "3", "4"] as const;
-const relatedThreatOptions = [
-  "Несанкціонований доступ до даних", 
-  "Шкідливе програмне забезпечення", 
-  "Фішинг", 
-  "Відмова в обслуговуванні (DoS/DDoS)", 
-  "Порушення політики безпеки",
-  "Витік даних",
-  "Соціальна інженерія",
-  "Недостатній контроль доступу",
-  "Інше"
-] as const;
 
-const softwareOptions = ["Власна CRM система", "Антивірусне ПЗ", "MS Office", "1C Бухгалтерія", "Операційна система Windows", "База даних SQL", "Файловий сервер", "Інше", "-"] as const;
-const hardwareOptions = ["Пошта сервер", "Робочі станції", "Мережеве обладнання (маршрутизатори, комутатори)", "Сервер баз даних", "Інше", "-"] as const;
-const informationResourceOptions = ["База даних клієнтів", "Облікові дані користувачів", "Веб-сайт компанії", "Файловий сервер", "Політика безпеки компанії", "Конфіденційні документи", "Персональні дані співробітників", "Внутрішні ресурси компанії", "Інше", "-"] as const;
-const icsToolOptions = ["WAF ModSecurity", "Система виявлення вторгнень (IDS)", "Фільтр електронної пошти", "Система захисту від DDoS", "Антивірус Касперського", "SIEM система", "DLP система", "Навчальні платформи з кібербезпеки", "Система управління ідентифікацією (IDM)", "Інше", "-"] as const;
+const relatedThreatOptions = [
+  "SQL Injection на сервері БД",
+  "XSS у WordPress",
+  "Атака через шкідливі вкладення",
+  "Використання уразливого компоненту СМS",
+  "Витік даних",
+  "DoS-атака на портал",
+  "Збереження паролів у відкритому вигляді",
+  "Незахищене ліцензування CRM",
+  "Несанкціонований доступ до бази користувачів",
+  "Недостатній контроль доступу",
+  "Обхід автентифікації",
+  "Порушення політики безпеки",
+  "Соціальна інженерія",
+  "Фішинг",
+  "Фішинг-посилання у CRM",
+  "Шкідливе програмне забезпечення",
+  "Інше"
+].sort((a, b) => a === "Інше" ? 1 : b === "Інше" ? -1 : a.localeCompare(b)) as const;
+
+
+const softwareOptions = [
+  "1C Бухгалтерія",
+  "WordPress CMS",
+  "Антивірусне ПЗ",
+  "База даних SQL",
+  "Будь-яке ПЗ з автентифікацією",
+  "Веб-портал",
+  "Власна CRM система",
+  "Операційна система Windows",
+  "Поштовий клієнт",
+  "Система автентифікації",
+  "Файловий сервер",
+  "Інше",
+  "-"
+].sort((a, b) => (a === "Інше" || a === "-") ? 1 : (b === "Інше" || b === "-") ? -1 : a.localeCompare(b)) as const;
+
+const hardwareOptions = [
+  "Веб-сервер",
+  "Мережеве обладнання (маршрутизатори, комутатори)",
+  "Пошта сервер",
+  "Робочі станції",
+  "Сервер баз даних",
+  "Інше",
+  "-"
+].sort((a, b) => (a === "Інше" || a === "-") ? 1 : (b === "Інше" || b === "-") ? -1 : a.localeCompare(b)) as const;
+
+const informationResourceOptions = [
+  "База даних клієнтів",
+  "Веб-сайт компанії",
+  "Внутрішні ресурси компанії",
+  "Електронна пошта",
+  "Конфіденційні документи",
+  "Ліцензійні ключі ПЗ",
+  "Облікові дані користувачів",
+  "Персональні дані співробітників",
+  "Політика безпеки компанії",
+  "Файловий сервер",
+  "Інше",
+  "-"
+].sort((a, b) => (a === "Інше" || a === "-") ? 1 : (b === "Інше" || b === "-") ? -1 : a.localeCompare(b)) as const;
+
+const icsToolOptions = [
+  "DLP система",
+  "SIEM система",
+  "WAF ModSecurity",
+  "Антивірус Касперського",
+  "Менеджер паролів",
+  "Навчальні платформи з кібербезпеки",
+  "Сканер вразливостей",
+  "Система виявлення вторгнень (IDS)",
+  "Система захисту від DDoS",
+  "Система управління активами",
+  "Система управління ідентифікацією (IDM)",
+  "Фільтр електронної пошти",
+  "Інше",
+  "-"
+].sort((a, b) => (a === "Інше" || a === "-") ? 1 : (b === "Інше" || b === "-") ? -1 : a.localeCompare(b)) as const;
 
 const threatConfigurations: Record<string, {
   identifier: string;
@@ -44,7 +107,7 @@ const threatConfigurations: Record<string, {
   informationResource: typeof informationResourceOptions[number];
   icsTool: typeof icsToolOptions[number];
 }> = {
-  "Несанкціонований доступ до даних": {
+  "Несанкціонований доступ до бази користувачів": { // Updated from "Несанкціонований доступ до даних"
     identifier: 'ID.AM-3', software: 'Власна CRM система', hardware: 'Пошта сервер', informationResource: 'База даних клієнтів', icsTool: 'WAF ModSecurity',
   },
   "Шкідливе програмне забезпечення": {
@@ -53,8 +116,8 @@ const threatConfigurations: Record<string, {
   "Фішинг": {
     identifier: 'ID.AM-2', software: '-', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Фільтр електронної пошти',
   },
-  "Відмова в обслуговуванні (DoS/DDoS)": {
-    identifier: 'ID.AM-5', software: '-', hardware: 'Мережеве обладнання (маршрутизатори, комутатори)', informationResource: 'Веб-сайт компанії', icsTool: 'Система захисту від DDoS',
+  "DoS-атака на портал": { // Updated from "Відмова в обслуговуванні (DoS/DDoS)"
+    identifier: 'ID.AM-5', software: 'Веб-портал', hardware: 'Мережеве обладнання (маршрутизатори, комутатори)', informationResource: 'Веб-сайт компанії', icsTool: 'Система захисту від DDoS',
   },
   "Порушення політики безпеки": {
     identifier: 'ID.AM-1', software: 'Операційна система Windows', hardware: '-', informationResource: 'Політика безпеки компанії', icsTool: 'SIEM система',
@@ -67,6 +130,30 @@ const threatConfigurations: Record<string, {
   },
   "Недостатній контроль доступу": {
     identifier: 'ID.AM-3', software: 'Файловий сервер', hardware: '-', informationResource: 'Внутрішні ресурси компанії', icsTool: 'Система управління ідентифікацією (IDM)',
+  },
+  "SQL Injection на сервері БД": {
+    identifier: 'ID.AM-3', software: 'База даних SQL', hardware: 'Сервер баз даних', informationResource: 'База даних клієнтів', icsTool: 'WAF ModSecurity',
+  },
+  "XSS у WordPress": {
+    identifier: 'ID.AM-4', software: 'WordPress CMS', hardware: 'Веб-сервер', informationResource: 'Веб-сайт компанії', icsTool: 'WAF ModSecurity',
+  },
+  "Незахищене ліцензування CRM": {
+    identifier: 'ID.AM-1', software: 'Власна CRM система', hardware: '-', informationResource: 'Ліцензійні ключі ПЗ', icsTool: 'Система управління активами',
+  },
+  "Атака через шкідливі вкладення": {
+    identifier: 'ID.AM-1', software: 'Поштовий клієнт', hardware: 'Робочі станції', informationResource: 'Електронна пошта', icsTool: 'Фільтр електронної пошти',
+  },
+  "Обхід автентифікації": {
+    identifier: 'ID.AM-3', software: 'Система автентифікації', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Система управління ідентифікацією (IDM)',
+  },
+  "Фішинг-посилання у CRM": {
+    identifier: 'ID.AM-2', software: 'Власна CRM система', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Фільтр електронної пошти',
+  },
+  "Збереження паролів у відкритому вигляді": {
+    identifier: 'ID.AM-3', software: 'Будь-яке ПЗ з автентифікацією', hardware: '-', informationResource: 'Облікові дані користувачів', icsTool: 'Менеджер паролів',
+  },
+  "Використання уразливого компоненту СМS": {
+    identifier: 'ID.AM-1', software: 'WordPress CMS', hardware: 'Веб-сервер', informationResource: 'Веб-сайт компанії', icsTool: 'Сканер вразливостей',
   },
   "Інше": { identifier: 'N/A', software: '-', hardware: '-', informationResource: '-', icsTool: '-', }
 };
@@ -162,7 +249,7 @@ export default function ReportingPage() {
         identifier: 'ID.AM-3',
         implementationStatus: 'Реалізовано',
         implementationLevel: '3',
-        relatedThreat: 'Несанкціонований доступ до даних',
+        relatedThreat: 'Несанкціонований доступ до бази користувачів',
         software: 'Власна CRM система',
         hardware: 'Пошта сервер',
         informationResource: 'База даних клієнтів',
@@ -268,7 +355,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Програмне забезпечення</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть ПЗ" /></SelectTrigger></FormControl>
               <SelectContent>
                 {softwareOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -284,7 +371,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Апаратне забезпечення</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть апаратне забезпечення" /></SelectTrigger></FormControl>
               <SelectContent>
                 {hardwareOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -300,7 +387,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Інформаційний ресурс</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть інформаційний ресурс" /></SelectTrigger></FormControl>
               <SelectContent>
                 {informationResourceOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -316,7 +403,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Засіб ІКЗ</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть засіб ІКЗ" /></SelectTrigger></FormControl>
               <SelectContent>
                 {icsToolOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -606,4 +693,6 @@ export default function ReportingPage() {
     </div>
   );
 }
+    
+
     
