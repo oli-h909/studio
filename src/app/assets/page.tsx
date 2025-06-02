@@ -19,9 +19,16 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 
+const displayCategoryMap = {
+  'Апаратні засоби': 'Обладнання',
+  'Програмне забезпечення': 'Програмне забезпечення',
+  'Інформаційні ресурси': 'Інформація',
+} as const;
+type DisplayCategoryKey = keyof typeof displayCategoryMap;
+const categoryKeys = Object.keys(displayCategoryMap) as DisplayCategoryKey[];
 
 const assetFormSchema = z.object({
   name: z.string().min(1, "Назва обов'язкова"),
@@ -33,14 +40,6 @@ const weaknessFormSchema = z.object({
   description: z.string().min(1, "Опис обов'язковий"),
   severity: z.enum(weaknessSeverities),
 });
-
-const displayCategoryMap = {
-  'Апаратні засоби': 'Обладнання',
-  'Програмне забезпечення': 'Програмне забезпечення',
-  'Інформаційні ресурси': 'Інформація',
-} as const;
-type DisplayCategoryKey = keyof typeof displayCategoryMap;
-const categoryKeys = Object.keys(displayCategoryMap) as DisplayCategoryKey[];
 
 const categoryIcons: Record<DisplayCategoryKey, React.ElementType> = {
   'Апаратні засоби': Server,
@@ -135,9 +134,7 @@ export default function AssetsPage() {
     try {
       const assetDocRef = doc(db, "assets", assetToManageWeakness.id);
       if (editingWeakness) {
-        // To edit a weakness, we remove the old one and add the new one.
-        // This is simpler than finding and updating in place in an array if order doesn't matter.
-        // If order matters or for very large arrays, a more complex update might be needed.
+        
         const weaknessToRemove = assetToManageWeakness.weaknesses?.find(w => w.id === editingWeakness.id);
         if (weaknessToRemove) {
             await updateDoc(assetDocRef, { weaknesses: arrayRemove(weaknessToRemove) });
@@ -150,7 +147,7 @@ export default function AssetsPage() {
         await updateDoc(assetDocRef, { weaknesses: arrayUnion(newWeakness) });
         toast({ title: "Успіх", description: "Вразливість додано." });
       }
-      fetchAssets(); // Refetch to get the updated asset
+      fetchAssets(); 
       setIsWeaknessDialogOpen(false);
       setEditingWeakness(null);
     } catch (error) {
@@ -216,7 +213,7 @@ export default function AssetsPage() {
         }
         await updateDoc(assetRef, { weaknesses: arrayRemove(weaknessToRemove) });
         toast({ title: "Успіх", description: "Вразливість видалено." });
-        fetchAssets(); // Refetch to update UI
+        fetchAssets(); 
     } catch (error) {
         console.error("Error deleting weakness: ", error);
         toast({ title: "Помилка", description: "Не вдалося видалити вразливість.", variant: "destructive" });
@@ -368,7 +365,7 @@ export default function AssetsPage() {
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
-                      disabled={true} // Type is determined by category when adding/editing
+                      disabled={true} 
                     >
                       <FormControl><SelectTrigger><SelectValue placeholder="Виберіть тип активу" /></SelectTrigger></FormControl>
                       <SelectContent>
@@ -453,3 +450,4 @@ export default function AssetsPage() {
     </div>
   );
 }
+
