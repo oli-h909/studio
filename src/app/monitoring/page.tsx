@@ -85,22 +85,25 @@ export default function MonitoringPage() {
 
   useEffect(() => {
     const now = Date.now();
-    setNextEventId(now);
-    setNextLogId(now + 100000); // Ensure uniqueness from event IDs
-    
-    // Initial population
+    const numInitialNetEvents = 20;
+    const numInitialAccessLogs = 15;
+
+    // Initial population for network events
     const initialNetEvents: NetworkEvent[] = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < numInitialNetEvents; i++) {
         initialNetEvents.push(generateMockNetworkEvent((now + i).toString()));
     }
     setNetworkEvents(initialNetEvents.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+    setNextEventId(now + numInitialNetEvents); // Start next IDs after the initial ones
 
+    // Initial population for asset access logs
     const initialAccessLogs: AssetAccessLog[] = [];
-    for (let i = 0; i < 15; i++) {
-        initialAccessLogs.push(generateMockAssetAccessLog((now + 100000 + i).toString()));
+    const logIdBase = now + 100000; // Ensure base is different from event IDs
+    for (let i = 0; i < numInitialAccessLogs; i++) {
+        initialAccessLogs.push(generateMockAssetAccessLog((logIdBase + i).toString()));
     }
     setAssetAccessLogs(initialAccessLogs.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
-
+    setNextLogId(logIdBase + numInitialAccessLogs); // Start next IDs after the initial ones
   }, []);
 
   const getUniqueEventId = useCallback(() => {
