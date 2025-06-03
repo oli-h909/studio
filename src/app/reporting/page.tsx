@@ -31,113 +31,133 @@ import { useToast } from "@/hooks/use-toast";
 const implementationStatusOptions = ["Реалізовано", "Не реалізовано", "Частково реалізовано", "Не застосовується"] as const;
 const implementationLevelOptions = ["1", "2", "3", "4"] as const;
 
+type AssetCategoryKey = 'software' | 'hardware' | 'informationResource' | 'icsTool';
+
 const threatDetailsMap: Record<string, {
   identifier: string;
-  vulnerability: string; // Original "Вразливість"
-  ttpDescription: string; // "Можливі дії зловмисника"
-  threatDescription: string; // "Загроза (конкретний ризик)"
+  vulnerability: string;
+  ttpDescription: string;
+  threatDescription: string;
+  affectedAssetTypes: AssetCategoryKey[];
 }> = {
   "Атака через шкідливі вкладення": {
-    identifier: 'ID.AM-2',
+    identifier: 'ID.AM-2', // or ID.AM-5 if related to user behavior
     vulnerability: "Атака через шкідливі вкладення",
     ttpDescription: "Відкриття вкладення, інфікування систем шкідливим ПЗ",
-    threatDescription: "Інфікування робочих станцій або серверів, втрата контролю над системою"
+    threatDescription: "Інфікування робочих станцій або серверів, втрата контролю над системою",
+    affectedAssetTypes: ['software', 'hardware']
   },
   "Використання уразливого компонента CMS": {
     identifier: 'ID.AM-2',
     vulnerability: "Використання уразливого компонента CMS",
     ttpDescription: "Експлуатація вразливості, запуск шкідливого коду",
-    threatDescription: "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту"
+    threatDescription: "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту",
+    affectedAssetTypes: ['software']
   },
   "Витік даних": {
     identifier: 'ID.AM-3',
     vulnerability: "Витік даних",
     ttpDescription: "Несанкціонований доступ, копіювання, передача інформації",
-    threatDescription: "Втрата конфіденційної інформації, репутаційні й фінансові збитки"
+    threatDescription: "Втрата конфіденційної інформації, репутаційні й фінансові збитки",
+    affectedAssetTypes: ['informationResource']
   },
   "Збереження паролів у відкритому вигляді": {
-    identifier: 'ID.AM-3',
+    identifier: 'ID.AM-3', // As it's about data
     vulnerability: "Збереження паролів у відкритому вигляді",
     ttpDescription: "Викрадення або витік паролів",
-    threatDescription: "Несанкціонований доступ до систем і сервісів"
+    threatDescription: "Несанкціонований доступ до систем і сервісів",
+    affectedAssetTypes: ['informationResource', 'software'] // Config files, or app logic
   },
   "Недостатній контроль доступу": {
-    identifier: 'ID.AM-3',
+    identifier: 'ID.AM-3', // Access to information
     vulnerability: "Недостатній контроль доступу",
     ttpDescription: "Несанкціонований вхід, підміна прав користувачів",
-    threatDescription: "Порушення цілісності, витік даних, саботаж систем"
+    threatDescription: "Порушення цілісності, витік даних, саботаж систем",
+    affectedAssetTypes: ['informationResource', 'software', 'hardware']
   },
   "Незахищене ліцензування CRM": {
     identifier: 'ID.AM-2',
     vulnerability: "Незахищене ліцензування CRM",
     ttpDescription: "Викрадення ліцензійних ключів, використання піратських копій",
-    threatDescription: "Юридичні проблеми, втрата контролю над системою"
+    threatDescription: "Юридичні проблеми, втрата контролю над системою",
+    affectedAssetTypes: ['software']
   },
   "Несанкціонований доступ до бази користувачів": {
     identifier: 'ID.AM-3',
     vulnerability: "Несанкціонований доступ до бази користувачів",
     ttpDescription: "Викрадення або модифікація даних користувачів",
-    threatDescription: "Викрадення персональних даних, порушення аутентифікації"
+    threatDescription: "Викрадення персональних даних, порушення аутентифікації",
+    affectedAssetTypes: ['informationResource']
   },
   "Обхід автентифікації": {
-    identifier: 'ID.AM-2',
+    identifier: 'ID.AM-2', // System/software vulnerability
     vulnerability: "Обхід автентифікації",
     ttpDescription: "Використання вразливостей для обходу перевірки ідентичності",
-    threatDescription: "Несанкціонований доступ, компрометація систем"
+    threatDescription: "Несанкціонований доступ, компрометація систем",
+    affectedAssetTypes: ['software']
   },
   "Порушення політики безпеки": {
-    identifier: 'ID.AM-5',
+    identifier: 'ID.AM-5', // Personnel/Process related
     vulnerability: "Порушення політики безпеки",
     ttpDescription: "Несанкціоновані зміни, ігнорування правил",
-    threatDescription: "Підвищений ризик інцидентів, внутрішні загрози"
+    threatDescription: "Підвищений ризик інцидентів, внутрішні загрози",
+    affectedAssetTypes: ['software', 'hardware', 'informationResource'] // Can impact any
   },
   "Соціальна інженерія": {
     identifier: 'ID.AM-5',
     vulnerability: "Соціальна інженерія",
     ttpDescription: "Обман співробітників для отримання доступу",
-    threatDescription: "Витік інформації, компрометація облікових даних"
+    threatDescription: "Витік інформації, компрометація облікових даних",
+    affectedAssetTypes: ['informationResource'] // Primarily targets info like credentials
   },
   "Фішинг": {
     identifier: 'ID.AM-5',
     vulnerability: "Фішинг",
     ttpDescription: "Розсилання підробних листів для отримання даних",
-    threatDescription: "Крадіжка облікових даних, несанкціонований доступ"
+    threatDescription: "Крадіжка облікових даних, несанкціонований доступ",
+    affectedAssetTypes: ['informationResource'] // Primarily targets info like credentials
   },
   "Фішинг-посилання у CRM": {
     identifier: 'ID.AM-2',
     vulnerability: "Фішинг-посилання у CRM",
     ttpDescription: "Впровадження шкідливих посилань в CRM",
-    threatDescription: "Компрометація користувацьких акаунтів, втручання у роботу CRM"
+    threatDescription: "Компрометація користувацьких акаунтів, втручання у роботу CRM",
+    affectedAssetTypes: ['software']
   },
   "Шкідливе програмне забезпечення": {
     identifier: 'ID.AM-2',
     vulnerability: "Шкідливе програмне забезпечення",
     ttpDescription: "Інсталяція, поширення шкідливих модулів",
-    threatDescription: "Пошкодження систем, крадіжка даних, відмова у обслуговуванні"
+    threatDescription: "Пошкодження систем, крадіжка даних, відмова у обслуговуванні",
+    affectedAssetTypes: ['software', 'hardware']
   },
   "DoS-атака на портал": {
-    identifier: 'ID.AM-2',
+    identifier: 'ID.AM-2', // Affects system availability
     vulnerability: "DoS-атака на портал",
     ttpDescription: "Перевантаження сервера запитами",
-    threatDescription: "Недоступність сервісу для користувачів"
+    threatDescription: "Недоступність сервісу для користувачів",
+    affectedAssetTypes: ['software', 'hardware']
   },
   "SQL Injection на сервері бази даних": {
-    identifier: 'ID.AM-2',
+    identifier: 'ID.AM-2', // Technical vulnerability in software
     vulnerability: "SQL Injection на сервері бази даних",
     ttpDescription: "Вставка шкідливого SQL-коду",
-    threatDescription: "Викрадення, модифікація або видалення даних у базі"
+    threatDescription: "Викрадення, модифікація або видалення даних у базі",
+    affectedAssetTypes: ['software', 'informationResource']
   },
   "XSS у WordPress": {
     identifier: 'ID.AM-2',
     vulnerability: "XSS у WordPress",
     ttpDescription: "Впровадження шкідливого JavaScript-коду",
-    threatDescription: "Викрадення сесій, перенаправлення користувачів, викрадення даних"
+    threatDescription: "Викрадення сесій, перенаправлення користувачів, викрадення даних",
+    affectedAssetTypes: ['software']
   },
   "Інше": {
     identifier: 'N/A',
     vulnerability: "Інше",
     ttpDescription: "Опишіть можливі дії зловмисника...",
-    threatDescription: "Опишіть конкретний ризик..."
+    threatDescription: "Опишіть конкретний ризик...",
+    affectedAssetTypes: [] // No automatic filtering for "Інше"
   }
 };
 
@@ -386,7 +406,7 @@ export default function ReportingPage() {
       const ir = assetsList.filter(a => a.type === 'Інформація').map(a => a.name);
       setInformationResourceOptions(prev => [...new Set([...baseAssetOptions, ...ir])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
 
-      const ics = assetsList.filter(a => a.type === 'Обладнання' || a.type === 'Програмне забезпечення').map(a => a.name); // Assuming ICS tools can be HW or SW
+      const ics = assetsList.filter(a => a.type === 'Обладнання' || a.type === 'Програмне забезпечення').map(a => a.name); 
       setIcsToolOptions(prev => [...new Set([...baseAssetOptions, ...ics])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
 
     } catch (error) {
@@ -399,14 +419,26 @@ export default function ReportingPage() {
     fetchAssets();
   }, [fetchAssets]);
 
-  // Effect to set default asset selection ('-') if not already set
   const currentProfileDetailsWatch = useWatch({ control: form.control, name: 'currentProfileDetails' });
   useEffect(() => {
-    currentProfileDetailsWatch.forEach((_, index) => {
+    currentProfileDetailsWatch.forEach((threat, index) => {
       if (form.getValues(`currentProfileDetails.${index}.software`) === undefined) form.setValue(`currentProfileDetails.${index}.software`, '-', { shouldValidate: false });
       if (form.getValues(`currentProfileDetails.${index}.hardware`) === undefined) form.setValue(`currentProfileDetails.${index}.hardware`, '-', { shouldValidate: false });
       if (form.getValues(`currentProfileDetails.${index}.informationResource`) === undefined) form.setValue(`currentProfileDetails.${index}.informationResource`, '-', { shouldValidate: false });
       if (form.getValues(`currentProfileDetails.${index}.icsTool`) === undefined) form.setValue(`currentProfileDetails.${index}.icsTool`, '-', { shouldValidate: false });
+
+      // Apply asset filtering if relatedThreat is already set (e.g. on initial load with defaults)
+      const relatedThreatValue = form.getValues(`currentProfileDetails.${index}.relatedThreat`);
+      if (relatedThreatValue) {
+        const details = threatDetailsMap[relatedThreatValue];
+        if (details?.affectedAssetTypes && details.affectedAssetTypes.length > 0) {
+            const affected = details.affectedAssetTypes;
+            if (!affected.includes('software') && form.getValues(`currentProfileDetails.${index}.software`) !== '-') form.setValue(`currentProfileDetails.${index}.software`, '-', { shouldDirty: true, shouldValidate: true });
+            if (!affected.includes('hardware') && form.getValues(`currentProfileDetails.${index}.hardware`) !== '-') form.setValue(`currentProfileDetails.${index}.hardware`, '-', { shouldDirty: true, shouldValidate: true });
+            if (!affected.includes('informationResource') && form.getValues(`currentProfileDetails.${index}.informationResource`) !== '-') form.setValue(`currentProfileDetails.${index}.informationResource`, '-', { shouldDirty: true, shouldValidate: true });
+            if (!affected.includes('icsTool') && form.getValues(`currentProfileDetails.${index}.icsTool`) !== '-') form.setValue(`currentProfileDetails.${index}.icsTool`, '-', { shouldDirty: true, shouldValidate: true });
+        }
+      }
     });
   }, [currentProfileDetailsWatch, form]);
 
@@ -437,7 +469,7 @@ export default function ReportingPage() {
       const errorMessage = err instanceof Error ? err.message : 'Сталася невідома помилка під час генерації звіту.';
       setError(errorMessage);
       toast({ title: "Помилка ШІ", description: errorMessage, variant: "destructive" });
-      setReportGenerated(true); // Still show the non-AI part of the report
+      setReportGenerated(true); 
     } finally {
       setIsLoading(false);
     }
@@ -449,6 +481,15 @@ export default function ReportingPage() {
       form.setValue(`currentProfileDetails.${threatIndex}.identifier`, details.identifier, { shouldDirty: true });
       form.setValue(`currentProfileDetails.${threatIndex}.threatDescription`, details.threatDescription, { shouldDirty: true });
       form.setValue(`currentProfileDetails.${threatIndex}.ttpDescription`, details.ttpDescription, { shouldDirty: true });
+
+      if (details.affectedAssetTypes && details.affectedAssetTypes.length > 0) {
+        const affected = details.affectedAssetTypes;
+        if (!affected.includes('software')) form.setValue(`currentProfileDetails.${threatIndex}.software`, '-', { shouldDirty: true });
+        if (!affected.includes('hardware')) form.setValue(`currentProfileDetails.${threatIndex}.hardware`, '-', { shouldDirty: true });
+        if (!affected.includes('informationResource')) form.setValue(`currentProfileDetails.${threatIndex}.informationResource`, '-', { shouldDirty: true });
+        if (!affected.includes('icsTool')) form.setValue(`currentProfileDetails.${threatIndex}.icsTool`, '-', { shouldDirty: true });
+      }
+      // If affectedAssetTypes is empty or not defined (e.g., for "Інше"), existing asset selections are preserved.
     }
   };
 
@@ -746,6 +787,7 @@ export default function ReportingPage() {
       <CardDescription>
         Створіть звіт, що порівнює поточний та цільовий профілі безпеки, та отримайте рекомендації від ШІ.
         Актуальні активи підтягуються з Реєстру активів. Вразливості та відповідні поля заповнюються автоматично.
+        При виборі вразливості, нерелевантні типи активів будуть автоматично очищені (встановлені в "-").
       </CardDescription>
 
       {!reportGenerated ? (
@@ -770,15 +812,24 @@ export default function ReportingPage() {
                     onClick={() => {
                         const newThreatKey = relatedThreatOptions.find(opt => opt !== "Інше") || relatedThreatOptions[0];
                         const newThreatDetails = threatDetailsMap[newThreatKey] || threatDetailsMap["Інше"];
-                        appendCurrentThreat({
+                        const newThreatToAdd: SingleCurrentProfileThreatValues = {
                             ...defaultThreatValues, 
                             id: Date.now().toString(),
                             relatedThreat: newThreatKey,
                             identifier: newThreatDetails.identifier,
                             threatDescription: newThreatDetails.threatDescription,
                             ttpDescription: newThreatDetails.ttpDescription,
-                            comment: '', // Start with an empty comment for new threats
-                        });
+                            comment: '', 
+                        };
+                        // Manually apply asset filtering for the new threat based on its default vulnerability
+                        if (newThreatDetails.affectedAssetTypes && newThreatDetails.affectedAssetTypes.length > 0) {
+                            const affected = newThreatDetails.affectedAssetTypes;
+                            if (!affected.includes('software')) newThreatToAdd.software = '-';
+                            if (!affected.includes('hardware')) newThreatToAdd.hardware = '-';
+                            if (!affected.includes('informationResource')) newThreatToAdd.informationResource = '-';
+                            if (!affected.includes('icsTool')) newThreatToAdd.icsTool = '-';
+                        }
+                        appendCurrentThreat(newThreatToAdd);
                     }}
                     className="mt-2"
                   >
@@ -808,7 +859,7 @@ export default function ReportingPage() {
         </Card>
       ) : null}
 
-      {error && !isLoading && ( // Show AI error card only if AI part failed but report data is generated
+      {error && !isLoading && ( 
         <Card className="border-destructive bg-destructive/10">
           <CardHeader>
             <CardTitle className="flex items-center text-destructive">
@@ -869,14 +920,13 @@ export default function ReportingPage() {
 
             <Separator className="my-6" />
 
-            {isLoading && !aiAnalysisResult && ( // Show loader only when AI is processing and no result yet
+            {isLoading && !aiAnalysisResult && ( 
                 <div className="text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
                     <p className="mt-2 text-muted-foreground">Генерація аналізу ШІ...</p>
                 </div>
             )}
             
-            {/* Display AI Analysis section if it's successfully generated or if there was an error but we still want to show its placeholder */}
             {(!isLoading && aiAnalysisResult) || (!isLoading && error && reportGenerated) ? (
               <>
                 <section>
