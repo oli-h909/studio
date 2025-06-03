@@ -16,12 +16,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, FileText, Printer, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, FileText, Download, PlusCircle, Trash2 } from 'lucide-react'; // Changed Printer to Download
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useReactToPrint } from 'react-to-print';
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 
 const implementationStatusOptions = ["Реалізовано", "Не реалізовано", "Частково реалізовано", "Не застосовується"] as const;
@@ -55,79 +56,79 @@ const threatDetailsMap: Record<string, ThreatDetailValue> = {
     ttp: "Несанкціонований доступ, копіювання, передача інформації",
     affectedAssetTypes: ['informationResource']
   },
-  "Несанкціонований доступ до систем і сервісів через викрадені паролі": {
-    identifier: 'ID.AM-3',
+  "Несанкціонований доступ до систем і сервісів через викрадені паролі": { // Key changed to be more specific
+    identifier: 'ID.AM-3', // Assuming this relates to information assets (passwords)
     vulnerability: "Збереження паролів у відкритому вигляді",
     ttp: "Викрадення або витік паролів",
     affectedAssetTypes: ['informationResource', 'software']
   },
-  "Порушення цілісності, витік даних, саботаж систем через недостатній контроль доступу": {
-    identifier: 'ID.AM-3',
+  "Порушення цілісності, витік даних, саботаж систем через недостатній контроль доступу": { // Key changed
+    identifier: 'ID.AM-3', // General access control issue
     vulnerability: "Недостатній контроль доступу",
     ttp: "Несанкціонований вхід, підміна прав користувачів",
     affectedAssetTypes: ['informationResource', 'software', 'hardware']
   },
-  "Юридичні проблеми, втрата контролю над CRM через ліцензування": {
+  "Юридичні проблеми, втрата контролю над системою CRM через ліцензування": { // Key changed
     identifier: 'ID.AM-2',
     vulnerability: "Незахищене ліцензування CRM",
     ttp: "Викрадення ліцензійних ключів, використання піратських копій",
     affectedAssetTypes: ['software']
   },
-  "Викрадення персональних даних, порушення аутентифікації через доступ до бази користувачів": {
+  "Викрадення персональних даних, порушення аутентифікації через доступ до бази користувачів": { // Key changed
     identifier: 'ID.AM-3',
     vulnerability: "Несанкціонований доступ до бази користувачів",
     ttp: "Викрадення або модифікація даних користувачів",
     affectedAssetTypes: ['informationResource']
   },
-  "Несанкціонований доступ, компрометація систем через обхід автентифікації": {
+  "Несанкціонований доступ, компрометація систем через обхід автентифікації": { // Key changed
     identifier: 'ID.AM-2',
     vulnerability: "Обхід автентифікації",
     ttp: "Використання вразливостей для обходу перевірки ідентичності",
     affectedAssetTypes: ['software']
   },
-  "Підвищений ризик інцидентів, внутрішні загрози через порушення політики": {
+  "Підвищений ризик інцидентів, внутрішні загрози через порушення політики": { // Key changed
     identifier: 'ID.AM-5',
     vulnerability: "Порушення політики безпеки",
     ttp: "Несанкціоновані зміни, ігнорування правил",
     affectedAssetTypes: ['software', 'hardware', 'informationResource']
   },
-  "Витік інформації, компрометація облікових даних через соціальну інженерію": {
+  "Витік інформації, компрометація облікових даних через соціальну інженерію": { // Key changed
     identifier: 'ID.AM-5',
     vulnerability: "Соціальна інженерія",
     ttp: "Обман співробітників для отримання доступу",
     affectedAssetTypes: ['informationResource']
   },
-  "Крадіжка облікових даних, несанкціонований доступ через фішинг": {
+  "Крадіжка облікових даних, несанкціонований доступ через фішинг": { // Key changed
     identifier: 'ID.AM-5',
     vulnerability: "Фішинг",
     ttp: "Розсилання підробних листів для отримання даних",
     affectedAssetTypes: ['informationResource', 'software']
   },
-  "Компрометація користувацьких акаунтів, втручання у роботу CRM через фішинг-посилання": {
+  "Компрометація користувацьких акаунтів, втручання у роботу CRM через фішинг-посилання": { // Key changed
     identifier: 'ID.AM-2',
     vulnerability: "Фішинг-посилання у CRM",
     ttp: "Впровадження шкідливих посилань в CRM",
     affectedAssetTypes: ['software']
   },
-  "Пошкодження систем, крадіжка даних, відмова у обслуговуванні через шкідливе ПЗ": {
+  "Пошкодження систем, крадіжка даних, відмова у обслуговуванні через шкідливе ПЗ": { // Key changed
     identifier: 'ID.AM-2',
     vulnerability: "Шкідливе програмне забезпечення",
     ttp: "Інсталяція, поширення шкідливих модулів",
     affectedAssetTypes: ['software', 'hardware']
   },
-  "Недоступність сервісу для користувачів через DoS-атаку": {
-    identifier: 'ID.AM-2',
+  "Недоступність сервісу для користувачів через DoS-атаку": { // Key changed
+    identifier: 'ID.AM-2', // Could also be AM-3 if data availability is compromised
     vulnerability: "DoS-атака на портал",
     ttp: "Перевантаження сервера запитами",
     affectedAssetTypes: ['software', 'hardware']
   },
-  "Викрадення, модифікація або видалення даних у базі через SQL Injection": {
-    identifier: 'ID.AM-2',
+  "Викрадення, модифікація або видалення даних у базі через SQL Injection": { // Key changed
+    identifier: 'ID.AM-2', // Related to software (application vulnerability)
     vulnerability: "SQL Injection на сервері бази даних",
     ttp: "Вставка шкідливого SQL-коду",
     affectedAssetTypes: ['software', 'informationResource']
   },
-  "Збої, відмова у роботі, втручання у цілісність і конфіденційність через XSS": {
+  "Збої, відмова у роботі, втручання у цілісність і конфіденційність через XSS": { // Key changed
     identifier: 'ID.AM-2',
     vulnerability: "XSS у WordPress",
     ttp: "Впровадження шкідливого JavaScript-коду",
@@ -137,7 +138,7 @@ const threatDetailsMap: Record<string, ThreatDetailValue> = {
     identifier: 'N/A',
     vulnerability: "Опишіть вразливість...",
     ttp: "Опишіть можливі дії зловмисника...",
-    affectedAssetTypes: []
+    affectedAssetTypes: [] // All asset types potentially applicable
   }
 };
 
@@ -209,7 +210,7 @@ const identifierRecommendations: Record<string, { title: string; measures: strin
 
 const singleCurrentProfileThreatSchema = z.object({
   id: z.string(),
-  selectedRisk: z.string().min(1, "Необхідно обрати загрозу"),
+  selectedRisk: z.string().min(1, "Необхідно обрати загрозу"), // This is the "Загроза (конкретний ризик)"
   identifier: z.string().optional(),
   vulnerabilityDescription: z.string().min(1, "Опис вразливості обов'язковий"),
   ttpDescription: z.string().min(1, "Опис TTP обов'язковий"),
@@ -263,7 +264,6 @@ const defaultThreatValues: SingleCurrentProfileThreatValues = {
 };
 
 const defaultTargetIdentifierValue = { id: Date.now().toString(), value: 'ID.AM-3.Target' };
-
 
 const renderRecommendationsSection = (
     currentProfileData: ReportPageFormValues['currentProfileDetails'],
@@ -346,7 +346,7 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
   targetProfileData: ReportPageFormValues['targetProfileDetails'];
 }>(({ currentProfileData, targetProfileData }, ref) => {
   return (
-    <div ref={ref} className="p-8 print:p-4 font-sans">
+    <div ref={ref} className="p-8 print:p-4 font-sans bg-white"> {/* Ensure white background for PDF generation */}
       <header className="text-center mb-8 print:mb-6">
         <h1 className="text-3xl font-bold text-primary mb-2 print:text-2xl print:text-black">Звіт про безпеку "КіберСтраж"</h1>
         <p className="text-sm text-muted-foreground print:text-xs print:text-gray-500">Згенеровано: {new Date().toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' })} {new Date().toLocaleTimeString('uk-UA')}</p>
@@ -446,22 +446,54 @@ export default function ReportingPage() {
   const [informationResourceAssetOptions, setInformationResourceAssetOptions] = useState<string[]>([...baseAssetOptions]);
 
   const { toast } = useToast();
-
   const reportPrintRef = useRef<HTMLDivElement>(null);
-  const handlePrint = useReactToPrint({
-    content: () => reportPrintRef.current,
-    documentTitle: `Звіт_КіберСтраж_${new Date().toISOString().split('T')[0]}`,
-    pageStyle: `
-      @media print {
-        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .page-break-before { page-break-before: always; }
-        table { page-break-inside: auto; }
-        tr { page-break-inside: avoid; page-break-after: auto; }
-        thead { display: table-header-group; }
-        tfoot { display: table-footer-group; }
+
+  const handleDirectDownloadPdf = async () => {
+    const element = reportPrintRef.current;
+    if (!element) {
+      toast({ title: "Помилка", description: "Не вдалося знайти контент звіту для завантаження.", variant: "destructive" });
+      return;
+    }
+    setIsGeneratingReport(true);
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2, // Improves quality
+        useCORS: true, // If you have external images
+        backgroundColor: '#ffffff', // Ensure background is white for PDF
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4'); // A4 portrait
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasWidth / canvasHeight;
+      
+      let imgHeight = pdfWidth / ratio;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = -imgHeight + heightLeft + (imgHeight - pdfHeight); // Adjust position for subsequent pages
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
       }
-    `,
-  });
+      
+      pdf.save(`Звіт_КіберСтраж_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast({ title: "Успіх", description: "PDF звіт завантажено." });
+    } catch (error) {
+      console.error("Error generating PDF: ", error);
+      toast({ title: "Помилка", description: "Не вдалося згенерувати PDF.", variant: "destructive" });
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
 
   const form = useForm<ReportPageFormValues>({
     resolver: zodResolver(reportPageFormSchema),
@@ -520,7 +552,8 @@ export default function ReportingPage() {
     fetchAssetsForReport();
   }, [fetchAssetsForReport]);
 
-  const getFirstAvailableAsset = (assetOptions: string[], preferredType: AssetCategoryKey, affectedTypes: AssetCategoryKey[]): string => {
+
+ const getFirstAvailableAsset = (assetOptions: string[], preferredType: AssetCategoryKey, affectedTypes: AssetCategoryKey[]): string => {
     if (affectedTypes.includes(preferredType)) {
         const firstRealAsset = assetOptions.find(opt => !baseAssetOptions.includes(opt as any));
         if (firstRealAsset) return firstRealAsset;
@@ -539,20 +572,30 @@ export default function ReportingPage() {
 
       const affected = details.affectedAssetTypes;
       const isOther = selectedRiskKey === "Інша загроза (потребує ручного опису)";
-
-      form.setValue(`${pathPrefix}.software`, isOther ? (form.getValues(`${pathPrefix}.software`) || '-') : getFirstAvailableAsset(softwareAssetOptions, 'software', affected), { shouldDirty: true });
-      form.setValue(`${pathPrefix}.hardware`, isOther ? (form.getValues(`${pathPrefix}.hardware`) || '-') : getFirstAvailableAsset(hardwareAssetOptions, 'hardware', affected), { shouldDirty: true });
-      form.setValue(`${pathPrefix}.informationResource`, isOther ? (form.getValues(`${pathPrefix}.informationResource`) || '-') : getFirstAvailableAsset(informationResourceAssetOptions, 'informationResource', affected), { shouldDirty: true });
       
-      // ICS Tool is always manually selected or set to '-' if not specifically affected for non-other threats
+      const autoSelectOrDash = (assetType: AssetCategoryKey, options: string[]) => {
+        if (isOther || affected.includes(assetType)) {
+            const firstRealAsset = options.find(opt => !baseAssetOptions.includes(opt as any));
+            return firstRealAsset || '-';
+        }
+        return '-';
+      };
+
+      form.setValue(`${pathPrefix}.software`, autoSelectOrDash('software', softwareAssetOptions), { shouldDirty: true });
+      form.setValue(`${pathPrefix}.hardware`, autoSelectOrDash('hardware', hardwareAssetOptions), { shouldDirty: true });
+      form.setValue(`${pathPrefix}.informationResource`, autoSelectOrDash('informationResource', informationResourceAssetOptions), { shouldDirty: true });
+      
+      // ICS Tool is manually selected, set to '-' if not specifically affected for non-other threats.
       if (!isOther && !affected.includes('icsTool')) {
         form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
       } else if (isOther && !form.getValues(`${pathPrefix}.icsTool`)) {
          form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
+      } else if (!form.getValues(`${pathPrefix}.icsTool`)) { // For cases where it's affected but not set
+         form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
       }
 
 
-    } else { // Reset if somehow details are not found (e.g. bad key)
+    } else { 
         form.setValue(`${pathPrefix}.identifier`, 'N/A', { shouldDirty: true });
         form.setValue(`${pathPrefix}.vulnerabilityDescription`, '', { shouldDirty: true });
         form.setValue(`${pathPrefix}.ttpDescription`, '', { shouldDirty: true });
@@ -569,7 +612,7 @@ export default function ReportingPage() {
     setTargetProfileForDisplay(values.targetProfileDetails);
     setReportGenerated(true);
     setIsGeneratingReport(false);
-    toast({ title: "Успіх", description: "Звіт успішно згенеровано." });
+    toast({ title: "Успіх", description: "Звіт успішно згенеровано. Натисніть 'Завантажити PDF'." });
   };
 
 
@@ -872,7 +915,7 @@ export default function ReportingPage() {
       </div>
       <CardDescription>
         Створіть звіт, обравши Загрозу, що автоматично заповнить Вразливість, ТТП та Ідентифікатор. 
-        Активи підтягуються з Реєстру активів та можуть бути автоматично встановлені в "-" або деактивовані для вибору, якщо нерелевантні для обраної загрози (окрім сценарію "Інша загроза").
+        Активи (ПЗ, Обладнання, Інфо.Ресурс) підтягуються з Реєстру активів. Деякі можуть бути автоматично встановлені в "-" або деактивовані для вибору, якщо нерелевантні для обраної загрози.
         Засіб ІКЗ обирається зі списку. Поля Вразливості, ТТП та Коментар можна редагувати вручну.
       </CardDescription>
 
@@ -901,6 +944,14 @@ export default function ReportingPage() {
                         const affectedForNew = newRiskDetails.affectedAssetTypes;
                         const isOtherNew = newRiskKey === "Інша загроза (потребує ручного опису)";
                         
+                        const autoSelectOrDash = (assetType: AssetCategoryKey, options: string[]) => {
+                            if (isOtherNew || affectedForNew.includes(assetType)) {
+                                const firstRealAsset = options.find(opt => !baseAssetOptions.includes(opt as any));
+                                return firstRealAsset || '-';
+                            }
+                            return '-';
+                          };
+
                         const newThreatToAdd: SingleCurrentProfileThreatValues = {
                             id: Date.now().toString(),
                             selectedRisk: newRiskKey,
@@ -909,10 +960,10 @@ export default function ReportingPage() {
                             ttpDescription: newRiskDetails.ttp,
                             implementationStatus: 'Реалізовано',
                             implementationLevel: '3',
-                            software: isOtherNew ? '-' : getFirstAvailableAsset(softwareAssetOptions, 'software', affectedForNew),
-                            hardware: isOtherNew ? '-' : getFirstAvailableAsset(hardwareAssetOptions, 'hardware', affectedForNew),
-                            informationResource: isOtherNew ? '-' : getFirstAvailableAsset(informationResourceAssetOptions, 'informationResource', affectedForNew),
-                            icsTool: isOtherNew ? '-' : (affectedForNew.includes('icsTool') ? (icsToolOptionsList[1]?.value || '-') : '-'),
+                            software: autoSelectOrDash('software', softwareAssetOptions),
+                            hardware: autoSelectOrDash('hardware', hardwareAssetOptions),
+                            informationResource: autoSelectOrDash('informationResource', informationResourceAssetOptions),
+                            icsTool: isOtherNew ? '-' : (affectedForNew.includes('icsTool') ? (icsToolOptionsList.find(opt=>opt.value !=="-")?.value || '-') : '-'),
                             comment: '', 
                         };
                         appendCurrentThreat(newThreatToAdd);
@@ -937,7 +988,7 @@ export default function ReportingPage() {
                   )}
                 </Button>
                  <p className="text-xs text-muted-foreground mt-2 sm:mt-0">
-                  Примітка: Для отримання PDF, після генерації звіту натисніть "Роздрукувати" та оберіть "Зберегти як PDF".
+                  Примітка: Для отримання PDF, після генерації звіту натисніть "Завантажити PDF".
                 </p>
               </CardFooter>
             </form>
@@ -951,13 +1002,14 @@ export default function ReportingPage() {
             <Button variant="outline" onClick={() => { setReportGenerated(false); setCurrentProfileForDisplay(null); setTargetProfileForDisplay(null); fetchAssetsForReport(); form.reset({ currentProfileDetails: [defaultThreatValues], targetProfileDetails: { identifiers: [defaultTargetIdentifierValue], implementationLevel: '4', appliesToSoftware: true, appliesToHardware: true, appliesToInformationResource: true, appliesToIcsTool: true } }); }}>
                 Створити новий звіт / Редагувати
             </Button>
-            <Button onClick={handlePrint} disabled={isGeneratingReport}>
+            <Button onClick={handleDirectDownloadPdf} disabled={isGeneratingReport}>
                 {isGeneratingReport && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                <Printer className="mr-2 h-4 w-4" /> Роздрукувати/Зберегти PDF
+                <Download className="mr-2 h-4 w-4" /> Завантажити PDF 
             </Button>
         </div>
 
-        <div style={{ display: "none" }}>
+        {/* This hidden div is used as source for html2canvas */}
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '210mm' }}> 
           <PrintableReport
             ref={reportPrintRef}
             currentProfileData={currentProfileForDisplay}
@@ -1053,6 +1105,9 @@ export default function ReportingPage() {
                 {renderRecommendationsSection(currentProfileForDisplay, targetProfileForDisplay)}
             </section>
           </CardContent>
+           <CardFooter>
+              {/* Footer can be empty or have a small note if needed, removed the previous text */}
+           </CardFooter>
         </Card>
         </>
       )}
