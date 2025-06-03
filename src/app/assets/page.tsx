@@ -52,131 +52,147 @@ const seedInitialAssets = async () => {
   const assetsCollectionRef = collection(db, 'assets');
 
   const initialAssetsData: Omit<Asset, 'id'>[] = [
-    // Активи програмного забезпечення (Software Assets)
+    // 1. Активи програмного забезпечення (Software Assets)
     {
       name: "Операційна система Windows Server",
       type: "Програмне забезпечення",
-      description: "ОС для серверів, що забезпечує роботу корпоративних сервісів та додатків.",
+      description: "ОС для серверів, що забезпечує роботу сервісів",
       weaknesses: [
-        { id: "seed_w_ps_1", assetId: "AUTO_ID", description: "Невчасне встановлення критичних оновлень безпеки ОС.", severity: "Висока" }
+        { id: "sw_w_1", assetId: "AUTO_ID", description: "Відсутність останніх оновлень безпеки.", severity: "Висока" }
       ]
     },
     {
       name: "Антивірусне ПЗ Avast",
       type: "Програмне забезпечення",
-      description: "Програмне забезпечення для захисту від вірусів, шпигунського ПЗ та інших шкідливих програм.",
+      description: "Захист від шкідливих програм",
       weaknesses: [
-        { id: "seed_w_ps_2", assetId: "AUTO_ID", description: "Використання застарілих баз вірусних сигнатур, що знижує ефективність виявлення нових загроз.", severity: "Середня" }
+        { id: "sw_w_2", assetId: "AUTO_ID", description: "Застарілі вірусні бази.", severity: "Середня" }
       ]
     },
     {
       name: "Система управління базами даних PostgreSQL",
       type: "Програмне забезпечення",
-      description: "Реляційна СУБД для зберігання, управління та доступу до корпоративних даних.",
+      description: "СУБД для зберігання корпоративних даних",
       weaknesses: [
-        { id: "seed_w_ps_3", assetId: "AUTO_ID", description: "Пароль за замовчуванням для облікового запису адміністратора бази даних не змінено.", severity: "Критична" }
+        { id: "sw_w_3", assetId: "AUTO_ID", description: "Слабкі паролі доступу до БД.", severity: "Критична" }
       ]
     },
     {
       name: "Веб-сервер Nginx",
       type: "Програмне забезпечення",
-      description: "Високопродуктивний веб-сервер та зворотний проксі-сервер для розгортання веб-додатків.",
+      description: "Сервер для розгортання веб-додатків",
       weaknesses: [
-        { id: "seed_w_ps_4", assetId: "AUTO_ID", description: "Не налаштовано HTTPS, що призводить до передачі трафіку у відкритому вигляді.", severity: "Висока" }
+        { id: "sw_w_4", assetId: "AUTO_ID", description: "Неналежне налаштування прав доступу до файлів.", severity: "Висока" }
       ]
     },
     {
       name: "Система моніторингу Wazuh",
       type: "Програмне забезпечення",
-      description: "Open-source платформа для моніторингу безпеки, виявлення вторгнень та аналізу логів.",
+      description: "Засоби моніторингу та оповіщення про стан систем",
       weaknesses: [
-        { id: "seed_w_ps_5", assetId: "AUTO_ID", description: "Відсутність налаштованих сповіщень для критичних подій безпеки, виявлених системою.", severity: "Середня" }
+        { id: "sw_w_5", assetId: "AUTO_ID", description: "Відсутність шифрування каналу передачі даних з агентами.", severity: "Середня" }
       ]
     },
 
-    // Активи апаратного забезпечення (Hardware Assets)
+    // 2. Активи апаратного забезпечення (Hardware Assets)
     {
       name: "Сервер Dell PowerEdge R740",
-      type: "Обладнання",
-      description: "Фізичний сервер, призначений для обробки корпоративних додатків та зберігання даних.",
+      type: "Обладнання", // Змінено з "Сервер" на "Обладнання" для відповідності типам
+      description: "Фізичний сервер для обробки корпоративних додатків",
       weaknesses: [
-        { id: "seed_w_az_1", assetId: "AUTO_ID", description: "Фізичний доступ до серверної кімнати недостатньо обмежений та контрольований.", severity: "Висока" }
+        { id: "hw_w_1", assetId: "AUTO_ID", description: "Фізична незахищеність серверної кімнати.", severity: "Висока" }
       ]
     },
     {
       name: "Маршрутизатор Cisco ISR 4451",
-      type: "Обладнання",
-      description: "Мережевий пристрій для маршрутизації трафіку між різними сегментами мережі та до Інтернету.",
+      type: "Обладнання", // Змінено з "Мережевий пристрій" на "Обладнання"
+      description: "Пристрій для маршрутизації трафіку",
       weaknesses: [
-        { id: "seed_w_az_2", assetId: "AUTO_ID", description: "Стандартні облікові дані (логін/пароль) для доступу до інтерфейсу керування маршрутизатором не змінені.", severity: "Критична" }
+        { id: "hw_w_2", assetId: "AUTO_ID", description: "Використання стандартного пароля адміністратора.", severity: "Критична" }
       ]
     },
     {
       name: "Робоча станція Dell OptiPlex 7080",
-      type: "Обладнання",
-      description: "Персональний комп'ютер, що використовується співробітником для виконання робочих завдань.",
+      type: "Обладнання", // Змінено з "Комп’ютер" на "Обладнання"
+      description: "Робоче місце співробітника",
       weaknesses: [
-        { id: "seed_w_az_3", assetId: "AUTO_ID", description: "Відсутність шифрування жорсткого диска на робочій станції, що містить конфіденційну інформацію.", severity: "Середня" }
+        { id: "hw_w_3", assetId: "AUTO_ID", description: "Відсутність шифрування жорсткого диска.", severity: "Середня" }
       ]
     },
     {
       name: "Мережевий комутатор HP Aruba 2930F",
-      type: "Обладнання",
-      description: "Комутатор для об'єднання пристроїв у локальній мережі та забезпечення передачі даних між ними.",
+      type: "Обладнання", // Змінено з "Мережевий пристрій" на "Обладнання"
+      description: "Комутатор для локальної мережі",
       weaknesses: [
-        { id: "seed_w_az_4", assetId: "AUTO_ID", description: "Невикористані фізичні порти комутатора не вимкнені, що створює потенційні точки несанкціонованого підключення.", severity: "Низька" }
+        { id: "hw_w_4", assetId: "AUTO_ID", description: "Неактивовані порти комутатора, що створюють точку входу.", severity: "Низька" }
       ]
     },
     {
       name: "Система безперебійного живлення APC Smart-UPS",
-      type: "Обладнання",
-      description: "Джерело безперебійного живлення для забезпечення стабільної роботи серверів під час відключень електроенергії.",
+      type: "Обладнання", // Змінено з "UPS" на "Обладнання"
+      description: "Джерело безперебійного живлення для серверів",
       weaknesses: [
-        { id: "seed_w_az_5", assetId: "AUTO_ID", description: "Відсутність регулярного тестування стану батарей та працездатності системи UPS.", severity: "Середня" }
+        { id: "hw_w_5", assetId: "AUTO_ID", description: "Відсутність моніторингу стану батарей.", severity: "Середня" }
       ]
     },
-
-    // Активи інформаційних ресурсів (Information Assets)
+    
+    // 3. Активи інформаційних ресурсів (Information Assets)
     {
       name: "База клієнтських даних CRM",
-      type: "Інформація",
-      description: "Структурована інформація про клієнтів організації, їхні контакти, історію взаємодій та замовлень.",
+      type: "Інформація", // Змінено з "Дані" на "Інформація"
+      description: "Інформація про клієнтів, контакти, історія взаємодій",
       weaknesses: [
-        { id: "seed_w_ir_1", assetId: "AUTO_ID", description: "Відсутність шифрування конфіденційних персональних даних клієнтів у базі даних CRM.", severity: "Висока" }
+        { id: "info_w_1", assetId: "AUTO_ID", description: "Відсутність політики резервного копіювання.", severity: "Висока" }
       ]
     },
     {
-      name: "Шаблони офіційних документів",
-      type: "Інформація",
-      description: "Стандартні шаблони для створення офіційних документів компанії (договори, звіти, накази тощо).",
+      name: "Шаблони документів",
+      type: "Інформація", // Тип був "Несанкціоновані зміни", замінено на "Інформація"
+      description: "Стандартизовані шаблони для офіційних документів", // Опис додано
       weaknesses: [
-        { id: "seed_w_ir_2", assetId: "AUTO_ID", description: "Відсутність контролю версій та аудиту змін для офіційних шаблонів документів.", severity: "Середня" }
+        { id: "info_w_2", assetId: "AUTO_ID", description: "Можливість несанкціонованої зміни шаблонів.", severity: "Середня" }
       ]
     },
     {
-      name: "Журнали фізичного доступу до приміщень",
-      type: "Інформація",
-      description: "Записи про фізичний доступ співробітників та відвідувачів до контрольованих приміщень компанії.",
+      name: "Журнали доступу до приміщень",
+      type: "Інформація", // Тип був "Фальсифікація або втрата", замінено на "Інформація"
+      description: "Записи про фізичний доступ до об'єктів", // Опис додано
       weaknesses: [
-        { id: "seed_w_ir_3", assetId: "AUTO_ID", description: "Зберігання паперових журналів фізичного доступу в незахищеному місці, доступному для сторонніх осіб.", severity: "Середня" }
+        { id: "info_w_3", assetId: "AUTO_ID", description: "Зберігання журналів у незахищеному місці.", severity: "Середня" }
       ]
     },
-    {
-      name: "Цифрові облікові дані доступу",
-      type: "Інформація",
-      description: "Набори логінів, паролів, токенів та сертифікатів, що використовуються для автентифікації в корпоративних системах.",
+     {
+      name: "Електронні ключі доступу",
+      type: "Інформація", // Тип був "Викрадення або дублювання", замінено на "Інформація"
+      description: "Цифрові сертифікати, токени для доступу до систем", // Опис додано
       weaknesses: [
-        { id: "seed_w_ir_4", assetId: "AUTO_ID", description: "Використання слабких або стандартних паролів для облікових записів з адміністративними привілеями.", severity: "Критична" }
+        { id: "info_w_4", assetId: "AUTO_ID", description: "Зберігання ключів у відкритому вигляді.", severity: "Критична" }
       ]
     },
+    // { // Цей актив видалено, оскільки він дублює наступний за змістом
+    //   name: "Історія змін у конфігураціях",
+    //   type: "Інформація", // Тип був "Несанкціоновані зміни", замінено на "Інформація"
+    //   description: "Записи про зміни конфігурацій систем та мереж", // Опис додано
+    //   weaknesses: [
+    //     { id: "info_w_5", assetId: "AUTO_ID", description: "Відсутність аудиту історії змін.", severity: "Висока" }
+    //   ]
+    // },
     {
-      name: "Журнали аудиту доступу до систем",
-      type: "Інформація",
-      description: "Лог-файли, що фіксують події підключення користувачів, їхні дії та спроби доступу в інформаційних системах.",
+      name: "Журнали доступу до систем",
+      type: "Інформація", // Тип був "Лог-файли", замінено на "Інформація"
+      description: "Записи про підключення користувачів та дії в системах",
       weaknesses: [
-        { id: "seed_w_ir_5", assetId: "AUTO_ID", description: "Журнали доступу не агрегуються централізовано та не аналізуються регулярно на предмет підозрілої активності.", severity: "Середня" }
+        { id: "info_w_6", assetId: "AUTO_ID", description: "Недостатній рівень деталізації логів.", severity: "Середня" }
       ]
-    }
+    },
+    // { // Цей актив видалено, оскільки він схожий на "База клієнтських даних CRM" і виходить за рамки 5 прикладів
+    //   name: "Архів електронної кореспонденції",
+    //   type: "Інформація", // Тип був "Дані", замінено на "Інформація"
+    //   description: "Збережені листи та повідомлення між співробітниками",
+    //   weaknesses: [
+    //     { id: "info_w_7", assetId: "AUTO_ID", description: "Відсутність шифрування архіву.", severity: "Висока" }
+    //   ]
+    // }
   ];
 
 
@@ -237,7 +253,7 @@ export default function AssetsPage() {
           const newSnapshot = await getDocs(assetsCollectionRef);
           const assetsList = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
           setAssets(assetsList);
-          toast({ title: "Вітаємо!", description: "Додано нові приклади активів згідно вашого запиту." });
+          toast({ title: "Вітаємо!", description: "Додано приклади активів згідно вашого запиту." });
         } else {
            setAssets([]); 
         }
@@ -345,10 +361,11 @@ export default function AssetsPage() {
 
   const deleteAsset = async (assetId: string) => {
     const assetToDelete = assets.find(a => a.id === assetId);
-    if (!confirm(\`Ви впевнені, що хочете видалити актив "\${assetToDelete?.name || assetId}"? Цю дію не можна буде скасувати.\`)) return;
+    const message = `Ви впевнені, що хочете видалити актив "${assetToDelete?.name || assetId}"? Цю дію не можна буде скасувати.`;
+    if (!confirm(message)) return;
     try {
       await deleteDoc(doc(db, "assets", assetId));
-      toast({ title: "Успіх", description: \`Актив "\${assetToDelete?.name || assetId}" видалено.\` });
+      toast({ title: "Успіх", description: `Актив "${assetToDelete?.name || assetId}" видалено.` });
       await fetchAssets(true);
     } catch (error) {
       console.error("Error deleting asset: ", error);
@@ -376,7 +393,8 @@ export default function AssetsPage() {
         toast({ title: "Помилка", description: "Вразливість не знайдено для видалення.", variant: "destructive" });
         return;
     }
-    if (!confirm(\`Ви впевнені, що хочете видалити вразливість "\${weaknessToDelete.description}" для активу "\${targetAsset.name}"?\`)) return;
+    const message = `Ви впевнені, що хочете видалити вразливість "${weaknessToDelete.description}" для активу "${targetAsset.name}"?`;
+    if (!confirm(message)) return;
     
     try {
         const assetRef = doc(db, "assets", targetAsset.id);
@@ -407,7 +425,10 @@ export default function AssetsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-headline">Реєстр активів</h1>
       </div>
-      <CardDescription>Каталогізуйте обладнання, програмне забезпечення та інформаційні активи вашої організації. Дані зберігаються у Firestore.</CardDescription>
+      <CardDescription>
+        Каталогізуйте обладнання, програмне забезпечення та інформаційні активи вашої організації, що стосуються інформаційної діяльності та безпеки критичної інфраструктури. 
+        Дані зберігаються у Firestore та оновлюються в реальному часі.
+      </CardDescription>
 
       <div className="flex space-x-2 mb-6 border-b pb-2">
         {categoryKeys.map(categoryName => {
@@ -461,15 +482,15 @@ export default function AssetsPage() {
                     <Badge variant="secondary" className="mt-1">{asset.type}</Badge>
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => openEditAssetDialog(asset)} aria-label={\`Редагувати \${asset.name}\`}><Edit3 className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteAsset(asset.id)} aria-label={\`Видалити \${asset.name}\`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => openEditAssetDialog(asset)} aria-label={`Редагувати ${asset.name}`}><Edit3 className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteAsset(asset.id)} aria-label={`Видалити ${asset.name}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
                 </div>
                 <CardDescription className="pt-2">{asset.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value={\`weaknesses-\${asset.id}\`}>
+                  <AccordionItem value={`weaknesses-${asset.id}`}>
                     <AccordionTrigger className="text-base hover:no-underline">
                       <div className="flex items-center">
                         <ShieldAlert className="mr-2 h-5 w-5 text-primary" />
@@ -486,8 +507,8 @@ export default function AssetsPage() {
                                 <Badge className={cn("text-xs mt-1", severityBadgeColor(weakness.severity))}>{weakness.severity}</Badge>
                               </div>
                               <div className="flex space-x-1">
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditWeaknessDialog(asset, weakness)} aria-label={\`Редагувати вразливість \${weakness.description}\`}><Edit3 className="h-3.5 w-3.5" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteWeakness(asset, weakness.id)} aria-label={\`Видалити вразливість \${weakness.description}\`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditWeaknessDialog(asset, weakness)} aria-label={`Редагувати вразливість ${weakness.description}`}><Edit3 className="h-3.5 w-3.5" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteWeakness(asset, weakness.id)} aria-label={`Видалити вразливість ${weakness.description}`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                               </div>
                             </li>
                           ))}
@@ -510,7 +531,7 @@ export default function AssetsPage() {
       <Dialog open={isAssetDialogOpen} onOpenChange={(isOpen) => { setIsAssetDialogOpen(isOpen); if (!isOpen) setEditingAsset(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingAsset ? "Редагувати актив" : \`Додати новий актив до "\${currentCategory}"\`}</DialogTitle>
+            <DialogTitle>{editingAsset ? "Редагувати актив" : `Додати новий актив до "${currentCategory}"`}</DialogTitle>
           </DialogHeader>
           <Form {...assetForm}>
             <form onSubmit={assetForm.handleSubmit(handleAssetSubmit)} className="space-y-4">
