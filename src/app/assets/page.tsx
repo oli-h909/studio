@@ -51,8 +51,9 @@ const seedInitialAssets = async () => {
   const batch = writeBatch(db);
   const assetsCollectionRef = collection(db, 'assets');
 
+  // Reduced number of initial assets to speed up initial seeding
   const initialAssetsData: Omit<Asset, 'id'>[] = [
-    // 1. Активи програмного забезпечення (Software Assets)
+    // 1. Активи програмного забезпечення (Software Assets) - 2 examples
     {
       name: "Операційна система Windows Server",
       type: "Програмне забезпечення",
@@ -69,35 +70,11 @@ const seedInitialAssets = async () => {
         { id: "sw_w_2", assetId: "AUTO_ID", description: "Застарілі вірусні бази.", severity: "Середня" }
       ]
     },
-    {
-      name: "Система управління базами даних PostgreSQL",
-      type: "Програмне забезпечення",
-      description: "СУБД для зберігання корпоративних даних",
-      weaknesses: [
-        { id: "sw_w_3", assetId: "AUTO_ID", description: "Слабкі паролі доступу до БД.", severity: "Критична" }
-      ]
-    },
-    {
-      name: "Веб-сервер Nginx",
-      type: "Програмне забезпечення",
-      description: "Сервер для розгортання веб-додатків",
-      weaknesses: [
-        { id: "sw_w_4", assetId: "AUTO_ID", description: "Неналежне налаштування прав доступу до файлів.", severity: "Висока" }
-      ]
-    },
-    {
-      name: "Система моніторингу Wazuh",
-      type: "Програмне забезпечення",
-      description: "Засоби моніторингу та оповіщення про стан систем",
-      weaknesses: [
-        { id: "sw_w_5", assetId: "AUTO_ID", description: "Відсутність шифрування каналу передачі даних з агентами.", severity: "Середня" }
-      ]
-    },
 
-    // 2. Активи апаратного забезпечення (Hardware Assets)
+    // 2. Активи апаратного забезпечення (Hardware Assets) - 2 examples
     {
       name: "Сервер Dell PowerEdge R740",
-      type: "Обладнання", // Змінено з "Сервер" на "Обладнання" для відповідності типам
+      type: "Обладнання",
       description: "Фізичний сервер для обробки корпоративних додатків",
       weaknesses: [
         { id: "hw_w_1", assetId: "AUTO_ID", description: "Фізична незахищеність серверної кімнати.", severity: "Висока" }
@@ -105,41 +82,17 @@ const seedInitialAssets = async () => {
     },
     {
       name: "Маршрутизатор Cisco ISR 4451",
-      type: "Обладнання", // Змінено з "Мережевий пристрій" на "Обладнання"
+      type: "Обладнання",
       description: "Пристрій для маршрутизації трафіку",
       weaknesses: [
         { id: "hw_w_2", assetId: "AUTO_ID", description: "Використання стандартного пароля адміністратора.", severity: "Критична" }
       ]
     },
-    {
-      name: "Робоча станція Dell OptiPlex 7080",
-      type: "Обладнання", // Змінено з "Комп’ютер" на "Обладнання"
-      description: "Робоче місце співробітника",
-      weaknesses: [
-        { id: "hw_w_3", assetId: "AUTO_ID", description: "Відсутність шифрування жорсткого диска.", severity: "Середня" }
-      ]
-    },
-    {
-      name: "Мережевий комутатор HP Aruba 2930F",
-      type: "Обладнання", // Змінено з "Мережевий пристрій" на "Обладнання"
-      description: "Комутатор для локальної мережі",
-      weaknesses: [
-        { id: "hw_w_4", assetId: "AUTO_ID", description: "Неактивовані порти комутатора, що створюють точку входу.", severity: "Низька" }
-      ]
-    },
-    {
-      name: "Система безперебійного живлення APC Smart-UPS",
-      type: "Обладнання", // Змінено з "UPS" на "Обладнання"
-      description: "Джерело безперебійного живлення для серверів",
-      weaknesses: [
-        { id: "hw_w_5", assetId: "AUTO_ID", description: "Відсутність моніторингу стану батарей.", severity: "Середня" }
-      ]
-    },
     
-    // 3. Активи інформаційних ресурсів (Information Assets)
+    // 3. Активи інформаційних ресурсів (Information Assets) - 2 examples
     {
       name: "База клієнтських даних CRM",
-      type: "Інформація", // Змінено з "Дані" на "Інформація"
+      type: "Інформація",
       description: "Інформація про клієнтів, контакти, історія взаємодій",
       weaknesses: [
         { id: "info_w_1", assetId: "AUTO_ID", description: "Відсутність політики резервного копіювання.", severity: "Висока" }
@@ -147,52 +100,12 @@ const seedInitialAssets = async () => {
     },
     {
       name: "Шаблони документів",
-      type: "Інформація", // Тип був "Несанкціоновані зміни", замінено на "Інформація"
-      description: "Стандартизовані шаблони для офіційних документів", // Опис додано
+      type: "Інформація",
+      description: "Стандартизовані шаблони для офіційних документів",
       weaknesses: [
         { id: "info_w_2", assetId: "AUTO_ID", description: "Можливість несанкціонованої зміни шаблонів.", severity: "Середня" }
       ]
     },
-    {
-      name: "Журнали доступу до приміщень",
-      type: "Інформація", // Тип був "Фальсифікація або втрата", замінено на "Інформація"
-      description: "Записи про фізичний доступ до об'єктів", // Опис додано
-      weaknesses: [
-        { id: "info_w_3", assetId: "AUTO_ID", description: "Зберігання журналів у незахищеному місці.", severity: "Середня" }
-      ]
-    },
-     {
-      name: "Електронні ключі доступу",
-      type: "Інформація", // Тип був "Викрадення або дублювання", замінено на "Інформація"
-      description: "Цифрові сертифікати, токени для доступу до систем", // Опис додано
-      weaknesses: [
-        { id: "info_w_4", assetId: "AUTO_ID", description: "Зберігання ключів у відкритому вигляді.", severity: "Критична" }
-      ]
-    },
-    // { // Цей актив видалено, оскільки він дублює наступний за змістом
-    //   name: "Історія змін у конфігураціях",
-    //   type: "Інформація", // Тип був "Несанкціоновані зміни", замінено на "Інформація"
-    //   description: "Записи про зміни конфігурацій систем та мереж", // Опис додано
-    //   weaknesses: [
-    //     { id: "info_w_5", assetId: "AUTO_ID", description: "Відсутність аудиту історії змін.", severity: "Висока" }
-    //   ]
-    // },
-    {
-      name: "Журнали доступу до систем",
-      type: "Інформація", // Тип був "Лог-файли", замінено на "Інформація"
-      description: "Записи про підключення користувачів та дії в системах",
-      weaknesses: [
-        { id: "info_w_6", assetId: "AUTO_ID", description: "Недостатній рівень деталізації логів.", severity: "Середня" }
-      ]
-    },
-    // { // Цей актив видалено, оскільки він схожий на "База клієнтських даних CRM" і виходить за рамки 5 прикладів
-    //   name: "Архів електронної кореспонденції",
-    //   type: "Інформація", // Тип був "Дані", замінено на "Інформація"
-    //   description: "Збережені листи та повідомлення між співробітниками",
-    //   weaknesses: [
-    //     { id: "info_w_7", assetId: "AUTO_ID", description: "Відсутність шифрування архіву.", severity: "Висока" }
-    //   ]
-    // }
   ];
 
 
@@ -209,7 +122,7 @@ const seedInitialAssets = async () => {
 
   try {
     await batch.commit();
-    console.log("Initial assets seeded successfully with new user-provided data.");
+    console.log("Initial assets seeded successfully with a reduced set of user-provided data.");
     return true; 
   } catch (error) {
     console.error("Error seeding initial assets: ", error);
@@ -253,7 +166,7 @@ export default function AssetsPage() {
           const newSnapshot = await getDocs(assetsCollectionRef);
           const assetsList = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
           setAssets(assetsList);
-          toast({ title: "Вітаємо!", description: "Додано приклади активів згідно вашого запиту." });
+          toast({ title: "Вітаємо!", description: "Додано приклади активів." });
         } else {
            setAssets([]); 
         }
