@@ -36,7 +36,6 @@ interface ThreatDetailValue {
   affectedAssetTypes: AssetCategoryKey[];
 }
 
-// Key: "Загроза (конкретний ризик)"
 const threatDetailsMap: Record<string, ThreatDetailValue> = {
   "Інфікування робочих станцій або серверів, втрата контролю над системою": {
     identifier: 'ID.AM-2',
@@ -143,7 +142,6 @@ const threatDetailsMap: Record<string, ThreatDetailValue> = {
 };
 
 const threatOptions = Object.keys(threatDetailsMap).sort((a, b) => a.startsWith("Інша") ? 1 : b.startsWith("Інша") ? -1 : a.localeCompare(b)) as [string, ...string[]];
-
 const baseAssetOptions = ["-", "Інше"] as const;
 
 const icsToolOptionsList = [
@@ -159,6 +157,54 @@ const icsToolOptionsList = [
   { value: "HID Global, Honeywell Access Control", label: "Системи контролю фізичного доступу (HID Global, Honeywell Access Control)" },
   { value: "Microsoft WSUS, ManageEngine Patch Manager", label: "Системи управління патчами (Microsoft WSUS, ManageEngine Patch Manager)" },
 ];
+
+const identifierRecommendations: Record<string, { title: string; measures: string[] }> = {
+  "ID.AM-1": {
+    title: "Фізичні пристрої і системи ідентифіковані",
+    measures: [
+      "Впровадження централізованої системи управління інвентаризацією ІТ-активів (наприклад, CMDB, ITAM)",
+      "Впровадження систем контролю доступу до фізичних приміщень (баджі, біометрія)",
+      "Встановлення систем моніторингу і відеоспостереження",
+      "Використання систем автоматичного виявлення і відстеження пристроїв у мережі (наприклад, NAC — Network Access Control)",
+      "Регулярні аудити інвентаризації активів",
+      "Обмеження фізичного доступу до серверних і робочих станцій",
+    ],
+  },
+  "ID.AM-2": {
+    title: "Програмне забезпечення ідентифіковане",
+    measures: [
+      "Ведення актуального реєстру встановленого програмного забезпечення (Software Asset Management)",
+      "Використання систем виявлення незатвердженого ПЗ (Whitelisting, Blacklisting)",
+      "Використання систем централізованого управління оновленнями (наприклад, WSUS, SCCM)",
+      "Впровадження політик безпеки, що забороняють встановлення ПЗ без затвердження",
+      "Регулярні сканування на наявність вразливостей в ПЗ (Vulnerability Scanning)",
+      "Впровадження процесів управління змінами (Change Management)",
+    ],
+  },
+  "ID.AM-3": {
+    title: "Логічні інтерфейси мережі і систем ідентифіковані і документовані",
+    measures: [
+      "Ведення мережевої документації (Network Diagrams, IP-адресація, VLAN, маршрутизація)",
+      "Використання систем моніторингу мережевого трафіку (наприклад, IDS/IPS, NetFlow)",
+      "Впровадження автоматизованих систем управління конфігурацією мережевого обладнання (Network Configuration Management)",
+      "Застосування систем контролю доступу до мережі (NAP, NAC)",
+      "Регулярне проведення аудиту і верифікації мережевої інфраструктури",
+      "Впровадження систем контролю і логування мережевих подій",
+    ],
+  },
+  "ID.AM-5": {
+    title: "Визначені властивості конфіденційності, цілісності, доступності активів",
+    measures: [
+      "Розробка та впровадження політик безпеки інформації (Information Security Policies)",
+      "Визначення категорій інформації за рівнем конфіденційності",
+      "Впровадження засобів захисту даних (шифрування, контроль доступу, DLP — Data Loss Prevention)",
+      "Резервне копіювання і відновлення даних (Backup & Recovery)",
+      "Впровадження засобів забезпечення цілісності (контрольні суми, цифрові підписи)",
+      "Забезпечення доступності за допомогою систем відмовостійкості, балансування навантаження, моніторингу",
+      "Регулярне тестування безпеки (penetration testing, vulnerability assessment)",
+    ],
+  },
+};
 
 
 const singleCurrentProfileThreatSchema = z.object({
@@ -219,21 +265,97 @@ const defaultThreatValues: SingleCurrentProfileThreatValues = {
 const defaultTargetIdentifierValue = { id: Date.now().toString(), value: 'ID.AM-3.Target' };
 
 
+const renderRecommendationsSection = (
+    currentProfileData: ReportPageFormValues['currentProfileDetails'],
+    targetProfileData: ReportPageFormValues['targetProfileDetails']
+) => {
+    if (!targetProfileData || targetProfileData.identifiers.length === 0) {
+        return <p className="text-sm text-muted-foreground">Цільові ідентифікатори не вказані.</p>;
+    }
+
+    return targetProfileData.identifiers.map(targetIdObj => {
+        const baseId = targetIdObj.value.replace(/\.Target$/, '').trim();
+        const recommendation = identifierRecommendations[baseId];
+        const relevantCurrentThreats = currentProfileData.filter(
+            threat => threat.identifier === baseId
+        );
+
+        return (
+            <div key={targetIdObj.id} className="mb-6 p-4 border rounded-md bg-muted/10 print:bg-white print:border-gray-300">
+                <h4 className="text-lg font-semibold text-primary mb-2 print:text-black">
+                    Рекомендації для досягнення: {targetIdObj.value}
+                </h4>
+                {recommendation ? (
+                    <>
+                        <p className="font-medium mb-1 print:text-gray-700">{recommendation.title}</p>
+                        <p className="mb-1 print:text-gray-700"><strong>Рекомендовані засоби та заходи:</strong></p>
+                        <ul className="list-disc list-inside text-sm space-y-1 mb-3 print:text-gray-600">
+                            {recommendation.measures.map((measure, index) => (
+                                <li key={index}>{measure}</li>
+                            ))}
+                        </ul>
+                    </>
+                ) : (
+                    <p className="text-sm text-muted-foreground mb-3 print:text-gray-500">
+                        Для ідентифікатора "{targetIdObj.value}" немає попередньо визначених рекомендацій.
+                    </p>
+                )}
+
+                {relevantCurrentThreats.length > 0 && (
+                    <>
+                        <p className="mb-1 print:text-gray-700"><strong>Пов'язані загрози з поточного профілю, що потребують уваги для досягнення "{baseId}":</strong></p>
+                        <ul className="list-disc list-inside text-sm space-y-1 print:text-gray-600">
+                            {relevantCurrentThreats.map(threat => {
+                                const affectedAssetsList = [
+                                    threat.software && threat.software !== '-' && `ПЗ: ${threat.software}`,
+                                    threat.hardware && threat.hardware !== '-' && `Обладнання: ${threat.hardware}`,
+                                    threat.informationResource && threat.informationResource !== '-' && `Інформаційний ресурс: ${threat.informationResource}`,
+                                    threat.icsTool && threat.icsTool !== '-' && `Засіб ІКЗ: ${icsToolOptionsList.find(opt => opt.value === threat.icsTool)?.label || threat.icsTool}`,
+                                ].filter(Boolean);
+                                
+                                const affectedAssetsString = affectedAssetsList.length > 0 ? ` Активи: ${affectedAssetsList.join('; ')}.` : ' Активи не вказані або нерелевантні.';
+
+                                return (
+                                    <li key={threat.id}>
+                                        Загроза: "{threat.selectedRisk}" (Вразливість: {threat.vulnerabilityDescription}).
+                                        {affectedAssetsString}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </>
+                )}
+                {relevantCurrentThreats.length === 0 && recommendation && (
+                    <p className="text-sm text-muted-foreground print:text-gray-500">
+                        Загроз з поточного профілю, що прямо відповідають ідентифікатору "{baseId}", не знайдено. Перегляньте загальний список загроз.
+                    </p>
+                )}
+                 {!recommendation && relevantCurrentThreats.length === 0 && (
+                    <p className="text-sm text-muted-foreground print:text-gray-500">
+                        Для цього цільового ідентифікатора не визначено ані специфічних рекомендацій, ані пов'язаних поточних загроз.
+                    </p>
+                )}
+            </div>
+        );
+    });
+};
+
+
 const PrintableReport = React.forwardRef<HTMLDivElement, {
   currentProfileData: ReportPageFormValues['currentProfileDetails'];
   targetProfileData: ReportPageFormValues['targetProfileDetails'];
 }>(({ currentProfileData, targetProfileData }, ref) => {
   return (
     <div ref={ref} className="p-8 print:p-4 font-sans">
-      <header className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-primary mb-2">Звіт про безпеку "КіберСтраж"</h1>
-        <p className="text-sm text-muted-foreground">Згенеровано: {new Date().toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' })} {new Date().toLocaleTimeString('uk-UA')}</p>
+      <header className="text-center mb-8 print:mb-6">
+        <h1 className="text-3xl font-bold text-primary mb-2 print:text-2xl print:text-black">Звіт про безпеку "КіберСтраж"</h1>
+        <p className="text-sm text-muted-foreground print:text-xs print:text-gray-500">Згенеровано: {new Date().toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' })} {new Date().toLocaleTimeString('uk-UA')}</p>
       </header>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2">1. Поточний профіль безпеки</h2>
+      <section className="mb-8 print:mb-6">
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2 print:text-xl print:border-gray-400 print:text-black">1. Поточний профіль безпеки</h2>
         {currentProfileData && currentProfileData.length > 0 ? (
-          <Table className="text-xs">
+          <Table className="text-xs print:text-[10px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Загроза</TableHead>
@@ -252,28 +374,28 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
             <TableBody>
               {currentProfileData.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="max-w-[150px] break-words">{item.selectedRisk}</TableCell>
-                  <TableCell className="max-w-[150px] break-words">{item.vulnerabilityDescription}</TableCell>
-                  <TableCell className="max-w-[150px] break-words">{item.ttpDescription}</TableCell>
+                  <TableCell className="max-w-[120px] break-words">{item.selectedRisk}</TableCell>
+                  <TableCell className="max-w-[120px] break-words">{item.vulnerabilityDescription}</TableCell>
+                  <TableCell className="max-w-[120px] break-words">{item.ttpDescription}</TableCell>
                   <TableCell>{item.identifier}</TableCell>
                   <TableCell>{item.software}</TableCell>
                   <TableCell>{item.hardware}</TableCell>
                   <TableCell>{item.informationResource}</TableCell>
-                  <TableCell>{icsToolOptionsList.find(opt => opt.value === item.icsTool)?.label || item.icsTool}</TableCell>
+                  <TableCell className="max-w-[100px] break-words">{icsToolOptionsList.find(opt => opt.value === item.icsTool)?.label || item.icsTool}</TableCell>
                   <TableCell>{item.implementationStatus}</TableCell>
                   <TableCell>{item.implementationLevel}</TableCell>
-                  <TableCell className="max-w-[150px] break-words">{item.comment}</TableCell>
+                  <TableCell className="max-w-[120px] break-words">{item.comment}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        ) : <p className="text-sm text-muted-foreground">Інформація не надана.</p>}
+        ) : <p className="text-sm text-muted-foreground print:text-gray-500">Інформація не надана.</p>}
       </section>
 
-      <section className="mb-8 page-break-before">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2">2. Цільовий профіль безпеки</h2>
+      <section className="mb-8 print:mb-6 page-break-before">
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2 print:text-xl print:border-gray-400 print:text-black">2. Цільовий профіль безпеки</h2>
          {targetProfileData ? (
-            <Table className="text-xs">
+            <Table className="text-xs print:text-[10px]">
                  <TableHeader>
                     <TableRow>
                         <TableHead>Цільові Ідентифікатори</TableHead>
@@ -295,27 +417,15 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
                     </TableRow>
                 </TableBody>
             </Table>
-         ) : <p className="text-sm text-muted-foreground">Інформація не надана.</p>}
+         ) : <p className="text-sm text-muted-foreground print:text-gray-500">Інформація не надана.</p>}
       </section>
       
-      <section className="mb-8 page-break-before">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2">3. Аналіз Розривів та Рекомендації</h2>
-        <div className="text-sm bg-gray-100 dark:bg-card p-4 rounded-md">
-            <p className="whitespace-pre-wrap">
-            На основі порівняння Поточного та Цільового профілів безпеки, визначте необхідні заходи для досягнення цілей.
-            Цей розділ призначений для ручного заповнення або документування стратегії покращення.
-            </p>
-            <p className="mt-2 whitespace-pre-wrap">
-            Наприклад:
-            Для досягнення ідентифікатора(ів) [{targetProfileData?.identifiers.map(id => id.value).join(', ') || 'Цільові Ідентифікатори'}]:
-            - Необхідно впровадити/покращити наступні засоби ІКЗ: [Перелік засобів]
-            - Необхідно усунути/мінімізувати наступні загрози: [Перелік загроз з Поточного профілю, що не відповідають цілям]
-            - Необхідно застосувати додаткові контролі до активів: [Перелік активів та контролів]
-            </p>
-        </div>
+      <section className="mb-8 print:mb-6 page-break-before">
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2 print:text-xl print:border-gray-400 print:text-black">3. Аналіз Розривів та Рекомендації</h2>
+        {renderRecommendationsSection(currentProfileData, targetProfileData)}
       </section>
 
-       <footer className="mt-12 pt-4 border-t text-center text-xs text-muted-foreground">
+       <footer className="mt-12 pt-4 border-t text-center text-xs text-muted-foreground print:text-[8px] print:text-gray-400 print:mt-8">
         КіберСтраж - Захист вашої інфраструктури
       </footer>
     </div>
@@ -341,6 +451,16 @@ export default function ReportingPage() {
   const handlePrint = useReactToPrint({
     content: () => reportPrintRef.current,
     documentTitle: `Звіт_КіберСтраж_${new Date().toISOString().split('T')[0]}`,
+    pageStyle: `
+      @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .page-break-before { page-break-before: always; }
+        table { page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+      }
+    `,
   });
 
   const form = useForm<ReportPageFormValues>({
@@ -400,8 +520,12 @@ export default function ReportingPage() {
     fetchAssetsForReport();
   }, [fetchAssetsForReport]);
 
-  const getFirstAvailableAsset = (options: string[]): string => {
-    return options.find(opt => !baseAssetOptions.includes(opt as any)) || '-';
+  const getFirstAvailableAsset = (assetOptions: string[], preferredType: AssetCategoryKey, affectedTypes: AssetCategoryKey[]): string => {
+    if (affectedTypes.includes(preferredType)) {
+        const firstRealAsset = assetOptions.find(opt => !baseAssetOptions.includes(opt as any));
+        if (firstRealAsset) return firstRealAsset;
+    }
+    return '-';
   };
 
   const handleSelectedRiskChange = (selectedRiskKey: string, threatIndex: number) => {
@@ -416,16 +540,26 @@ export default function ReportingPage() {
       const affected = details.affectedAssetTypes;
       const isOther = selectedRiskKey === "Інша загроза (потребує ручного опису)";
 
-      if (!isOther && affected.length > 0) {
-        form.setValue(`${pathPrefix}.software`, affected.includes('software') ? getFirstAvailableAsset(softwareAssetOptions) : '-', { shouldDirty: true });
-        form.setValue(`${pathPrefix}.hardware`, affected.includes('hardware') ? getFirstAvailableAsset(hardwareAssetOptions) : '-', { shouldDirty: true });
-        form.setValue(`${pathPrefix}.informationResource`, affected.includes('informationResource') ? getFirstAvailableAsset(informationResourceAssetOptions) : '-', { shouldDirty: true });
-      } else if (isOther) {
-        if (!form.getValues(`${pathPrefix}.software`)) form.setValue(`${pathPrefix}.software`, '-', { shouldDirty: true });
-        if (!form.getValues(`${pathPrefix}.hardware`)) form.setValue(`${pathPrefix}.hardware`, '-', { shouldDirty: true });
-        if (!form.getValues(`${pathPrefix}.informationResource`)) form.setValue(`${pathPrefix}.informationResource`, '-', { shouldDirty: true });
+      form.setValue(`${pathPrefix}.software`, isOther ? (form.getValues(`${pathPrefix}.software`) || '-') : getFirstAvailableAsset(softwareAssetOptions, 'software', affected), { shouldDirty: true });
+      form.setValue(`${pathPrefix}.hardware`, isOther ? (form.getValues(`${pathPrefix}.hardware`) || '-') : getFirstAvailableAsset(hardwareAssetOptions, 'hardware', affected), { shouldDirty: true });
+      form.setValue(`${pathPrefix}.informationResource`, isOther ? (form.getValues(`${pathPrefix}.informationResource`) || '-') : getFirstAvailableAsset(informationResourceAssetOptions, 'informationResource', affected), { shouldDirty: true });
+      
+      // ICS Tool is always manually selected or set to '-' if not specifically affected for non-other threats
+      if (!isOther && !affected.includes('icsTool')) {
+        form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
+      } else if (isOther && !form.getValues(`${pathPrefix}.icsTool`)) {
+         form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
       }
-      // ICS Tool is always manually selected by the user
+
+
+    } else { // Reset if somehow details are not found (e.g. bad key)
+        form.setValue(`${pathPrefix}.identifier`, 'N/A', { shouldDirty: true });
+        form.setValue(`${pathPrefix}.vulnerabilityDescription`, '', { shouldDirty: true });
+        form.setValue(`${pathPrefix}.ttpDescription`, '', { shouldDirty: true });
+        form.setValue(`${pathPrefix}.software`, '-', { shouldDirty: true });
+        form.setValue(`${pathPrefix}.hardware`, '-', { shouldDirty: true });
+        form.setValue(`${pathPrefix}.informationResource`, '-', { shouldDirty: true });
+        form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
     }
   };
   
@@ -738,7 +872,7 @@ export default function ReportingPage() {
       </div>
       <CardDescription>
         Створіть звіт, обравши Загрозу, що автоматично заповнить Вразливість, ТТП та Ідентифікатор. 
-        Активи підтягуються з Реєстру активів. Нерелевантні типи активів будуть автоматично встановлені в "-" або деактивовані для вибору, окрім сценарію "Інша загроза".
+        Активи підтягуються з Реєстру активів та можуть бути автоматично встановлені в "-" або деактивовані для вибору, якщо нерелевантні для обраної загрози (окрім сценарію "Інша загроза").
         Засіб ІКЗ обирається зі списку. Поля Вразливості, ТТП та Коментар можна редагувати вручну.
       </CardDescription>
 
@@ -775,10 +909,10 @@ export default function ReportingPage() {
                             ttpDescription: newRiskDetails.ttp,
                             implementationStatus: 'Реалізовано',
                             implementationLevel: '3',
-                            software: (!isOtherNew && affectedForNew.includes('software')) ? getFirstAvailableAsset(softwareAssetOptions) : '-',
-                            hardware: (!isOtherNew && affectedForNew.includes('hardware')) ? getFirstAvailableAsset(hardwareAssetOptions) : '-',
-                            informationResource: (!isOtherNew && affectedForNew.includes('informationResource')) ? getFirstAvailableAsset(informationResourceAssetOptions) : '-',
-                            icsTool: '-', 
+                            software: isOtherNew ? '-' : getFirstAvailableAsset(softwareAssetOptions, 'software', affectedForNew),
+                            hardware: isOtherNew ? '-' : getFirstAvailableAsset(hardwareAssetOptions, 'hardware', affectedForNew),
+                            informationResource: isOtherNew ? '-' : getFirstAvailableAsset(informationResourceAssetOptions, 'informationResource', affectedForNew),
+                            icsTool: isOtherNew ? '-' : (affectedForNew.includes('icsTool') ? (icsToolOptionsList[1]?.value || '-') : '-'),
                             comment: '', 
                         };
                         appendCurrentThreat(newThreatToAdd);
@@ -811,7 +945,7 @@ export default function ReportingPage() {
         </Card>
       ) : null}
 
-      {reportGenerated && (
+      {reportGenerated && currentProfileForDisplay && targetProfileForDisplay && (
         <>
         <div className="flex justify-end gap-2 mb-4 print:hidden">
             <Button variant="outline" onClick={() => { setReportGenerated(false); setCurrentProfileForDisplay(null); setTargetProfileForDisplay(null); fetchAssetsForReport(); form.reset({ currentProfileDetails: [defaultThreatValues], targetProfileDetails: { identifiers: [defaultTargetIdentifierValue], implementationLevel: '4', appliesToSoftware: true, appliesToHardware: true, appliesToInformationResource: true, appliesToIcsTool: true } }); }}>
@@ -826,23 +960,23 @@ export default function ReportingPage() {
         <div style={{ display: "none" }}>
           <PrintableReport
             ref={reportPrintRef}
-            currentProfileData={currentProfileForDisplay || []}
-            targetProfileData={targetProfileForDisplay!}
+            currentProfileData={currentProfileForDisplay}
+            targetProfileData={targetProfileForDisplay}
           />
         </div>
 
         <Card className="p-6 print:shadow-none print:border-none" id="report-content-display">
           <CardHeader className="text-center print:pb-2">
-            <h2 className="text-2xl font-headline text-primary">Звіт про безпеку "КіберСтраж"</h2>
-            <CardDescription>Згенеровано: {new Date().toLocaleDateString('uk-UA')} {new Date().toLocaleTimeString('uk-UA')}</CardDescription>
+            <h2 className="text-2xl font-headline text-primary print:text-xl print:text-black">Звіт про безпеку "КіберСтраж"</h2>
+            <CardDescription className="print:text-xs print:text-gray-500">Згенеровано: {new Date().toLocaleDateString('uk-UA')} {new Date().toLocaleTimeString('uk-UA')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
             <section>
-              <h3 className="text-xl font-headline mb-2 border-b pb-1">Поточний профіль безпеки</h3>
-              <ScrollArea className="h-auto max-h-[400px] w-full rounded-md border p-0 print:h-auto print:border-none print:p-0">
+              <h3 className="text-xl font-headline mb-2 border-b pb-1 print:text-lg print:border-gray-400 print:text-black">Поточний профіль безпеки</h3>
+              <ScrollArea className="h-auto max-h-[400px] w-full rounded-md border p-0 print:h-auto print:max-h-none print:border-none print:p-0">
                 {currentProfileForDisplay && currentProfileForDisplay.length > 0 ? (
-                 <Table className="text-xs">
+                 <Table className="text-xs print:text-[9px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead className="min-w-[120px]">Загроза</TableHead>
@@ -876,17 +1010,17 @@ export default function ReportingPage() {
                       ))}
                     </TableBody>
                   </Table>
-                ) : <p className="text-sm text-muted-foreground p-3">Інформація не надана.</p>}
+                ) : <p className="text-sm text-muted-foreground p-3 print:text-gray-500">Інформація не надана.</p>}
               </ScrollArea>
             </section>
 
-            <Separator className="my-6" />
+            <Separator className="my-6 print:my-3" />
 
             <section>
-              <h3 className="text-xl font-headline mb-2 border-b pb-1">Цільовий профіль безпеки</h3>
-              <ScrollArea className="h-auto max-h-[200px] w-full rounded-md border p-0 print:h-auto print:border-none print:p-0">
+              <h3 className="text-xl font-headline mb-2 border-b pb-1 print:text-lg print:border-gray-400 print:text-black">Цільовий профіль безпеки</h3>
+              <ScrollArea className="h-auto max-h-[200px] w-full rounded-md border p-0 print:h-auto print:max-h-none print:border-none print:p-0">
                 {targetProfileForDisplay ? (
-                    <Table className="text-xs">
+                    <Table className="text-xs print:text-[9px]">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Цільові Ідентифікатори</TableHead>
@@ -908,34 +1042,17 @@ export default function ReportingPage() {
                             </TableRow>
                         </TableBody>
                     </Table>
-                ) : <p className="text-sm text-muted-foreground p-3">Інформація не надана.</p>}
+                ) : <p className="text-sm text-muted-foreground p-3 print:text-gray-500">Інформація не надана.</p>}
               </ScrollArea>
             </section>
 
-            <Separator className="my-6" />
+            <Separator className="my-6 print:my-3" />
             
-            <section>
-              <h3 className="text-xl font-headline mb-2 border-b pb-1">Аналіз Розривів та Рекомендації</h3>
-                <div className="text-sm p-3 rounded-md border bg-muted/20">
-                    <p className="whitespace-pre-wrap">
-                    На основі порівняння Поточного та Цільового профілів безпеки, визначте необхідні заходи для досягнення цілей.
-                    Цей розділ призначений для ручного заповнення або документування стратегії покращення.
-                    </p>
-                    <p className="mt-2 whitespace-pre-wrap">
-                    Наприклад:
-                    Для досягнення ідентифікатора(ів) [{targetProfileForDisplay?.identifiers.map(id => id.value).join(', ') || 'Цільові Ідентифікатори'}]:
-                    - Необхідно впровадити/покращити наступні засоби ІКЗ: [Перелік засобів]
-                    - Необхідно усунути/мінімізувати наступні загрози: [Перелік загроз з Поточного профілю, що не відповідають цілям]
-                    - Необхідно застосувати додаткові контролі до активів: [Перелік активів та контролів]
-                    </p>
-                </div>
+            <section className="print:break-before-page">
+              <h3 className="text-xl font-headline mb-2 border-b pb-1 print:text-lg print:border-gray-400 print:text-black">Аналіз Розривів та Рекомендації</h3>
+                {renderRecommendationsSection(currentProfileForDisplay, targetProfileForDisplay)}
             </section>
           </CardContent>
-          <CardFooter className="print:hidden">
-            <p className="text-xs text-muted-foreground text-center w-full">
-              Це системно згенерований звіт. Для отримання PDF використовуйте кнопку "Роздрукувати/Зберегти PDF" вище.
-            </p>
-          </CardFooter>
         </Card>
         </>
       )}
