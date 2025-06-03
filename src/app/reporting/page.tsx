@@ -31,57 +31,128 @@ import { useToast } from "@/hooks/use-toast";
 const implementationStatusOptions = ["Реалізовано", "Не реалізовано", "Частково реалізовано", "Не застосовується"] as const;
 const implementationLevelOptions = ["1", "2", "3", "4"] as const;
 
-const relatedThreatOptions = [
-  "Несанкціонований доступ до бази користувачів",
-  "Шкідливе програмне забезпечення",
-  "Фішинг",
-  "DoS-атака на портал",
-  "Порушення політики безпеки",
-  "Витік даних",
-  "Соціальна інженерія",
-  "Недостатній контроль доступу",
-  "SQL Injection на сервері БД",
-  "XSS у WordPress",
-  "Незахищене ліцензування CRM",
-  "Атака через шкідливі вкладення",
-  "Обхід автентифікації",
-  "Фішинг-посилання у CRM",
-  "Збереження паролів у відкритому вигляді",
-  "Використання уразливого компоненту СМS",
-  "Інше"
-].sort((a, b) => a === "Інше" ? 1 : b === "Інше" ? -1 : a.localeCompare(b)) as const;
+const threatDetailsMap: Record<string, {
+  identifier: string;
+  vulnerability: string; // Original "Вразливість"
+  ttpDescription: string; // "Можливі дії зловмисника"
+  threatDescription: string; // "Загроза (конкретний ризик)"
+}> = {
+  "Атака через шкідливі вкладення": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Атака через шкідливі вкладення",
+    ttpDescription: "Відкриття вкладення, інфікування систем шкідливим ПЗ",
+    threatDescription: "Інфікування робочих станцій або серверів, втрата контролю над системою"
+  },
+  "Використання уразливого компонента CMS": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Використання уразливого компонента CMS",
+    ttpDescription: "Експлуатація вразливості, запуск шкідливого коду",
+    threatDescription: "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту"
+  },
+  "Витік даних": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Витік даних",
+    ttpDescription: "Несанкціонований доступ, копіювання, передача інформації",
+    threatDescription: "Втрата конфіденційної інформації, репутаційні й фінансові збитки"
+  },
+  "Збереження паролів у відкритому вигляді": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Збереження паролів у відкритому вигляді",
+    ttpDescription: "Викрадення або витік паролів",
+    threatDescription: "Несанкціонований доступ до систем і сервісів"
+  },
+  "Недостатній контроль доступу": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Недостатній контроль доступу",
+    ttpDescription: "Несанкціонований вхід, підміна прав користувачів",
+    threatDescription: "Порушення цілісності, витік даних, саботаж систем"
+  },
+  "Незахищене ліцензування CRM": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Незахищене ліцензування CRM",
+    ttpDescription: "Викрадення ліцензійних ключів, використання піратських копій",
+    threatDescription: "Юридичні проблеми, втрата контролю над системою"
+  },
+  "Несанкціонований доступ до бази користувачів": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Несанкціонований доступ до бази користувачів",
+    ttpDescription: "Викрадення або модифікація даних користувачів",
+    threatDescription: "Викрадення персональних даних, порушення аутентифікації"
+  },
+  "Обхід автентифікації": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Обхід автентифікації",
+    ttpDescription: "Використання вразливостей для обходу перевірки ідентичності",
+    threatDescription: "Несанкціонований доступ, компрометація систем"
+  },
+  "Порушення політики безпеки": {
+    identifier: 'ID.AM-5',
+    vulnerability: "Порушення політики безпеки",
+    ttpDescription: "Несанкціоновані зміни, ігнорування правил",
+    threatDescription: "Підвищений ризик інцидентів, внутрішні загрози"
+  },
+  "Соціальна інженерія": {
+    identifier: 'ID.AM-5',
+    vulnerability: "Соціальна інженерія",
+    ttpDescription: "Обман співробітників для отримання доступу",
+    threatDescription: "Витік інформації, компрометація облікових даних"
+  },
+  "Фішинг": {
+    identifier: 'ID.AM-5',
+    vulnerability: "Фішинг",
+    ttpDescription: "Розсилання підробних листів для отримання даних",
+    threatDescription: "Крадіжка облікових даних, несанкціонований доступ"
+  },
+  "Фішинг-посилання у CRM": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Фішинг-посилання у CRM",
+    ttpDescription: "Впровадження шкідливих посилань в CRM",
+    threatDescription: "Компрометація користувацьких акаунтів, втручання у роботу CRM"
+  },
+  "Шкідливе програмне забезпечення": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Шкідливе програмне забезпечення",
+    ttpDescription: "Інсталяція, поширення шкідливих модулів",
+    threatDescription: "Пошкодження систем, крадіжка даних, відмова у обслуговуванні"
+  },
+  "DoS-атака на портал": {
+    identifier: 'ID.AM-2',
+    vulnerability: "DoS-атака на портал",
+    ttpDescription: "Перевантаження сервера запитами",
+    threatDescription: "Недоступність сервісу для користувачів"
+  },
+  "SQL Injection на сервері бази даних": {
+    identifier: 'ID.AM-2',
+    vulnerability: "SQL Injection на сервері бази даних",
+    ttpDescription: "Вставка шкідливого SQL-коду",
+    threatDescription: "Викрадення, модифікація або видалення даних у базі"
+  },
+  "XSS у WordPress": {
+    identifier: 'ID.AM-2',
+    vulnerability: "XSS у WordPress",
+    ttpDescription: "Впровадження шкідливого JavaScript-коду",
+    threatDescription: "Викрадення сесій, перенаправлення користувачів, викрадення даних"
+  },
+  "Інше": {
+    identifier: 'N/A',
+    vulnerability: "Інше",
+    ttpDescription: "Опишіть можливі дії зловмисника...",
+    threatDescription: "Опишіть конкретний ризик..."
+  }
+};
 
+const relatedThreatOptions = Object.keys(threatDetailsMap).sort((a, b) => a === "Інше" ? 1 : b === "Інше" ? -1 : a.localeCompare(b)) as [string, ...string[]];
 
 const baseAssetOptions = ["-", "Інше"] as const;
-
-const threatConfigurations: Record<string, { identifier: string; }> = {
-  "Несанкціонований доступ до бази користувачів": { identifier: 'ID.AM-3' },
-  "Шкідливе програмне забезпечення": { identifier: 'ID.AM-1' },
-  "Фішинг": { identifier: 'ID.AM-2' },
-  "DoS-атака на портал": { identifier: 'ID.AM-5' },
-  "Порушення політики безпеки": { identifier: 'ID.AM-1' },
-  "Витік даних": { identifier: 'ID.AM-3' },
-  "Соціальна інженерія": { identifier: 'ID.AM-2' },
-  "Недостатній контроль доступу": { identifier: 'ID.AM-3' },
-  "SQL Injection на сервері БД": { identifier: 'ID.AM-3' },
-  "XSS у WordPress": { identifier: 'ID.AM-4' },
-  "Незахищене ліцензування CRM": { identifier: 'ID.AM-1' },
-  "Атака через шкідливі вкладення": { identifier: 'ID.AM-1' },
-  "Обхід автентифікації": { identifier: 'ID.AM-3' },
-  "Фішинг-посилання у CRM": { identifier: 'ID.AM-2' },
-  "Збереження паролів у відкритому вигляді": { identifier: 'ID.AM-3' },
-  "Використання уразливого компоненту СМS": { identifier: 'ID.AM-1' },
-  "Інше": { identifier: 'N/A' }
-};
 
 const singleCurrentProfileThreatSchema = z.object({
   id: z.string(),
   identifier: z.string().optional(),
   implementationStatus: z.string().optional(),
   implementationLevel: z.string().optional(),
-  relatedThreat: z.string().optional(),
-  threatDescription: z.string().optional(),
-  ttpDescription: z.string().optional(),
+  relatedThreat: z.string().optional(), // This will store the "Вразливість"
+  threatDescription: z.string().optional(), // "Загроза (конкретний ризик)"
+  ttpDescription: z.string().optional(), // "Можливі дії зловмисника"
   software: z.string().optional(),
   hardware: z.string().optional(),
   informationResource: z.string().optional(),
@@ -111,19 +182,22 @@ const reportPageFormSchema = z.object({
 
 type ReportPageFormValues = z.infer<typeof reportPageFormSchema>;
 
+const defaultSelectedThreatKey = relatedThreatOptions.find(opt => opt !== "Інше") || relatedThreatOptions[0];
+const defaultThreatDetails = threatDetailsMap[defaultSelectedThreatKey] || threatDetailsMap["Інше"];
+
 const defaultThreatValues: SingleCurrentProfileThreatValues = {
   id: Date.now().toString(),
-  relatedThreat: 'Несанкціонований доступ до бази користувачів',
-  identifier: 'ID.AM-3',
+  relatedThreat: defaultSelectedThreatKey,
+  identifier: defaultThreatDetails.identifier,
   implementationStatus: 'Реалізовано',
   implementationLevel: '3',
   software: '-',
   hardware: '-',
   informationResource: '-',
   icsTool: '-',
-  threatDescription: 'Недостатній контроль доступу до баз даних користувачів, що може призвести до несанкціонованого перегляду, зміни або видалення даних.',
-  ttpDescription: 'OWASP A5 - Broken Access Control: Використання прямих посилань на об\'єкти без належної перевірки прав, відсутність перевірки прав на рівні бізнес-логіки.',
-  comment: 'Кінцеві точки мають базовий антивірус, але немає рішення EDR. Регулярні оновлення ОС та ПЗ проводяться.',
+  threatDescription: defaultThreatDetails.threatDescription,
+  ttpDescription: defaultThreatDetails.ttpDescription,
+  comment: 'Загальні заходи захисту на рівні мережі та кінцевих точок впроваджені.',
 };
 
 const defaultTargetIdentifierValue = { id: Date.now().toString(), value: 'ID.AM-3 Target' };
@@ -134,17 +208,16 @@ const formatCurrentProfileDataToString = (data: SingleCurrentProfileThreatValues
 
   let summary = "Поточний профіль безпеки (виявлені загрози та їх деталі):\n\n";
   data.forEach((threat, index) => {
-    summary += `Загроза ${index + 1}:\n`;
-    if (threat.relatedThreat) summary += `- Пов'язана загроза: ${threat.relatedThreat}\n`;
+    summary += `Загроза ${index + 1} (на основі вразливості: ${threat.relatedThreat || 'Не вказано'}):\n`;
     if (threat.identifier) summary += `  - Ідентифікатор: ${threat.identifier}\n`;
-    if (threat.implementationStatus) summary += `  - Статус реалізації: ${threat.implementationStatus}\n`;
-    if (threat.implementationLevel) summary += `  - Рівень впровадження: ${threat.implementationLevel}\n`;
-    if (threat.software && threat.software !== '-') summary += `  - Програмне забезпечення (Актив): ${threat.software}\n`;
-    if (threat.hardware && threat.hardware !== '-') summary += `  - Апаратне забезпечення (Актив): ${threat.hardware}\n`;
-    if (threat.informationResource && threat.informationResource !== '-') summary += `  - Інформаційний ресурс (Актив): ${threat.informationResource}\n`;
-    if (threat.icsTool && threat.icsTool !== '-') summary += `  - Засіб ІКЗ (Актив): ${threat.icsTool}\n`;
-    if (threat.threatDescription) summary += `  - Опис загрози: ${threat.threatDescription}\n`;
-    if (threat.ttpDescription) summary += `  - Опис ТТР: ${threat.ttpDescription}\n`;
+    if (threat.threatDescription) summary += `  - Опис загрози (ризик): ${threat.threatDescription}\n`;
+    if (threat.ttpDescription) summary += `  - Можливі дії зловмисника (TTP): ${threat.ttpDescription}\n`;
+    if (threat.implementationStatus) summary += `  - Статус реалізації контрзаходів: ${threat.implementationStatus}\n`;
+    if (threat.implementationLevel) summary += `  - Рівень впровадження контрзаходів: ${threat.implementationLevel}\n`;
+    if (threat.software && threat.software !== '-') summary += `  - Пов'язане програмне забезпечення (Актив): ${threat.software}\n`;
+    if (threat.hardware && threat.hardware !== '-') summary += `  - Пов'язане апаратне забезпечення (Актив): ${threat.hardware}\n`;
+    if (threat.informationResource && threat.informationResource !== '-') summary += `  - Пов'язаний інформаційний ресурс (Актив): ${threat.informationResource}\n`;
+    if (threat.icsTool && threat.icsTool !== '-') summary += `  - Пов'язаний засіб ІКЗ (Актив): ${threat.icsTool}\n`;
     if (threat.comment && threat.comment.trim() !== '') summary += `  - Коментар: ${threat.comment}\n`;
     summary += "\n";
   });
@@ -158,7 +231,7 @@ const formatTargetProfileDataToString = (data: z.infer<typeof targetProfileDetai
   } else {
     summary += `- Цільові ідентифікатори: не вказано\n`;
   }
-  if (data.implementationLevel) summary += `- Рівень впровадження: ${data.implementationLevel}\n`;
+  if (data.implementationLevel) summary += `- Бажаний рівень впровадження контрзаходів: ${data.implementationLevel}\n`;
 
   const selectedAssets: string[] = [];
   if (data.appliesToSoftware) selectedAssets.push("Програмне забезпечення");
@@ -167,9 +240,9 @@ const formatTargetProfileDataToString = (data: z.infer<typeof targetProfileDetai
   if (data.appliesToIcsTool) selectedAssets.push("Засіб ІКЗ");
 
   if (selectedAssets.length > 0) {
-    summary += `- Застосовується до активів: ${selectedAssets.join(', ')}\n`;
+    summary += `- Застосовується до типів активів: ${selectedAssets.join(', ')}\n`;
   } else {
-    summary += `- Активи не обрані\n`;
+    summary += `- Типи активів не обрані\n`;
   }
 
   if (summary.trim() === `Цільовий профіль безпеки:`) {
@@ -195,7 +268,7 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
   return (
     <div ref={ref} className="p-8 print:p-4 font-sans">
       <header className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-primary mb-2">Звіт про безпеку "КіберСтраж AI"</h1>
+        <h1 className="text-3xl font-bold text-primary mb-2">Звіт про безпеку "КіберСтраж"</h1>
         <p className="text-sm text-muted-foreground">Згенеровано: {new Date().toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' })} {new Date().toLocaleTimeString('uk-UA')}</p>
       </header>
 
@@ -243,7 +316,7 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
         </>
       )}
        <footer className="mt-12 pt-4 border-t text-center text-xs text-muted-foreground">
-        КіберСтраж AI - Захист вашої інфраструктури
+        КіберСтраж - Захист вашої інфраструктури
       </footer>
     </div>
   );
@@ -260,7 +333,6 @@ export default function ReportingPage() {
   const [displayedCurrentProfile, setDisplayedCurrentProfile] = useState<string>('');
   const [displayedTargetProfile, setDisplayedTargetProfile] = useState<string>('');
 
-  const [allAssets, setAllAssets] = useState<Asset[]>([]);
   const [softwareOptions, setSoftwareOptions] = useState<string[]>([...baseAssetOptions]);
   const [hardwareOptions, setHardwareOptions] = useState<string[]>([...baseAssetOptions]);
   const [informationResourceOptions, setInformationResourceOptions] = useState<string[]>([...baseAssetOptions]);
@@ -271,7 +343,7 @@ export default function ReportingPage() {
   const reportPrintRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
     content: () => reportPrintRef.current,
-    documentTitle: `Звіт_КіберСтраж_AI_${new Date().toISOString().split('T')[0]}`,
+    documentTitle: `Звіт_КіберСтраж_${new Date().toISOString().split('T')[0]}`,
   });
 
   const form = useForm<ReportPageFormValues>({
@@ -304,8 +376,7 @@ export default function ReportingPage() {
       const assetsCollectionRef = collection(db, 'assets');
       const assetSnapshot = await getDocs(assetsCollectionRef);
       const assetsList = assetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
-      setAllAssets(assetsList);
-
+      
       const sw = assetsList.filter(a => a.type === 'Програмне забезпечення').map(a => a.name);
       setSoftwareOptions(prev => [...new Set([...baseAssetOptions, ...sw])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
 
@@ -315,7 +386,7 @@ export default function ReportingPage() {
       const ir = assetsList.filter(a => a.type === 'Інформація').map(a => a.name);
       setInformationResourceOptions(prev => [...new Set([...baseAssetOptions, ...ir])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
 
-      const ics = assetsList.filter(a => a.type === 'Обладнання' || a.type === 'Програмне забезпечення').map(a => a.name);
+      const ics = assetsList.filter(a => a.type === 'Обладнання' || a.type === 'Програмне забезпечення').map(a => a.name); // Assuming ICS tools can be HW or SW
       setIcsToolOptions(prev => [...new Set([...baseAssetOptions, ...ics])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
 
     } catch (error) {
@@ -328,31 +399,17 @@ export default function ReportingPage() {
     fetchAssets();
   }, [fetchAssets]);
 
-
-  const watchedThreats = useWatch({
-    control: form.control,
-    name: 'currentProfileDetails',
-  });
-
+  // Effect to set default asset selection ('-') if not already set
+  const currentProfileDetailsWatch = useWatch({ control: form.control, name: 'currentProfileDetails' });
   useEffect(() => {
-    if (watchedThreats) {
-      watchedThreats.forEach((threat, index) => {
-        if (threat.relatedThreat) {
-          const config = threatConfigurations[threat.relatedThreat] || threatConfigurations["Інше"];
-          const currentIdentifier = form.getValues(`currentProfileDetails.${index}.identifier`);
-          if (currentIdentifier !== config.identifier) {
-            form.setValue(`currentProfileDetails.${index}.identifier`, config.identifier, { shouldValidate: true });
-          }
+    currentProfileDetailsWatch.forEach((_, index) => {
+      if (form.getValues(`currentProfileDetails.${index}.software`) === undefined) form.setValue(`currentProfileDetails.${index}.software`, '-', { shouldValidate: false });
+      if (form.getValues(`currentProfileDetails.${index}.hardware`) === undefined) form.setValue(`currentProfileDetails.${index}.hardware`, '-', { shouldValidate: false });
+      if (form.getValues(`currentProfileDetails.${index}.informationResource`) === undefined) form.setValue(`currentProfileDetails.${index}.informationResource`, '-', { shouldValidate: false });
+      if (form.getValues(`currentProfileDetails.${index}.icsTool`) === undefined) form.setValue(`currentProfileDetails.${index}.icsTool`, '-', { shouldValidate: false });
+    });
+  }, [currentProfileDetailsWatch, form]);
 
-          if (form.getValues(`currentProfileDetails.${index}.software`) === undefined) form.setValue(`currentProfileDetails.${index}.software`, '-', { shouldValidate: false });
-          if (form.getValues(`currentProfileDetails.${index}.hardware`) === undefined) form.setValue(`currentProfileDetails.${index}.hardware`, '-', { shouldValidate: false });
-          if (form.getValues(`currentProfileDetails.${index}.informationResource`) === undefined) form.setValue(`currentProfileDetails.${index}.informationResource`, '-', { shouldValidate: false });
-          if (form.getValues(`currentProfileDetails.${index}.icsTool`) === undefined) form.setValue(`currentProfileDetails.${index}.icsTool`, '-', { shouldValidate: false });
-
-        }
-      });
-    }
-  }, [watchedThreats, form]);
 
   const handleGenerateReport = async (values: ReportPageFormValues) => {
     setIsLoading(true);
@@ -374,15 +431,26 @@ export default function ReportingPage() {
       const output = await analyzeSecurityGaps(input);
       setAiAnalysisResult(output);
       setReportGenerated(true);
+      toast({ title: "Успіх", description: "Звіт та аналіз ШІ успішно згенеровано." });
     } catch (err) {
       console.error("Report Generation Error:", err);
-      setError(err instanceof Error ? err.message : 'Сталася невідома помилка під час генерації звіту.');
-      setReportGenerated(true);
+      const errorMessage = err instanceof Error ? err.message : 'Сталася невідома помилка під час генерації звіту.';
+      setError(errorMessage);
+      toast({ title: "Помилка ШІ", description: errorMessage, variant: "destructive" });
+      setReportGenerated(true); // Still show the non-AI part of the report
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleRelatedThreatChange = (value: string, threatIndex: number) => {
+    const details = threatDetailsMap[value];
+    if (details) {
+      form.setValue(`currentProfileDetails.${threatIndex}.identifier`, details.identifier, { shouldDirty: true });
+      form.setValue(`currentProfileDetails.${threatIndex}.threatDescription`, details.threatDescription, { shouldDirty: true });
+      form.setValue(`currentProfileDetails.${threatIndex}.ttpDescription`, details.ttpDescription, { shouldDirty: true });
+    }
+  };
 
   const renderCurrentProfileThreatFields = (threatIndex: number) => {
     return (
@@ -393,6 +461,7 @@ export default function ReportingPage() {
           size="icon"
           className="absolute top-2 right-2 h-7 w-7 text-destructive hover:bg-destructive/10"
           onClick={() => currentThreatFields.length > 1 ? removeCurrentThreat(threatIndex) : toast({title: "Помилка", description:"Має бути принаймні одна загроза.", variant: "destructive"})}
+          aria-label={`Видалити загрозу #${threatIndex + 1}`}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -402,9 +471,15 @@ export default function ReportingPage() {
         name={`currentProfileDetails.${threatIndex}.relatedThreat`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Пов'язана загроза</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть загрозу" /></SelectTrigger></FormControl>
+            <FormLabel>Пов'язана вразливість</FormLabel>
+            <Select
+              onValueChange={(value) => {
+                field.onChange(value);
+                handleRelatedThreatChange(value, threatIndex);
+              }}
+              defaultValue={field.value}
+            >
+              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть вразливість" /></SelectTrigger></FormControl>
               <SelectContent>
                 {relatedThreatOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
@@ -418,8 +493,30 @@ export default function ReportingPage() {
         name={`currentProfileDetails.${threatIndex}.identifier`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Ідентифікатор</FormLabel>
+            <FormLabel>Ідентифікатор (ID.AM-X)</FormLabel>
             <FormControl><Input placeholder="Автоматично" {...field} disabled /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+       <FormField
+        control={form.control}
+        name={`currentProfileDetails.${threatIndex}.threatDescription`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Опис загрози (конкретний ризик)</FormLabel>
+            <FormControl><Textarea placeholder="Опис конкретного ризику, що виникає з вразливості..." {...field} className="min-h-[100px] font-code text-sm" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name={`currentProfileDetails.${threatIndex}.ttpDescription`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Можливі дії зловмисника (TTP)</FormLabel>
+            <FormControl><Textarea placeholder="Опис тактик, технік та процедур зловмисника..." {...field} className="min-h-[100px] font-code text-sm" /></FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -493,7 +590,7 @@ export default function ReportingPage() {
         name={`currentProfileDetails.${threatIndex}.implementationStatus`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Статус реалізації</FormLabel>
+            <FormLabel>Статус реалізації контрзаходів</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть статус" /></SelectTrigger></FormControl>
               <SelectContent>
@@ -509,7 +606,7 @@ export default function ReportingPage() {
         name={`currentProfileDetails.${threatIndex}.implementationLevel`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Рівень впровадження (1-4)</FormLabel>
+            <FormLabel>Рівень впровадження контрзаходів (1-4)</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть рівень" /></SelectTrigger></FormControl>
               <SelectContent>
@@ -520,35 +617,13 @@ export default function ReportingPage() {
           </FormItem>
         )}
       />
-      <FormField
-        control={form.control}
-        name={`currentProfileDetails.${threatIndex}.threatDescription`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Опис загрози</FormLabel>
-            <FormControl><Textarea placeholder="Детальний опис загрози..." {...field} className="min-h-[100px] font-code text-sm" /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name={`currentProfileDetails.${threatIndex}.ttpDescription`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Опис TTP (Тактики, Техніки, Процедури)</FormLabel>
-            <FormControl><Textarea placeholder="Опис TTP..." {...field} className="min-h-[100px] font-code text-sm" /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
        <FormField
         control={form.control}
         name={`currentProfileDetails.${threatIndex}.comment`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Загальний коментар / Додаткова інформація</FormLabel>
-            <FormControl><Textarea placeholder="Загальний опис стану, політик, процедур..." {...field} className="min-h-[150px] font-code text-sm" /></FormControl>
+            <FormLabel>Коментар (вручну)</FormLabel>
+            <FormControl><Textarea placeholder="Додаткова інформація, специфічні деталі реалізації контрзаходів..." {...field} className="min-h-[100px] font-code text-sm" /></FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -561,7 +636,7 @@ export default function ReportingPage() {
     <div className="space-y-4 p-4 border rounded-md bg-card shadow-sm">
       <h3 className="text-lg font-medium text-primary">Цільовий профіль безпеки</h3>
 
-      <FormLabel>Цільові ідентифікатори</FormLabel>
+      <FormLabel>Цільові ідентифікатори безпеки</FormLabel>
       {targetIdentifierFields.map((field, index) => (
         <div key={field.id} className="flex items-center gap-2">
           <FormField
@@ -569,7 +644,7 @@ export default function ReportingPage() {
             name={`targetProfileDetails.identifiers.${index}.value`}
             render={({ field: innerField }) => (
               <FormItem className="flex-grow">
-                <FormControl><Input placeholder={`Ідентифікатор #${index + 1}`} {...innerField} /></FormControl>
+                <FormControl><Input placeholder={`Ідентифікатор #${index + 1} (напр. ID.AM-3.Target)`} {...innerField} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -580,6 +655,7 @@ export default function ReportingPage() {
             size="icon"
             className="h-9 w-9 text-destructive hover:bg-destructive/10"
             onClick={() => targetIdentifierFields.length > 1 ? removeTargetIdentifier(index) : toast({title: "Помилка", description: "Має бути принаймні один цільовий ідентифікатор.", variant: "destructive"})}
+            aria-label={`Видалити цільовий ідентифікатор #${index + 1}`}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -592,7 +668,7 @@ export default function ReportingPage() {
         onClick={() => appendTargetIdentifier({ id: Date.now().toString(), value: ''})}
         className="mt-1"
       >
-        <PlusCircle className="mr-2 h-4 w-4" /> Додати ідентифікатор
+        <PlusCircle className="mr-2 h-4 w-4" /> Додати цільовий ідентифікатор
       </Button>
       <div className="pt-2"></div>
 
@@ -602,7 +678,7 @@ export default function ReportingPage() {
         name="targetProfileDetails.implementationLevel"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Рівень впровадження (1-4)</FormLabel>
+            <FormLabel>Бажаний рівень впровадження контрзаходів (1-4)</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть рівень" /></SelectTrigger></FormControl>
               <SelectContent>
@@ -614,7 +690,7 @@ export default function ReportingPage() {
         )}
       />
       <div>
-        <FormLabel>Активи, до яких застосовується:</FormLabel>
+        <FormLabel>Типи активів, до яких застосовується цільовий профіль:</FormLabel>
         <div className="space-y-2 mt-2">
           <FormField
             control={form.control}
@@ -669,7 +745,7 @@ export default function ReportingPage() {
       </div>
       <CardDescription>
         Створіть звіт, що порівнює поточний та цільовий профілі безпеки, та отримайте рекомендації від ШІ.
-        Актуальні активи підтягуються з Реєстру активів.
+        Актуальні активи підтягуються з Реєстру активів. Вразливості та відповідні поля заповнюються автоматично.
       </CardDescription>
 
       {!reportGenerated ? (
@@ -678,7 +754,7 @@ export default function ReportingPage() {
             <form onSubmit={form.handleSubmit(handleGenerateReport)}>
               <CardHeader>
                 <CardTitle>Створити звіт про безпеку</CardTitle>
-                <CardDescription>Заповніть деталі для поточного та цільового профілів.</CardDescription>
+                <CardDescription>Заповніть деталі для поточного та цільового профілів. Поля "Ідентифікатор", "Опис загрози" та "Опис ТТР" заповняться автоматично при виборі "Пов'язаної вразливості".</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
@@ -691,7 +767,19 @@ export default function ReportingPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => appendCurrentThreat({...defaultThreatValues, id: Date.now().toString()})}
+                    onClick={() => {
+                        const newThreatKey = relatedThreatOptions.find(opt => opt !== "Інше") || relatedThreatOptions[0];
+                        const newThreatDetails = threatDetailsMap[newThreatKey] || threatDetailsMap["Інше"];
+                        appendCurrentThreat({
+                            ...defaultThreatValues, 
+                            id: Date.now().toString(),
+                            relatedThreat: newThreatKey,
+                            identifier: newThreatDetails.identifier,
+                            threatDescription: newThreatDetails.threatDescription,
+                            ttpDescription: newThreatDetails.ttpDescription,
+                            comment: '', // Start with an empty comment for new threats
+                        });
+                    }}
                     className="mt-2"
                   >
                     <PlusCircle className="mr-2 h-4 w-4" /> Додати загрозу до поточного профілю
@@ -720,17 +808,17 @@ export default function ReportingPage() {
         </Card>
       ) : null}
 
-      {error && !isLoading && (
+      {error && !isLoading && ( // Show AI error card only if AI part failed but report data is generated
         <Card className="border-destructive bg-destructive/10">
           <CardHeader>
             <CardTitle className="flex items-center text-destructive">
               <AlertTriangle className="mr-2 h-5 w-5" />
-              Помилка генерації звіту ШІ
+              Помилка генерації аналізу ШІ
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-destructive">{error}</p>
-            <p className="text-sm text-muted-foreground mt-2">Звіт без аналізу ШІ доступний нижче.</p>
+            <p className="text-sm text-muted-foreground mt-2">Звіт без аналізу ШІ доступний нижче. Ви можете спробувати згенерувати аналіз ШІ ще раз, відредагувавши дані та натиснувши "Створити новий звіт".</p>
           </CardContent>
         </Card>
       )}
@@ -738,8 +826,8 @@ export default function ReportingPage() {
       {reportGenerated && (
         <>
         <div className="flex justify-end gap-2 mb-4 print:hidden">
-            <Button variant="outline" onClick={() => { setReportGenerated(false); setError(null); setAiAnalysisResult(null); }}>
-                Створити новий звіт
+            <Button variant="outline" onClick={() => { setReportGenerated(false); setError(null); setAiAnalysisResult(null); setIsLoading(false); }}>
+                Створити новий звіт / Редагувати
             </Button>
             <Button onClick={handlePrint} disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -758,7 +846,7 @@ export default function ReportingPage() {
 
         <Card className="p-6 print:shadow-none print:border-none" id="report-content-display">
           <CardHeader className="text-center print:pb-2">
-            <h2 className="text-2xl font-headline text-primary">Звіт про безпеку "КіберСтраж AI"</h2>
+            <h2 className="text-2xl font-headline text-primary">Звіт про безпеку "КіберСтраж"</h2>
             <CardDescription>Згенеровано: {new Date().toLocaleDateString('uk-UA')} {new Date().toLocaleTimeString('uk-UA')}</CardDescription>
           </CardHeader>
 
@@ -781,23 +869,28 @@ export default function ReportingPage() {
 
             <Separator className="my-6" />
 
-            {isLoading && !aiAnalysisResult && (
+            {isLoading && !aiAnalysisResult && ( // Show loader only when AI is processing and no result yet
                 <div className="text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
                     <p className="mt-2 text-muted-foreground">Генерація аналізу ШІ...</p>
                 </div>
             )}
-
-            {aiAnalysisResult && (
+            
+            {/* Display AI Analysis section if it's successfully generated or if there was an error but we still want to show its placeholder */}
+            {(!isLoading && aiAnalysisResult) || (!isLoading && error && reportGenerated) ? (
               <>
                 <section>
                   <h3 className="text-xl font-headline mb-2 border-b pb-1 flex items-center">
                     <Sparkles className="mr-2 h-5 w-5 text-yellow-500" />
                     Аналіз розривів (AI)
                   </h3>
-                  <div className="text-sm p-3 rounded-md border bg-muted/20">
-                     <p className="whitespace-pre-wrap">{aiAnalysisResult.gapAnalysis}</p>
-                  </div>
+                  {aiAnalysisResult?.gapAnalysis ? (
+                    <div className="text-sm p-3 rounded-md border bg-muted/20">
+                       <p className="whitespace-pre-wrap">{aiAnalysisResult.gapAnalysis}</p>
+                    </div>
+                  ) : (
+                     <p className="text-sm text-muted-foreground p-3 rounded-md border bg-muted/20">Аналіз розривів не згенеровано через помилку або відсутність даних від ШІ.</p>
+                  )}
                 </section>
 
                 <Separator className="my-6" />
@@ -807,7 +900,7 @@ export default function ReportingPage() {
                     <Sparkles className="mr-2 h-5 w-5 text-yellow-500" />
                     Рекомендації (AI)
                   </h3>
-                  {aiAnalysisResult.recommendations.length > 0 ? (
+                  {aiAnalysisResult?.recommendations && aiAnalysisResult.recommendations.length > 0 ? (
                      <Accordion type="single" collapsible className="w-full" defaultValue={`recommendation-0`}>
                         {aiAnalysisResult.recommendations.map((rec, index) => (
                           <AccordionItem value={`recommendation-${index}`} key={index} className="mb-2 border dark:border-border rounded-md overflow-hidden">
@@ -824,11 +917,12 @@ export default function ReportingPage() {
                         ))}
                       </Accordion>
                   ) : (
-                    <p className="text-sm text-muted-foreground p-3 rounded-md border bg-muted/20">Рекомендації не згенеровано.</p>
+                    <p className="text-sm text-muted-foreground p-3 rounded-md border bg-muted/20">Рекомендації не згенеровано через помилку або відсутність даних від ШІ.</p>
                   )}
                 </section>
               </>
-            )}
+            ) : null }
+
 
           </CardContent>
           <CardFooter className="print:hidden">
@@ -842,6 +936,4 @@ export default function ReportingPage() {
     </div>
   );
 }
-
-
     
