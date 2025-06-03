@@ -58,7 +58,7 @@ const seedInitialAssets = async () => {
       type: "Програмне забезпечення",
       description: "Центральний компонент, що агрегує, аналізує та корелює дані про кіберзагрози.",
       weaknesses: [
-        { id: "sw_t_1", assetId: "AUTO_ID", description: "Недостатня валідація вхідних даних від зовнішніх джерел (feeds) може призвести до RCE, дозволяючи зловмиснику скомпрометувати систему збору розвідданих.", severity: "Критична" }
+        { id: "sw_t_1", assetId: "AUTO_ID", description: "Вразливість: Недостатня валідація вхідних даних від зовнішніх джерел (feeds). Дії зловмисника: Виконання віддаленого коду (RCE), що дозволяє скомпрометувати систему збору розвідданих.", severity: "Критична" }
       ]
     },
     {
@@ -66,7 +66,7 @@ const seedInitialAssets = async () => {
       type: "Програмне забезпечення",
       description: "Система збору, моніторингу та аналізу логів безпеки з корпоративних систем.",
       weaknesses: [
-        { id: "sw_t_2", assetId: "AUTO_ID", description: "Використання стандартних облікових даних для доступу до SIEM дозволяє зловмиснику отримати доступ до логів, приховати сліди або сфабрикувати події.", severity: "Висока" }
+        { id: "sw_t_2", assetId: "AUTO_ID", description: "Вразливість: Використання стандартних облікових даних для доступу до SIEM. Дії зловмисника: Отримання доступу до логів, приховування слідів або фабрикація подій.", severity: "Висока" }
       ]
     },
     {
@@ -74,7 +74,7 @@ const seedInitialAssets = async () => {
       type: "Програмне забезпечення",
       description: "Платформа для автоматизації реагування на інциденти безпеки на основі плейбуків.",
       weaknesses: [
-        { id: "sw_t_3", assetId: "AUTO_ID", description: "Вразливість у кастомному скрипті плейбука (наприклад, ін'єкція команд) може дозволити зловмиснику виконати довільні команди на підключених системах.", severity: "Критична" }
+        { id: "sw_t_3", assetId: "AUTO_ID", description: "Вразливість: Ін'єкція команд у кастомному скрипті плейбука. Дії зловмисника: Виконання довільних команд на підключених системах.", severity: "Критична" }
       ]
     },
     {
@@ -82,7 +82,7 @@ const seedInitialAssets = async () => {
       type: "Програмне забезпечення",
       description: "ПЗ для автоматизованого виявлення вразливостей в ІТ-інфраструктурі.",
       weaknesses: [
-        { id: "sw_t_4", assetId: "AUTO_ID", description: "Застаріла база сигнатур вразливостей сканера призводить до пропуску нових експлойтів, дозволяючи зловмиснику їх використати.", severity: "Висока" }
+        { id: "sw_t_4", assetId: "AUTO_ID", description: "Вразливість: Застаріла база сигнатур вразливостей сканера. Дії зловмисника: Пропуск нових експлойтів, що дозволяє їх використати.", severity: "Висока" }
       ]
     },
     {
@@ -90,7 +90,7 @@ const seedInitialAssets = async () => {
       type: "Програмне забезпечення",
       description: "Агент на кінцевих точках для моніторингу, виявлення та реагування на загрози.",
       weaknesses: [
-        { id: "sw_t_5", assetId: "AUTO_ID", description: "Обхід механізмів захисту EDR-агента (наприклад, через kernel-level експлойт) дозволяє зловмиснику діяти на кінцевій точці непоміченим.", severity: "Висока" }
+        { id: "sw_t_5", assetId: "AUTO_ID", description: "Вразливість: Можливість обходу механізмів захисту EDR-агента (наприклад, через kernel-level експлойт). Дії зловмисника: Непомітні дії на кінцевій точці.", severity: "Висока" }
       ]
     },
     {
@@ -98,7 +98,7 @@ const seedInitialAssets = async () => {
       type: "Програмне забезпечення",
       description: "Сервер, що забезпечує безпечний віддалений доступ до корпоративної мережі.",
       weaknesses: [
-        { id: "sw_t_6", assetId: "AUTO_ID", description: "Використання VPN-сервером застарілого протоколу шифрування (наприклад, PPTP) робить VPN-трафік вразливим до перехоплення та розшифрування.", severity: "Середня" }
+        { id: "sw_t_6", assetId: "AUTO_ID", description: "Вразливість: Використання VPN-сервером застарілого протоколу шифрування (наприклад, PPTP). Дії зловмисника: Перехоплення та розшифрування VPN-трафіку.", severity: "Середня" }
       ]
     },
 
@@ -108,7 +108,7 @@ const seedInitialAssets = async () => {
       type: "Обладнання",
       description: "Високопродуктивний сервер для обробки даних розвідки та запуску моделей ML.",
       weaknesses: [
-        { id: "hw_t_1", assetId: "AUTO_ID", description: "Фізичний несанкціонований доступ до серверної стійки може призвести до викрадення сервера, спричинивши втрату даних та зупинку аналітики.", severity: "Критична" }
+        { id: "hw_t_1", assetId: "AUTO_ID", description: "Вразливість: Недостатній фізичний захист серверної стійки. Дії зловмисника: Фізичний несанкціонований доступ, викрадення сервера, що призводить до втрати даних та зупинки аналітики.", severity: "Критична" }
       ]
     },
     {
@@ -116,7 +116,7 @@ const seedInitialAssets = async () => {
       type: "Обладнання",
       description: "Пристрій для виявлення та запобігання вторгненням на периметрі мережі.",
       weaknesses: [
-        { id: "hw_t_2", assetId: "AUTO_ID", description: "Неправильна конфігурація правил IDS/IPS (пропуск відомих атак) дозволяє зловмиснику обійти систему виявлення та проникнути в мережу.", severity: "Висока" }
+        { id: "hw_t_2", assetId: "AUTO_ID", description: "Вразливість: Неправильна конфігурація правил IDS/IPS. Дії зловмисника: Обхід системи виявлення (пропуск відомих атак) та проникнення в мережу.", severity: "Висока" }
       ]
     },
     {
@@ -124,7 +124,7 @@ const seedInitialAssets = async () => {
       type: "Обладнання",
       description: "Система зберігання для необроблених та оброблених даних про кіберзагрози.",
       weaknesses: [
-        { id: "hw_t_3", assetId: "AUTO_ID", description: "Відмова диску в RAID-масиві без гарячого резерву та моніторингу може призвести до втрати частини даних розвідки при наступній відмові.", severity: "Середня" }
+        { id: "hw_t_3", assetId: "AUTO_ID", description: "Вразливість: Відсутність гарячого резерву та моніторингу RAID-масиву. Дії зловмисника: (Непряма) Втрата частини даних розвідки при послідовних відмовах дисків.", severity: "Середня" }
       ]
     },
     {
@@ -132,7 +132,7 @@ const seedInitialAssets = async () => {
       type: "Обладнання",
       description: "Потужний комп'ютер для аналізу шкідливого ПЗ та розслідування інцидентів.",
       weaknesses: [
-        { id: "hw_t_4", assetId: "AUTO_ID", description: "Зараження робочої станції аналітика через фішинг (RAT) дозволяє зловмиснику отримати доступ до інструментів аналізу та конфіденційних даних.", severity: "Висока" }
+        { id: "hw_t_4", assetId: "AUTO_ID", description: "Вразливість: Недостатня обізнаність користувача щодо фішингу. Дії зловмисника: Зараження робочої станції через фішинг (RAT), отримання доступу до інструментів аналізу та конфіденційних даних.", severity: "Висока" }
       ]
     },
     {
@@ -140,7 +140,7 @@ const seedInitialAssets = async () => {
       type: "Обладнання",
       description: "Мережевий екран з розширеними функціями інспекції трафіку.",
       weaknesses: [
-        { id: "hw_t_5", assetId: "AUTO_ID", description: "Використання стандартного пароля адміністратора на NGFW дозволяє зловмиснику отримати контроль над ним та змінювати правила фільтрації.", severity: "Критична" }
+        { id: "hw_t_5", assetId: "AUTO_ID", description: "Вразливість: Використання стандартного пароля адміністратора на NGFW. Дії зловмисника: Отримання контролю над NGFW, зміна правил фільтрації.", severity: "Критична" }
       ]
     },
     {
@@ -148,7 +148,7 @@ const seedInitialAssets = async () => {
       type: "Обладнання",
       description: "Пристрій для безпечного зберігання та управління криптографічними ключами.",
       weaknesses: [
-        { id: "hw_t_6", assetId: "AUTO_ID", description: "Компрометація облікових даних адміністратора HSM через соц. інженерію може призвести до несанкціонованого доступу до криптографічних ключів.", severity: "Критична" }
+        { id: "hw_t_6", assetId: "AUTO_ID", description: "Вразливість: Можливість компрометації облікових даних адміністратора HSM через соціальну інженерію. Дії зловмисника: Несанкціонований доступ до криптографічних ключів.", severity: "Критична" }
       ]
     },
     
@@ -158,7 +158,7 @@ const seedInitialAssets = async () => {
       type: "Інформація",
       description: "Структурована інформація про відомі шкідливі файли, IP-адреси, домени.",
       weaknesses: [
-        { id: "info_t_1", assetId: "AUTO_ID", description: "Несанкціонована зміна (отруєння) даних в базі IoC (наприклад, додавання легітимних ресурсів як шкідливих) може спричинити DoS важливих сервісів.", severity: "Висока" }
+        { id: "info_t_1", assetId: "AUTO_ID", description: "Вразливість: Неналежний контроль доступу до бази IoC. Дії зловмисника: Несанкціонована зміна (отруєння) даних в базі IoC (наприклад, додавання легітимних ресурсів як шкідливих), що може спричинити DoS важливих сервісів.", severity: "Висока" }
       ]
     },
     {
@@ -166,7 +166,7 @@ const seedInitialAssets = async () => {
       type: "Інформація",
       description: "Конфіденційні документи з деталями розслідуваних інцидентів та TTPs зловмисників.",
       weaknesses: [
-        { id: "info_t_2", assetId: "AUTO_ID", description: "Витік звітів про інциденти через інсайдера або неправильні права доступу може розкрити методи розслідування та слабкі місця компанії.", severity: "Висока" }
+        { id: "info_t_2", assetId: "AUTO_ID", description: "Вразливість: Недостатній захист сховища звітів. Дії зловмисника: Витік звітів про інциденти через інсайдера або неправильні права доступу, що може розкрити методи розслідування та слабкі місця компанії.", severity: "Висока" }
       ]
     },
     {
@@ -174,7 +174,7 @@ const seedInitialAssets = async () => {
       type: "Інформація",
       description: "Файли з налаштуваннями правил, політик, інтеграцій SIEM, SOAR, Firewall.",
       weaknesses: [
-        { id: "info_t_3", assetId: "AUTO_ID", description: "Доступ до конфігурацій NGFW (через вразливість на сервері бекапів) дозволяє зловмиснику вивчити правила та знайти шляхи обходу.", severity: "Критична" }
+        { id: "info_t_3", assetId: "AUTO_ID", description: "Вразливість: Зберігання паролів у відкритому вигляді в конфігураційних файлах системи. Дії зловмисника: Витік або несанкціоноване отримання цих паролів, що призводить до несанкціонованого доступу до систем та даних.", severity: "Критична" }
       ]
     },
     {
@@ -182,7 +182,7 @@ const seedInitialAssets = async () => {
       type: "Інформація",
       description: "Ключі для автентифікації та шифрування доступу до API платформи розвідданих.",
       weaknesses: [
-        { id: "info_t_4", assetId: "AUTO_ID", description: "Зберігання приватних ключів API у відкритому вигляді в репозиторії коду дозволяє зловмиснику перехопити їх та отримати доступ до API.", severity: "Критична" }
+        { id: "info_t_4", assetId: "AUTO_ID", description: "Вразливість: Зберігання приватних ключів API у відкритому вигляді в коді. Дії зловмисника: Перехоплення ключів з репозиторію коду, що дозволяє отримати несанкціонований доступ до API та даних розвідки.", severity: "Критична" }
       ]
     },
     {
@@ -190,7 +190,7 @@ const seedInitialAssets = async () => {
       type: "Інформація",
       description: "ПІБ, контакти, посади співробітників, що працюють з системами кіберзахисту.",
       weaknesses: [
-        { id: "info_t_5", assetId: "AUTO_ID", description: "Витік персональних даних співробітників безпеки (через фішинг на HR-порталі) може бути використаний для цілеспрямованих атак соц. інженерії.", severity: "Середня" }
+        { id: "info_t_5", assetId: "AUTO_ID", description: "Вразливість: Недостатній захист бази даних персональних даних. Дії зловмисника: Витік персональних даних співробітників безпеки (через фішинг на HR-порталі), що може бути використано для цілеспрямованих атак соціальної інженерії.", severity: "Середня" }
       ]
     },
     {
@@ -198,7 +198,7 @@ const seedInitialAssets = async () => {
       type: "Інформація",
       description: "Зібрана та класифікована інформація про тактики, техніки та процедури кіберзлочинців.",
       weaknesses: [
-        { id: "info_t_6", assetId: "AUTO_ID", description: "Відсутність регулярного оновлення бази TTP призводить до нездатності виявляти новітні методи атак, роблячи систему вразливою.", severity: "Середня" }
+        { id: "info_t_6", assetId: "AUTO_ID", description: "Вразливість: Відсутність регулярного оновлення бази TTP. Дії зловмисника: Нездатність системи виявляти новітні методи атак, оскільки база знань застаріла.", severity: "Середня" }
       ]
     },
   ];
@@ -285,6 +285,10 @@ export default function AssetsPage() {
     if (!editingAsset) {
       assetForm.reset({ name: "", type: displayCategoryMap[currentCategory], description: "" });
     } else {
+      const assetTypeKey = Object.keys(displayCategoryMap).find(key => displayCategoryMap[key as DisplayCategoryKey] === editingAsset.type) as DisplayCategoryKey | undefined;
+      if (assetTypeKey) {
+         setCurrentCategory(assetTypeKey); // Ensure currentCategory is in sync if editing asset from different category
+      }
       assetForm.reset(editingAsset); 
     }
   }, [editingAsset, assetForm, currentCategory]);
@@ -328,12 +332,16 @@ export default function AssetsPage() {
       const assetDocRef = doc(db, "assets", assetToManageWeakness.id);
       if (editingWeakness) { 
         const weaknessToRemove = assetToManageWeakness.weaknesses?.find(w => w.id === editingWeakness.id);
+        
+        const batch = writeBatch(db);
         if (weaknessToRemove) {
-            await updateDoc(assetDocRef, { weaknesses: arrayRemove(weaknessToRemove) });
+           batch.update(assetDocRef, { weaknesses: arrayRemove(weaknessToRemove) });
         }
         const updatedWeakness = { ...editingWeakness, ...values }; 
-        await updateDoc(assetDocRef, { weaknesses: arrayUnion(updatedWeakness) });
-        toast({ title: "Успіх", description: "Загрозу (вразливість) оновлено." });
+        batch.update(assetDocRef, { weaknesses: arrayUnion(updatedWeakness) });
+        await batch.commit();
+
+        toast({ title: "Успіх", description: "Загрозу оновлено." });
       } else { 
         const newWeakness: Weakness = { 
             ...values, 
@@ -341,7 +349,7 @@ export default function AssetsPage() {
             assetId: assetToManageWeakness.id 
         };
         await updateDoc(assetDocRef, { weaknesses: arrayUnion(newWeakness) });
-        toast({ title: "Успіх", description: "Загрозу (вразливість) додано." });
+        toast({ title: "Успіх", description: "Загрозу додано." });
       }
       await fetchAssets(true); 
       setIsWeaknessDialogOpen(false);
@@ -349,7 +357,7 @@ export default function AssetsPage() {
       setAssetToManageWeakness(null); 
     } catch (error) {
       console.error("Error submitting weakness: ", error);
-      toast({ title: "Помилка", description: "Не вдалося зберегти загрозу (вразливість).", variant: "destructive" });
+      toast({ title: "Помилка", description: "Не вдалося зберегти загрозу.", variant: "destructive" });
     } finally {
       setIsSubmittingWeakness(false);
     }
@@ -363,7 +371,13 @@ export default function AssetsPage() {
 
   const openEditAssetDialog = (asset: Asset) => {
     setEditingAsset(asset);
-    assetForm.reset(asset); 
+    // Ensure the form's type field is correctly set from the asset being edited
+    const assetTypeKey = Object.keys(displayCategoryMap).find(key => displayCategoryMap[key as DisplayCategoryKey] === asset.type) as DisplayCategoryKey | undefined;
+    if (assetTypeKey) {
+        assetForm.reset({ ...asset, type: displayCategoryMap[assetTypeKey] });
+    } else {
+        assetForm.reset(asset); // Fallback if type mapping is not found (should not happen)
+    }
     setIsAssetDialogOpen(true);
   };
 
@@ -398,20 +412,20 @@ export default function AssetsPage() {
   const deleteWeakness = async (targetAsset: Asset, weaknessId: string) => {
     const weaknessToDelete = targetAsset.weaknesses?.find(w => w.id === weaknessId);
     if (!weaknessToDelete) {
-        toast({ title: "Помилка", description: "Загрозу (вразливість) не знайдено для видалення.", variant: "destructive" });
+        toast({ title: "Помилка", description: "Загрозу не знайдено для видалення.", variant: "destructive" });
         return;
     }
-    const message = `Ви впевнені, що хочете видалити загрозу (вразливість) "${weaknessToDelete.description}" для активу "${targetAsset.name}"?`;
+    const message = `Ви впевнені, що хочете видалити загрозу "${weaknessToDelete.description}" для активу "${targetAsset.name}"?`;
     if (!confirm(message)) return;
     
     try {
         const assetRef = doc(db, "assets", targetAsset.id);
         await updateDoc(assetRef, { weaknesses: arrayRemove(weaknessToDelete) });
-        toast({ title: "Успіх", description: "Загрозу (вразливість) видалено." });
+        toast({ title: "Успіх", description: "Загрозу видалено." });
         await fetchAssets(true); 
     } catch (error) {
         console.error("Error deleting weakness: ", error);
-        toast({ title: "Помилка", description: "Не вдалося видалити загрозу (вразливість).", variant: "destructive" });
+        toast({ title: "Помилка", description: "Не вдалося видалити загрозу.", variant: "destructive" });
     }
   };
 
@@ -516,14 +530,14 @@ export default function AssetsPage() {
                                 <Badge className={cn("text-xs mt-1", severityBadgeColor(weakness.severity))}>{weakness.severity}</Badge>
                               </div>
                               <div className="flex space-x-1">
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditWeaknessDialog(asset, weakness)} aria-label={`Редагувати загрозу (вразливість) ${weakness.description}`}><Edit3 className="h-3.5 w-3.5" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteWeakness(asset, weakness.id)} aria-label={`Видалити загрозу (вразливість) ${weakness.description}`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditWeaknessDialog(asset, weakness)} aria-label={`Редагувати загрозу ${weakness.description}`}><Edit3 className="h-3.5 w-3.5" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteWeakness(asset, weakness.id)} aria-label={`Видалити загрозу ${weakness.description}`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                               </div>
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-sm text-muted-foreground mt-2">Для цього активу загроз (вразливостей) не виявлено.</p>
+                        <p className="text-sm text-muted-foreground mt-2">Для цього активу загроз не виявлено.</p>
                       )}
                       <Button variant="outline" size="sm" className="mt-4" onClick={() => openAddWeaknessDialog(asset)}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Додати загрозу
@@ -564,6 +578,7 @@ export default function AssetsPage() {
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value} 
+                      // Disable type change if editing an asset OR if adding and category is fixed
                       disabled={!!editingAsset || !!displayCategoryMap[currentCategory]} 
                     >
                       <FormControl><SelectTrigger><SelectValue placeholder="Виберіть тип активу" /></SelectTrigger></FormControl>
@@ -572,7 +587,11 @@ export default function AssetsPage() {
                           <SelectItem 
                             key={actualType} 
                             value={actualType} 
-                            disabled={(actualType !== displayCategoryMap[currentCategory] && !editingAsset) || (!!editingAsset && field.value !== actualType) }
+                            // When adding, only allow current category type. When editing, only allow current asset's original type.
+                            disabled={
+                                (!editingAsset && actualType !== displayCategoryMap[currentCategory]) || 
+                                (!!editingAsset && field.value !== actualType && assetForm.formState.defaultValues?.type !== actualType)
+                            }
                           >
                             {displayName} ({actualType})
                           </SelectItem>
@@ -618,7 +637,7 @@ export default function AssetsPage() {
       <Dialog open={isWeaknessDialogOpen} onOpenChange={(isOpen) => { setIsWeaknessDialogOpen(isOpen); if (!isOpen) { setEditingWeakness(null); setAssetToManageWeakness(null); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingWeakness ? "Редагувати загрозу (вразливість)" : "Додати нову загрозу (вразливість)"} для активу "{assetToManageWeakness?.name}"</DialogTitle>
+            <DialogTitle>{editingWeakness ? "Редагувати загрозу" : "Додати нову загрозу"} для активу "{assetToManageWeakness?.name}"</DialogTitle>
           </DialogHeader>
            <Form {...weaknessForm}>
             <form onSubmit={weaknessForm.handleSubmit(handleWeaknessSubmit)} className="space-y-4">
@@ -628,7 +647,7 @@ export default function AssetsPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Опис загрози (вразливість + дії зловмисника)</FormLabel>
-                    <FormControl><Textarea placeholder="напр., SQL-ін'єкція на веб-сервері дозволяє зловмиснику отримати доступ до бази даних клієнтів." {...field} /></FormControl>
+                    <FormControl><Textarea placeholder="напр., Вразливість: SQL-ін'єкція на веб-сервері. Дії зловмисника: Отримання доступу до бази даних клієнтів." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
