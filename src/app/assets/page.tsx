@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Asset, Weakness } from '@/lib/types';
-import { weaknessSeverities } from '@/lib/types'; // Removed assetTypes as it's not directly used here anymore
+import { weaknessSeverities } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,11 +52,14 @@ const seedInitialAssets = async () => {
   const assetsCollectionRef = collection(db, 'assets');
 
   const initialAssetsData: Omit<Asset, 'id'>[] = [
-    // 1. Активи програмного забезпечення (Software Assets) - 6 examples
+    // 1. Активи програмного забезпечення (Software Assets) - 2 examples
     {
       name: "Платформа аналізу загроз (TIP Core)",
       type: "Програмне забезпечення",
       description: "Центральний компонент, що агрегує, аналізує та корелює дані про кіберзагрози.",
+      version: "2.1.0",
+      installationDate: "2023-05-15",
+      lastUpdateDate: "2024-07-20",
       weaknesses: [
         { id: "sw_t_1", assetId: "AUTO_ID", description: "Вразливість: Недостатня валідація вхідних даних від зовнішніх джерел (feeds). Дії зловмисника: Виконання віддаленого коду (RCE), що дозволяє скомпрометувати систему збору розвідданих.", severity: "Критична" }
       ]
@@ -65,48 +68,22 @@ const seedInitialAssets = async () => {
       name: "Система SIEM (Security Information and Event Management)",
       type: "Програмне забезпечення",
       description: "Система збору, моніторингу та аналізу логів безпеки з корпоративних систем.",
+      version: "5.4.2",
+      installationDate: "2022-11-01",
+      lastUpdateDate: "2024-06-28",
       weaknesses: [
         { id: "sw_t_2", assetId: "AUTO_ID", description: "Вразливість: Використання стандартних облікових даних для доступу до SIEM. Дії зловмисника: Отримання доступу до логів, приховування слідів або фабрикація подій.", severity: "Висока" }
       ]
     },
-    {
-      name: "Платформа SOAR (Security Orchestration, Automation and Response)",
-      type: "Програмне забезпечення",
-      description: "Платформа для автоматизації реагування на інциденти безпеки на основі плейбуків.",
-      weaknesses: [
-        { id: "sw_t_3", assetId: "AUTO_ID", description: "Вразливість: Ін'єкція команд у кастомному скрипті плейбука. Дії зловмисника: Виконання довільних команд на підключених системах.", severity: "Критична" }
-      ]
-    },
-    {
-      name: "Сканер вразливостей",
-      type: "Програмне забезпечення",
-      description: "ПЗ для автоматизованого виявлення вразливостей в ІТ-інфраструктурі.",
-      weaknesses: [
-        { id: "sw_t_4", assetId: "AUTO_ID", description: "Вразливість: Застаріла база сигнатур вразливостей сканера. Дії зловмисника: Пропуск нових експлойтів, що дозволяє їх використати.", severity: "Висока" }
-      ]
-    },
-    {
-      name: "EDR Агент (Endpoint Detection and Response)",
-      type: "Програмне забезпечення",
-      description: "Агент на кінцевих точках для моніторингу, виявлення та реагування на загрози.",
-      weaknesses: [
-        { id: "sw_t_5", assetId: "AUTO_ID", description: "Вразливість: Можливість обходу механізмів захисту EDR-агента (наприклад, через kernel-level експлойт). Дії зловмисника: Непомітні дії на кінцевій точці.", severity: "Висока" }
-      ]
-    },
-    {
-      name: "Корпоративний VPN-сервер",
-      type: "Програмне забезпечення",
-      description: "Сервер, що забезпечує безпечний віддалений доступ до корпоративної мережі.",
-      weaknesses: [
-        { id: "sw_t_6", assetId: "AUTO_ID", description: "Вразливість: Використання VPN-сервером застарілого протоколу шифрування (наприклад, PPTP). Дії зловмисника: Перехоплення та розшифрування VPN-трафіку.", severity: "Середня" }
-      ]
-    },
 
-    // 2. Активи апаратного забезпечення (Hardware Assets) - 6 examples
+    // 2. Активи апаратного забезпечення (Hardware Assets) - 2 examples
     {
       name: "Сервер аналізу загроз",
       type: "Обладнання",
       description: "Високопродуктивний сервер для обробки даних розвідки та запуску моделей ML.",
+      ipAddress: "10.0.1.15",
+      macAddress: "00:1A:2B:3C:4D:5E",
+      location: "Дата-центр Київ, Стійка А03",
       weaknesses: [
         { id: "hw_t_1", assetId: "AUTO_ID", description: "Вразливість: Недостатній фізичний захист серверної стійки. Дії зловмисника: Фізичний несанкціонований доступ, викрадення сервера, що призводить до втрати даних та зупинки аналітики.", severity: "Критична" }
       ]
@@ -115,90 +92,37 @@ const seedInitialAssets = async () => {
       name: "Мережевий сенсор IDS/IPS",
       type: "Обладнання",
       description: "Пристрій для виявлення та запобігання вторгненням на периметрі мережі.",
+      ipAddress: "192.168.1.254",
+      macAddress: "00:AA:BB:CC:DD:EE",
+      location: "Головний маршрутизатор, DMZ",
       weaknesses: [
         { id: "hw_t_2", assetId: "AUTO_ID", description: "Вразливість: Неправильна конфігурація правил IDS/IPS. Дії зловмисника: Обхід системи виявлення (пропуск відомих атак) та проникнення в мережу.", severity: "Висока" }
       ]
     },
-    {
-      name: "Сховище даних розвідки (Data Lake)",
-      type: "Обладнання",
-      description: "Система зберігання для необроблених та оброблених даних про кіберзагрози.",
-      weaknesses: [
-        { id: "hw_t_3", assetId: "AUTO_ID", description: "Вразливість: Відсутність гарячого резерву та моніторингу RAID-масиву. Дії зловмисника: (Непряма) Втрата частини даних розвідки при послідовних відмовах дисків.", severity: "Середня" }
-      ]
-    },
-    {
-      name: "Робоча станція аналітика безпеки",
-      type: "Обладнання",
-      description: "Потужний комп'ютер для аналізу шкідливого ПЗ та розслідування інцидентів.",
-      weaknesses: [
-        { id: "hw_t_4", assetId: "AUTO_ID", description: "Вразливість: Недостатня обізнаність користувача щодо фішингу. Дії зловмисника: Зараження робочої станції через фішинг (RAT), отримання доступу до інструментів аналізу та конфіденційних даних.", severity: "Висока" }
-      ]
-    },
-    {
-      name: "Firewall наступного покоління (NGFW)",
-      type: "Обладнання",
-      description: "Мережевий екран з розширеними функціями інспекції трафіку.",
-      weaknesses: [
-        { id: "hw_t_5", assetId: "AUTO_ID", description: "Вразливість: Використання стандартного пароля адміністратора на NGFW. Дії зловмисника: Отримання контролю над NGFW, зміна правил фільтрації.", severity: "Критична" }
-      ]
-    },
-    {
-      name: "Апаратний модуль безпеки (HSM)",
-      type: "Обладнання",
-      description: "Пристрій для безпечного зберігання та управління криптографічними ключами.",
-      weaknesses: [
-        { id: "hw_t_6", assetId: "AUTO_ID", description: "Вразливість: Можливість компрометації облікових даних адміністратора HSM через соціальну інженерію. Дії зловмисника: Несанкціонований доступ до криптографічних ключів.", severity: "Критична" }
-      ]
-    },
     
-    // 3. Активи інформаційних ресурсів (Information Assets) - 6 examples
+    // 3. Активи інформаційних ресурсів (Information Assets) - 2 examples
     {
       name: "База даних індикаторів компрометації (IoCs)",
       type: "Інформація",
       description: "Структурована інформація про відомі шкідливі файли, IP-адреси, домени.",
+      dataSensitivity: "Дуже висока",
+      storageLocation: "PostgreSQL Cluster (Main DB)",
+      creationDate: "2022-01-10",
+      lastAccessedDate: "2024-07-28",
       weaknesses: [
         { id: "info_t_1", assetId: "AUTO_ID", description: "Вразливість: Неналежний контроль доступу до бази IoC. Дії зловмисника: Несанкціонована зміна (отруєння) даних в базі IoC (наприклад, додавання легітимних ресурсів як шкідливих), що може спричинити DoS важливих сервісів.", severity: "Висока" }
-      ]
-    },
-    {
-      name: "Звіти про розслідування кіберінцидентів",
-      type: "Інформація",
-      description: "Конфіденційні документи з деталями розслідуваних інцидентів та TTPs зловмисників.",
-      weaknesses: [
-        { id: "info_t_2", assetId: "AUTO_ID", description: "Вразливість: Недостатній захист сховища звітів. Дії зловмисника: Витік звітів про інциденти через інсайдера або неправильні права доступу, що може розкрити методи розслідування та слабкі місця компанії.", severity: "Висока" }
       ]
     },
     {
       name: "Конфігураційні файли систем безпеки",
       type: "Інформація",
       description: "Файли з налаштуваннями правил, політик, інтеграцій SIEM, SOAR, Firewall.",
+      dataSensitivity: "Критична",
+      storageLocation: "Захищене сховище конфігурацій Vault",
+      creationDate: "2022-03-01",
+      lastAccessedDate: "2024-07-25",
       weaknesses: [
         { id: "info_t_3", assetId: "AUTO_ID", description: "Вразливість: Зберігання паролів у відкритому вигляді в конфігураційних файлах системи. Дії зловмисника: Витік або несанкціоноване отримання цих паролів, що призводить до несанкціонованого доступу до систем та даних.", severity: "Критична" }
-      ]
-    },
-    {
-      name: "Приватні ключі API розвідданих",
-      type: "Інформація",
-      description: "Ключі для автентифікації та шифрування доступу до API платформи розвідданих.",
-      weaknesses: [
-        { id: "info_t_4", assetId: "AUTO_ID", description: "Вразливість: Зберігання приватних ключів API у відкритому вигляді в коді. Дії зловмисника: Перехоплення ключів з репозиторію коду, що дозволяє отримати несанкціонований доступ до API та даних розвідки.", severity: "Критична" }
-      ]
-    },
-    {
-      name: "Персональні дані співробітників служби безпеки",
-      type: "Інформація",
-      description: "ПІБ, контакти, посади співробітників, що працюють з системами кіберзахисту.",
-      weaknesses: [
-        { id: "info_t_5", assetId: "AUTO_ID", description: "Вразливість: Недостатній захист бази даних персональних даних. Дії зловмисника: Витік персональних даних співробітників безпеки (через фішинг на HR-порталі), що може бути використано для цілеспрямованих атак соціальної інженерії.", severity: "Середня" }
-      ]
-    },
-    {
-      name: "База знань про TTP зловмисників",
-      type: "Інформація",
-      description: "Зібрана та класифікована інформація про тактики, техніки та процедури кіберзлочинців.",
-      weaknesses: [
-        { id: "info_t_6", assetId: "AUTO_ID", description: "Вразливість: Відсутність регулярного оновлення бази TTP. Дії зловмисника: Нездатність системи виявляти новітні методи атак, оскільки база знань застаріла.", severity: "Середня" }
       ]
     },
   ];
@@ -217,7 +141,7 @@ const seedInitialAssets = async () => {
 
   try {
     await batch.commit();
-    console.log("Initial assets seeded successfully with updated cyber-intelligence themed data.");
+    console.log("Initial assets seeded successfully with updated cyber-intelligence themed data and additional details.");
     return true; 
   } catch (error) {
     console.error("Error seeding initial assets: ", error);
@@ -287,7 +211,7 @@ export default function AssetsPage() {
     } else {
       const assetTypeKey = Object.keys(displayCategoryMap).find(key => displayCategoryMap[key as DisplayCategoryKey] === editingAsset.type) as DisplayCategoryKey | undefined;
       if (assetTypeKey) {
-         setCurrentCategory(assetTypeKey); // Ensure currentCategory is in sync if editing asset from different category
+         setCurrentCategory(assetTypeKey); 
       }
       assetForm.reset(editingAsset); 
     }
@@ -304,13 +228,43 @@ export default function AssetsPage() {
 
   const handleAssetSubmit = async (values: z.infer<typeof assetFormSchema>) => {
     setIsSubmittingAsset(true);
+    const assetDataToSave: Partial<Asset> = { ...values };
+    
+    // Preserve existing additional fields if editing, or set defaults if adding
+    if (editingAsset) {
+        assetDataToSave.version = editingAsset.version;
+        assetDataToSave.installationDate = editingAsset.installationDate;
+        assetDataToSave.lastUpdateDate = editingAsset.lastUpdateDate;
+        assetDataToSave.ipAddress = editingAsset.ipAddress;
+        assetDataToSave.macAddress = editingAsset.macAddress;
+        assetDataToSave.location = editingAsset.location;
+        assetDataToSave.dataSensitivity = editingAsset.dataSensitivity;
+        assetDataToSave.storageLocation = editingAsset.storageLocation;
+        assetDataToSave.creationDate = editingAsset.creationDate;
+        assetDataToSave.lastAccessedDate = editingAsset.lastAccessedDate;
+    } else {
+      // Set some defaults or leave undefined if not applicable to the type
+      if (values.type === "Програмне забезпечення") {
+        assetDataToSave.version = "1.0.0";
+        assetDataToSave.installationDate = new Date().toISOString().split('T')[0];
+        assetDataToSave.lastUpdateDate = new Date().toISOString().split('T')[0];
+      } else if (values.type === "Обладнання") {
+        assetDataToSave.ipAddress = "N/A";
+      } else if (values.type === "Інформація") {
+         assetDataToSave.creationDate = new Date().toISOString().split('T')[0];
+         assetDataToSave.lastAccessedDate = new Date().toISOString().split('T')[0];
+         assetDataToSave.dataSensitivity = "Середня";
+      }
+    }
+
+
     try {
       if (editingAsset) {
         const assetDocRef = doc(db, "assets", editingAsset.id);
-        await updateDoc(assetDocRef, values);
+        await updateDoc(assetDocRef, assetDataToSave);
         toast({ title: "Успіх", description: "Актив оновлено." });
       } else {
-        await addDoc(collection(db, "assets"), { ...values, weaknesses: [] });
+        await addDoc(collection(db, "assets"), { ...assetDataToSave, weaknesses: [] });
         toast({ title: "Успіх", description: "Актив додано." });
       }
       await fetchAssets(true); 
@@ -333,13 +287,13 @@ export default function AssetsPage() {
       if (editingWeakness) { 
         const weaknessToRemove = assetToManageWeakness.weaknesses?.find(w => w.id === editingWeakness.id);
         
-        const batch = writeBatch(db);
+        const batchOp = writeBatch(db);
         if (weaknessToRemove) {
-           batch.update(assetDocRef, { weaknesses: arrayRemove(weaknessToRemove) });
+           batchOp.update(assetDocRef, { weaknesses: arrayRemove(weaknessToRemove) });
         }
         const updatedWeakness = { ...editingWeakness, ...values }; 
-        batch.update(assetDocRef, { weaknesses: arrayUnion(updatedWeakness) });
-        await batch.commit();
+        batchOp.update(assetDocRef, { weaknesses: arrayUnion(updatedWeakness) });
+        await batchOp.commit();
 
         toast({ title: "Успіх", description: "Загрозу оновлено." });
       } else { 
@@ -371,12 +325,11 @@ export default function AssetsPage() {
 
   const openEditAssetDialog = (asset: Asset) => {
     setEditingAsset(asset);
-    // Ensure the form's type field is correctly set from the asset being edited
     const assetTypeKey = Object.keys(displayCategoryMap).find(key => displayCategoryMap[key as DisplayCategoryKey] === asset.type) as DisplayCategoryKey | undefined;
     if (assetTypeKey) {
         assetForm.reset({ ...asset, type: displayCategoryMap[assetTypeKey] });
     } else {
-        assetForm.reset(asset); // Fallback if type mapping is not found (should not happen)
+        assetForm.reset(asset);
     }
     setIsAssetDialogOpen(true);
   };
@@ -512,6 +465,31 @@ export default function AssetsPage() {
                 <CardDescription className="pt-2">{asset.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
+                <div className="mb-4 text-sm text-muted-foreground space-y-1 border-t border-border pt-3">
+                  <h4 className="font-medium text-foreground mb-2">Додаткова інформація:</h4>
+                  {asset.type === 'Програмне забезпечення' && (
+                    <>
+                      {asset.version && <p><strong>Версія:</strong> {asset.version}</p>}
+                      {asset.installationDate && <p><strong>Дата встановлення:</strong> {new Date(asset.installationDate).toLocaleDateString('uk-UA')}</p>}
+                      {asset.lastUpdateDate && <p><strong>Останнє оновлення:</strong> {new Date(asset.lastUpdateDate).toLocaleDateString('uk-UA')}</p>}
+                    </>
+                  )}
+                  {asset.type === 'Обладнання' && (
+                    <>
+                      {asset.ipAddress && <p><strong>IP-адреса:</strong> {asset.ipAddress}</p>}
+                      {asset.macAddress && <p><strong>MAC-адреса:</strong> {asset.macAddress}</p>}
+                      {asset.location && <p><strong>Розташування:</strong> {asset.location}</p>}
+                    </>
+                  )}
+                  {asset.type === 'Інформація' && (
+                    <>
+                      {asset.dataSensitivity && <p><strong>Рівень чутливості:</strong> {asset.dataSensitivity}</p>}
+                      {asset.storageLocation && <p><strong>Місце зберігання:</strong> {asset.storageLocation}</p>}
+                      {asset.creationDate && <p><strong>Дата створення:</strong> {new Date(asset.creationDate).toLocaleDateString('uk-UA')}</p>}
+                      {asset.lastAccessedDate && <p><strong>Останній доступ:</strong> {new Date(asset.lastAccessedDate).toLocaleDateString('uk-UA')}</p>}
+                    </>
+                  )}
+                </div>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value={`weaknesses-${asset.id}`}>
                     <AccordionTrigger className="text-base hover:no-underline">
@@ -578,7 +556,6 @@ export default function AssetsPage() {
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value} 
-                      // Disable type change if editing an asset OR if adding and category is fixed
                       disabled={!!editingAsset || !!displayCategoryMap[currentCategory]} 
                     >
                       <FormControl><SelectTrigger><SelectValue placeholder="Виберіть тип активу" /></SelectTrigger></FormControl>
@@ -587,7 +564,6 @@ export default function AssetsPage() {
                           <SelectItem 
                             key={actualType} 
                             value={actualType} 
-                            // When adding, only allow current category type. When editing, only allow current asset's original type.
                             disabled={
                                 (!editingAsset && actualType !== displayCategoryMap[currentCategory]) || 
                                 (!!editingAsset && field.value !== actualType && assetForm.formState.defaultValues?.type !== actualType)
