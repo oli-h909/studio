@@ -3,7 +3,6 @@
 
 import * as React from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-// Removed: import { analyzeSecurityGaps, type GapAnalysisInput, type GapAnalysisOutput } from '@/ai/flows/gap-analyzer-flow';
 import type { Asset } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
@@ -11,20 +10,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm, useWatch, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, FileText, Printer, AlertTriangle, PlusCircle, Trash2 } from 'lucide-react'; // Removed Sparkles
+import { Loader2, FileText, Printer, PlusCircle, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useReactToPrint } from 'react-to-print';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -44,97 +39,97 @@ interface ThreatDetailValue {
 // Key: "Загроза (конкретний ризик)"
 const threatDetailsMap: Record<string, ThreatDetailValue> = {
   "Інфікування робочих станцій або серверів, втрата контролю над системою": {
-    identifier: 'ID.AM-2', // Relates to software/hardware systems
+    identifier: 'ID.AM-2',
     vulnerability: "Атака через шкідливі вкладення",
     ttp: "Відкриття вкладення, інфікування систем шкідливим ПЗ",
     affectedAssetTypes: ['software', 'hardware']
   },
   "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту": {
-    identifier: 'ID.AM-2', // Relates to software (CMS)
+    identifier: 'ID.AM-2',
     vulnerability: "Використання уразливого компонента CMS",
     ttp: "Експлуатація вразливості, запуск шкідливого коду",
     affectedAssetTypes: ['software']
   },
   "Втрата конфіденційної інформації, репутаційні й фінансові збитки": {
-    identifier: 'ID.AM-3', // Relates to data
+    identifier: 'ID.AM-3',
     vulnerability: "Витік даних",
     ttp: "Несанкціонований доступ, копіювання, передача інформації",
     affectedAssetTypes: ['informationResource']
   },
   "Несанкціонований доступ до систем і сервісів через викрадені паролі": {
-    identifier: 'ID.AM-3', // Relates to access, data protection
+    identifier: 'ID.AM-3',
     vulnerability: "Збереження паролів у відкритому вигляді",
     ttp: "Викрадення або витік паролів",
     affectedAssetTypes: ['informationResource', 'software']
   },
   "Порушення цілісності, витік даних, саботаж систем через недостатній контроль доступу": {
-    identifier: 'ID.AM-3', // Access control
+    identifier: 'ID.AM-3',
     vulnerability: "Недостатній контроль доступу",
     ttp: "Несанкціонований вхід, підміна прав користувачів",
     affectedAssetTypes: ['informationResource', 'software', 'hardware']
   },
   "Юридичні проблеми, втрата контролю над CRM через ліцензування": {
-    identifier: 'ID.AM-2', // Software licensing
+    identifier: 'ID.AM-2',
     vulnerability: "Незахищене ліцензування CRM",
     ttp: "Викрадення ліцензійних ключів, використання піратських копій",
     affectedAssetTypes: ['software']
   },
   "Викрадення персональних даних, порушення аутентифікації через доступ до бази користувачів": {
-    identifier: 'ID.AM-3', // Data asset
+    identifier: 'ID.AM-3',
     vulnerability: "Несанкціонований доступ до бази користувачів",
     ttp: "Викрадення або модифікація даних користувачів",
     affectedAssetTypes: ['informationResource']
   },
   "Несанкціонований доступ, компрометація систем через обхід автентифікації": {
-    identifier: 'ID.AM-2', // Authentication mechanism - often software
+    identifier: 'ID.AM-2',
     vulnerability: "Обхід автентифікації",
     ttp: "Використання вразливостей для обходу перевірки ідентичності",
     affectedAssetTypes: ['software']
   },
   "Підвищений ризик інцидентів, внутрішні загрози через порушення політики": {
-    identifier: 'ID.AM-5', // Organizational policy
+    identifier: 'ID.AM-5',
     vulnerability: "Порушення політики безпеки",
     ttp: "Несанкціоновані зміни, ігнорування правил",
-    affectedAssetTypes: ['software', 'hardware', 'informationResource'] // Can affect all
+    affectedAssetTypes: ['software', 'hardware', 'informationResource']
   },
   "Витік інформації, компрометація облікових даних через соціальну інженерію": {
-    identifier: 'ID.AM-5', // Human factor
+    identifier: 'ID.AM-5',
     vulnerability: "Соціальна інженерія",
     ttp: "Обман співробітників для отримання доступу",
     affectedAssetTypes: ['informationResource']
   },
   "Крадіжка облікових даних, несанкціонований доступ через фішинг": {
-    identifier: 'ID.AM-5', // Human factor, often targets credentials for info systems
+    identifier: 'ID.AM-5',
     vulnerability: "Фішинг",
     ttp: "Розсилання підробних листів для отримання даних",
     affectedAssetTypes: ['informationResource', 'software']
   },
   "Компрометація користувацьких акаунтів, втручання у роботу CRM через фішинг-посилання": {
-    identifier: 'ID.AM-2', // Software (CRM) specific
+    identifier: 'ID.AM-2',
     vulnerability: "Фішинг-посилання у CRM",
     ttp: "Впровадження шкідливих посилань в CRM",
     affectedAssetTypes: ['software']
   },
   "Пошкодження систем, крадіжка даних, відмова у обслуговуванні через шкідливе ПЗ": {
-    identifier: 'ID.AM-2', // Malware affects software/hardware
+    identifier: 'ID.AM-2',
     vulnerability: "Шкідливе програмне забезпечення",
     ttp: "Інсталяція, поширення шкідливих модулів",
     affectedAssetTypes: ['software', 'hardware']
   },
   "Недоступність сервісу для користувачів через DoS-атаку": {
-    identifier: 'ID.AM-2', // Affects availability of software/hardware services
+    identifier: 'ID.AM-2',
     vulnerability: "DoS-атака на портал",
     ttp: "Перевантаження сервера запитами",
     affectedAssetTypes: ['software', 'hardware']
   },
   "Викрадення, модифікація або видалення даних у базі через SQL Injection": {
-    identifier: 'ID.AM-2', // Software (database server) and data itself
+    identifier: 'ID.AM-2',
     vulnerability: "SQL Injection на сервері бази даних",
     ttp: "Вставка шкідливого SQL-коду",
     affectedAssetTypes: ['software', 'informationResource']
   },
-  "Збої, відмова у роботі, втручання у цілісність і конфіденційність через XSS": { // Updated Threat for XSS
-    identifier: 'ID.AM-2', // Software (WordPress)
+  "Збої, відмова у роботі, втручання у цілісність і конфіденційність через XSS": {
+    identifier: 'ID.AM-2',
     vulnerability: "XSS у WordPress",
     ttp: "Впровадження шкідливого JavaScript-коду",
     affectedAssetTypes: ['software']
@@ -143,7 +138,7 @@ const threatDetailsMap: Record<string, ThreatDetailValue> = {
     identifier: 'N/A',
     vulnerability: "Опишіть вразливість...",
     ttp: "Опишіть можливі дії зловмисника...",
-    affectedAssetTypes: [] // Allows all asset types to be selected manually
+    affectedAssetTypes: []
   }
 };
 
@@ -168,7 +163,7 @@ const icsToolOptionsList = [
 
 const singleCurrentProfileThreatSchema = z.object({
   id: z.string(),
-  selectedRisk: z.string().min(1, "Необхідно обрати загрозу"), // Key from threatDetailsMap, now "Загроза"
+  selectedRisk: z.string().min(1, "Необхідно обрати загрозу"),
   identifier: z.string().optional(),
   vulnerabilityDescription: z.string().min(1, "Опис вразливості обов'язковий"),
   ttpDescription: z.string().min(1, "Опис TTP обов'язковий"),
@@ -193,7 +188,7 @@ const targetProfileDetailsSchema = z.object({
   appliesToSoftware: z.boolean().optional().default(false),
   appliesToHardware: z.boolean().optional().default(false),
   appliesToInformationResource: z.boolean().optional().default(false),
-  appliesToIcsTool: z.boolean().optional().default(false), // Keep this for target profile flexibility
+  appliesToIcsTool: z.boolean().optional().default(false),
 });
 
 const reportPageFormSchema = z.object({
@@ -339,7 +334,6 @@ export default function ReportingPage() {
   const [softwareAssetOptions, setSoftwareAssetOptions] = useState<string[]>([...baseAssetOptions]);
   const [hardwareAssetOptions, setHardwareAssetOptions] = useState<string[]>([...baseAssetOptions]);
   const [informationResourceAssetOptions, setInformationResourceAssetOptions] = useState<string[]>([...baseAssetOptions]);
-  // ICS Tool options are static, defined in icsToolOptionsList
 
   const { toast } = useToast();
 
@@ -426,15 +420,12 @@ export default function ReportingPage() {
         form.setValue(`${pathPrefix}.software`, affected.includes('software') ? getFirstAvailableAsset(softwareAssetOptions) : '-', { shouldDirty: true });
         form.setValue(`${pathPrefix}.hardware`, affected.includes('hardware') ? getFirstAvailableAsset(hardwareAssetOptions) : '-', { shouldDirty: true });
         form.setValue(`${pathPrefix}.informationResource`, affected.includes('informationResource') ? getFirstAvailableAsset(informationResourceAssetOptions) : '-', { shouldDirty: true });
-        // ICS Tool is manually selected, not auto-set based on threat's affectedAssetTypes
-        // form.setValue(`${pathPrefix}.icsTool`, affected.includes('icsTool') ? (icsToolOptionsList.length > 2 ? icsToolOptionsList[2].value : '-') : '-', { shouldDirty: true });
       } else if (isOther) {
-        // For "Інша загроза", allow user to select any asset, don't auto-clear.
-        // Default to '-' if not already set or if previous threat cleared them.
         if (!form.getValues(`${pathPrefix}.software`)) form.setValue(`${pathPrefix}.software`, '-', { shouldDirty: true });
         if (!form.getValues(`${pathPrefix}.hardware`)) form.setValue(`${pathPrefix}.hardware`, '-', { shouldDirty: true });
         if (!form.getValues(`${pathPrefix}.informationResource`)) form.setValue(`${pathPrefix}.informationResource`, '-', { shouldDirty: true });
       }
+      // ICS Tool is always manually selected by the user
     }
   };
   
@@ -577,7 +568,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Засіб ІКЗ</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'}>
+            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!isOtherThreat && !affectedForCurrentThreat.includes('icsTool')}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть засіб ІКЗ" /></SelectTrigger></FormControl>
               <SelectContent>
                 {icsToolOptionsList.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
@@ -777,17 +768,18 @@ export default function ReportingPage() {
                         const isOtherNew = newRiskKey === "Інша загроза (потребує ручного опису)";
                         
                         const newThreatToAdd: SingleCurrentProfileThreatValues = {
-                            ...defaultThreatValues, 
                             id: Date.now().toString(),
                             selectedRisk: newRiskKey,
                             identifier: newRiskDetails.identifier,
                             vulnerabilityDescription: newRiskDetails.vulnerability,
                             ttpDescription: newRiskDetails.ttp,
-                            comment: '', 
+                            implementationStatus: 'Реалізовано',
+                            implementationLevel: '3',
                             software: (!isOtherNew && affectedForNew.includes('software')) ? getFirstAvailableAsset(softwareAssetOptions) : '-',
                             hardware: (!isOtherNew && affectedForNew.includes('hardware')) ? getFirstAvailableAsset(hardwareAssetOptions) : '-',
                             informationResource: (!isOtherNew && affectedForNew.includes('informationResource')) ? getFirstAvailableAsset(informationResourceAssetOptions) : '-',
-                            icsTool: '-', // ICS Tool is always manual
+                            icsTool: '-', 
+                            comment: '', 
                         };
                         appendCurrentThreat(newThreatToAdd);
                     }}
@@ -822,7 +814,7 @@ export default function ReportingPage() {
       {reportGenerated && (
         <>
         <div className="flex justify-end gap-2 mb-4 print:hidden">
-            <Button variant="outline" onClick={() => { setReportGenerated(false); setCurrentProfileForDisplay(null); setTargetProfileForDisplay(null); fetchAssetsForReport(); form.reset(); }}>
+            <Button variant="outline" onClick={() => { setReportGenerated(false); setCurrentProfileForDisplay(null); setTargetProfileForDisplay(null); fetchAssetsForReport(); form.reset({ currentProfileDetails: [defaultThreatValues], targetProfileDetails: { identifiers: [defaultTargetIdentifierValue], implementationLevel: '4', appliesToSoftware: true, appliesToHardware: true, appliesToInformationResource: true, appliesToIcsTool: true } }); }}>
                 Створити новий звіт / Редагувати
             </Button>
             <Button onClick={handlePrint} disabled={isGeneratingReport}>
@@ -950,4 +942,6 @@ export default function ReportingPage() {
     </div>
   );
 }
+    
+
     
