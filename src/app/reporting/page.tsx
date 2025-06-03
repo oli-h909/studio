@@ -27,152 +27,136 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 
-
 const implementationStatusOptions = ["Реалізовано", "Не реалізовано", "Частково реалізовано", "Не застосовується"] as const;
 const implementationLevelOptions = ["1", "2", "3", "4"] as const;
 
 type AssetCategoryKey = 'software' | 'hardware' | 'informationResource' | 'icsTool';
 
-const threatDetailsMap: Record<string, {
+interface ThreatDetailValue {
   identifier: string;
   vulnerability: string;
-  ttpDescription: string;
-  threatDescription: string;
+  ttp: string;
   affectedAssetTypes: AssetCategoryKey[];
-}> = {
-  "Атака через шкідливі вкладення": {
-    identifier: 'ID.AM-2', // or ID.AM-5 if related to user behavior
+}
+
+const threatDetailsMap: Record<string, ThreatDetailValue> = {
+  // Ключ = "Загроза (конкретний ризик)"
+  "Інфікування робочих станцій або серверів, втрата контролю над системою": {
+    identifier: 'ID.AM-2',
     vulnerability: "Атака через шкідливі вкладення",
-    ttpDescription: "Відкриття вкладення, інфікування систем шкідливим ПЗ",
-    threatDescription: "Інфікування робочих станцій або серверів, втрата контролю над системою",
+    ttp: "Відкриття вкладення, інфікування систем шкідливим ПЗ",
     affectedAssetTypes: ['software', 'hardware']
   },
-  "Використання уразливого компонента CMS": {
+  "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту": {
     identifier: 'ID.AM-2',
     vulnerability: "Використання уразливого компонента CMS",
-    ttpDescription: "Експлуатація вразливості, запуск шкідливого коду",
-    threatDescription: "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту",
+    ttp: "Експлуатація вразливості, запуск шкідливого коду",
     affectedAssetTypes: ['software']
   },
-  "Витік даних": {
+  "Втрата конфіденційної інформації, репутаційні й фінансові збитки": {
     identifier: 'ID.AM-3',
     vulnerability: "Витік даних",
-    ttpDescription: "Несанкціонований доступ, копіювання, передача інформації",
-    threatDescription: "Втрата конфіденційної інформації, репутаційні й фінансові збитки",
+    ttp: "Несанкціонований доступ, копіювання, передача інформації",
     affectedAssetTypes: ['informationResource']
   },
-  "Збереження паролів у відкритому вигляді": {
-    identifier: 'ID.AM-3', // As it's about data
+  "Несанкціонований доступ до систем і сервісів через викрадені паролі": { // Уточнено ключ для унікальності
+    identifier: 'ID.AM-3',
     vulnerability: "Збереження паролів у відкритому вигляді",
-    ttpDescription: "Викрадення або витік паролів",
-    threatDescription: "Несанкціонований доступ до систем і сервісів",
-    affectedAssetTypes: ['informationResource', 'software'] // Config files, or app logic
+    ttp: "Викрадення або витік паролів",
+    affectedAssetTypes: ['informationResource', 'software']
   },
-  "Недостатній контроль доступу": {
-    identifier: 'ID.AM-3', // Access to information
+  "Порушення цілісності, витік даних, саботаж систем через недостатній контроль доступу": { // Уточнено
+    identifier: 'ID.AM-3',
     vulnerability: "Недостатній контроль доступу",
-    ttpDescription: "Несанкціонований вхід, підміна прав користувачів",
-    threatDescription: "Порушення цілісності, витік даних, саботаж систем",
+    ttp: "Несанкціонований вхід, підміна прав користувачів",
     affectedAssetTypes: ['informationResource', 'software', 'hardware']
   },
-  "Незахищене ліцензування CRM": {
+  "Юридичні проблеми, втрата контролю над CRM через ліцензування": { // Уточнено
     identifier: 'ID.AM-2',
     vulnerability: "Незахищене ліцензування CRM",
-    ttpDescription: "Викрадення ліцензійних ключів, використання піратських копій",
-    threatDescription: "Юридичні проблеми, втрата контролю над системою",
+    ttp: "Викрадення ліцензійних ключів, використання піратських копій",
     affectedAssetTypes: ['software']
   },
-  "Несанкціонований доступ до бази користувачів": {
+  "Викрадення персональних даних, порушення аутентифікації через доступ до бази користувачів": { // Уточнено
     identifier: 'ID.AM-3',
     vulnerability: "Несанкціонований доступ до бази користувачів",
-    ttpDescription: "Викрадення або модифікація даних користувачів",
-    threatDescription: "Викрадення персональних даних, порушення аутентифікації",
+    ttp: "Викрадення або модифікація даних користувачів",
     affectedAssetTypes: ['informationResource']
   },
-  "Обхід автентифікації": {
-    identifier: 'ID.AM-2', // System/software vulnerability
+  "Несанкціонований доступ, компрометація систем через обхід автентифікації": { // Уточнено
+    identifier: 'ID.AM-2',
     vulnerability: "Обхід автентифікації",
-    ttpDescription: "Використання вразливостей для обходу перевірки ідентичності",
-    threatDescription: "Несанкціонований доступ, компрометація систем",
+    ttp: "Використання вразливостей для обходу перевірки ідентичності",
     affectedAssetTypes: ['software']
   },
-  "Порушення політики безпеки": {
-    identifier: 'ID.AM-5', // Personnel/Process related
+  "Підвищений ризик інцидентів, внутрішні загрози через порушення політики": { // Уточнено
+    identifier: 'ID.AM-5',
     vulnerability: "Порушення політики безпеки",
-    ttpDescription: "Несанкціоновані зміни, ігнорування правил",
-    threatDescription: "Підвищений ризик інцидентів, внутрішні загрози",
-    affectedAssetTypes: ['software', 'hardware', 'informationResource'] // Can impact any
+    ttp: "Несанкціоновані зміни, ігнорування правил",
+    affectedAssetTypes: ['software', 'hardware', 'informationResource']
   },
-  "Соціальна інженерія": {
+  "Витік інформації, компрометація облікових даних через соціальну інженерію": { // Уточнено
     identifier: 'ID.AM-5',
     vulnerability: "Соціальна інженерія",
-    ttpDescription: "Обман співробітників для отримання доступу",
-    threatDescription: "Витік інформації, компрометація облікових даних",
-    affectedAssetTypes: ['informationResource'] // Primarily targets info like credentials
+    ttp: "Обман співробітників для отримання доступу",
+    affectedAssetTypes: ['informationResource']
   },
-  "Фішинг": {
+  "Крадіжка облікових даних, несанкціонований доступ через фішинг": { // Уточнено
     identifier: 'ID.AM-5',
     vulnerability: "Фішинг",
-    ttpDescription: "Розсилання підробних листів для отримання даних",
-    threatDescription: "Крадіжка облікових даних, несанкціонований доступ",
-    affectedAssetTypes: ['informationResource'] // Primarily targets info like credentials
+    ttp: "Розсилання підробних листів для отримання даних",
+    affectedAssetTypes: ['informationResource']
   },
-  "Фішинг-посилання у CRM": {
+  "Компрометація користувацьких акаунтів, втручання у роботу CRM через фішинг-посилання": { // Уточнено
     identifier: 'ID.AM-2',
     vulnerability: "Фішинг-посилання у CRM",
-    ttpDescription: "Впровадження шкідливих посилань в CRM",
-    threatDescription: "Компрометація користувацьких акаунтів, втручання у роботу CRM",
+    ttp: "Впровадження шкідливих посилань в CRM",
     affectedAssetTypes: ['software']
   },
-  "Шкідливе програмне забезпечення": {
+  "Пошкодження систем, крадіжка даних, відмова у обслуговуванні через шкідливе ПЗ": { // Уточнено
     identifier: 'ID.AM-2',
     vulnerability: "Шкідливе програмне забезпечення",
-    ttpDescription: "Інсталяція, поширення шкідливих модулів",
-    threatDescription: "Пошкодження систем, крадіжка даних, відмова у обслуговуванні",
+    ttp: "Інсталяція, поширення шкідливих модулів",
     affectedAssetTypes: ['software', 'hardware']
   },
-  "DoS-атака на портал": {
-    identifier: 'ID.AM-2', // Affects system availability
+  "Недоступність сервісу для користувачів через DoS-атаку": { // Уточнено
+    identifier: 'ID.AM-2',
     vulnerability: "DoS-атака на портал",
-    ttpDescription: "Перевантаження сервера запитами",
-    threatDescription: "Недоступність сервісу для користувачів",
+    ttp: "Перевантаження сервера запитами",
     affectedAssetTypes: ['software', 'hardware']
   },
-  "SQL Injection на сервері бази даних": {
-    identifier: 'ID.AM-2', // Technical vulnerability in software
+  "Викрадення, модифікація або видалення даних у базі через SQL Injection": { // Уточнено
+    identifier: 'ID.AM-2',
     vulnerability: "SQL Injection на сервері бази даних",
-    ttpDescription: "Вставка шкідливого SQL-коду",
-    threatDescription: "Викрадення, модифікація або видалення даних у базі",
+    ttp: "Вставка шкідливого SQL-коду",
     affectedAssetTypes: ['software', 'informationResource']
   },
-  "XSS у WordPress": {
+  "Викрадення сесій, перенаправлення користувачів, викрадення даних через XSS": { // Уточнено
     identifier: 'ID.AM-2',
     vulnerability: "XSS у WordPress",
-    ttpDescription: "Впровадження шкідливого JavaScript-коду",
-    threatDescription: "Викрадення сесій, перенаправлення користувачів, викрадення даних",
+    ttp: "Впровадження шкідливого JavaScript-коду",
     affectedAssetTypes: ['software']
   },
-  "Інше": {
+  "Інша загроза (потребує ручного опису)": {
     identifier: 'N/A',
-    vulnerability: "Інше",
-    ttpDescription: "Опишіть можливі дії зловмисника...",
-    threatDescription: "Опишіть конкретний ризик...",
-    affectedAssetTypes: [] // No automatic filtering for "Інше"
+    vulnerability: "Опишіть вразливість...",
+    ttp: "Опишіть можливі дії зловмисника...",
+    affectedAssetTypes: []
   }
 };
 
-const relatedThreatOptions = Object.keys(threatDetailsMap).sort((a, b) => a === "Інше" ? 1 : b === "Інше" ? -1 : a.localeCompare(b)) as [string, ...string[]];
+const threatOptions = Object.keys(threatDetailsMap).sort((a, b) => a.startsWith("Інша") ? 1 : b.startsWith("Інша") ? -1 : a.localeCompare(b)) as [string, ...string[]];
 
 const baseAssetOptions = ["-", "Інше"] as const;
 
 const singleCurrentProfileThreatSchema = z.object({
   id: z.string(),
+  selectedRisk: z.string().min(1, "Необхідно обрати загрозу"), // Ключ з threatDetailsMap
   identifier: z.string().optional(),
+  vulnerabilityDescription: z.string().min(1, "Опис вразливості обов'язковий"),
+  ttpDescription: z.string().min(1, "Опис TTP обов'язковий"),
   implementationStatus: z.string().optional(),
   implementationLevel: z.string().optional(),
-  relatedThreat: z.string().optional(), // This will store the "Вразливість"
-  threatDescription: z.string().optional(), // "Загроза (конкретний ризик)"
-  ttpDescription: z.string().optional(), // "Можливі дії зловмисника"
   software: z.string().optional(),
   hardware: z.string().optional(),
   informationResource: z.string().optional(),
@@ -202,43 +186,43 @@ const reportPageFormSchema = z.object({
 
 type ReportPageFormValues = z.infer<typeof reportPageFormSchema>;
 
-const defaultSelectedThreatKey = relatedThreatOptions.find(opt => opt !== "Інше") || relatedThreatOptions[0];
-const defaultThreatDetails = threatDetailsMap[defaultSelectedThreatKey] || threatDetailsMap["Інше"];
+const defaultSelectedRiskKey = threatOptions.find(opt => !opt.startsWith("Інша")) || threatOptions[0];
+const defaultRiskDetails = threatDetailsMap[defaultSelectedRiskKey] || threatDetailsMap["Інша загроза (потребує ручного опису)"];
 
 const defaultThreatValues: SingleCurrentProfileThreatValues = {
   id: Date.now().toString(),
-  relatedThreat: defaultSelectedThreatKey,
-  identifier: defaultThreatDetails.identifier,
+  selectedRisk: defaultSelectedRiskKey,
+  identifier: defaultRiskDetails.identifier,
+  vulnerabilityDescription: defaultRiskDetails.vulnerability,
+  ttpDescription: defaultRiskDetails.ttp,
   implementationStatus: 'Реалізовано',
   implementationLevel: '3',
   software: '-',
   hardware: '-',
   informationResource: '-',
   icsTool: '-',
-  threatDescription: defaultThreatDetails.threatDescription,
-  ttpDescription: defaultThreatDetails.ttpDescription,
   comment: 'Загальні заходи захисту на рівні мережі та кінцевих точок впроваджені.',
 };
 
-const defaultTargetIdentifierValue = { id: Date.now().toString(), value: 'ID.AM-3 Target' };
+const defaultTargetIdentifierValue = { id: Date.now().toString(), value: 'ID.AM-3.Target' };
 
 
 const formatCurrentProfileDataToString = (data: SingleCurrentProfileThreatValues[]): string => {
   if (!data || data.length === 0) return "Поточний профіль безпеки: Інформація не надана\n";
 
   let summary = "Поточний профіль безпеки (виявлені загрози та їх деталі):\n\n";
-  data.forEach((threat, index) => {
-    summary += `Загроза ${index + 1} (на основі вразливості: ${threat.relatedThreat || 'Не вказано'}):\n`;
-    if (threat.identifier) summary += `  - Ідентифікатор: ${threat.identifier}\n`;
-    if (threat.threatDescription) summary += `  - Опис загрози (ризик): ${threat.threatDescription}\n`;
-    if (threat.ttpDescription) summary += `  - Можливі дії зловмисника (TTP): ${threat.ttpDescription}\n`;
-    if (threat.implementationStatus) summary += `  - Статус реалізації контрзаходів: ${threat.implementationStatus}\n`;
-    if (threat.implementationLevel) summary += `  - Рівень впровадження контрзаходів: ${threat.implementationLevel}\n`;
-    if (threat.software && threat.software !== '-') summary += `  - Пов'язане програмне забезпечення (Актив): ${threat.software}\n`;
-    if (threat.hardware && threat.hardware !== '-') summary += `  - Пов'язане апаратне забезпечення (Актив): ${threat.hardware}\n`;
-    if (threat.informationResource && threat.informationResource !== '-') summary += `  - Пов'язаний інформаційний ресурс (Актив): ${threat.informationResource}\n`;
-    if (threat.icsTool && threat.icsTool !== '-') summary += `  - Пов'язаний засіб ІКЗ (Актив): ${threat.icsTool}\n`;
-    if (threat.comment && threat.comment.trim() !== '') summary += `  - Коментар: ${threat.comment}\n`;
+  data.forEach((item, index) => {
+    summary += `Загроза (Ризик) ${index + 1}: ${item.selectedRisk}\n`;
+    if (item.identifier) summary += `  - Ідентифікатор: ${item.identifier}\n`;
+    summary += `  - Вразливість: ${item.vulnerabilityDescription}\n`;
+    summary += `  - Можливі дії зловмисника (TTP): ${item.ttpDescription}\n`;
+    if (item.implementationStatus) summary += `  - Статус реалізації контрзаходів: ${item.implementationStatus}\n`;
+    if (item.implementationLevel) summary += `  - Рівень впровадження контрзаходів: ${item.implementationLevel}\n`;
+    if (item.software && item.software !== '-') summary += `  - Пов'язане програмне забезпечення (Актив): ${item.software}\n`;
+    if (item.hardware && item.hardware !== '-') summary += `  - Пов'язане апаратне забезпечення (Актив): ${item.hardware}\n`;
+    if (item.informationResource && item.informationResource !== '-') summary += `  - Пов'язаний інформаційний ресурс (Актив): ${item.informationResource}\n`;
+    if (item.icsTool && item.icsTool !== '-') summary += `  - Пов'язаний засіб ІКЗ (Актив): ${item.icsTool}\n`;
+    if (item.comment && item.comment.trim() !== '') summary += `  - Коментар: ${item.comment}\n`;
     summary += "\n";
   });
   return summary.trim();
@@ -353,10 +337,10 @@ export default function ReportingPage() {
   const [displayedCurrentProfile, setDisplayedCurrentProfile] = useState<string>('');
   const [displayedTargetProfile, setDisplayedTargetProfile] = useState<string>('');
 
-  const [softwareOptions, setSoftwareOptions] = useState<string[]>([...baseAssetOptions]);
-  const [hardwareOptions, setHardwareOptions] = useState<string[]>([...baseAssetOptions]);
-  const [informationResourceOptions, setInformationResourceOptions] = useState<string[]>([...baseAssetOptions]);
-  const [icsToolOptions, setIcsToolOptions] = useState<string[]>([...baseAssetOptions]);
+  const [softwareAssetOptions, setSoftwareAssetOptions] = useState<string[]>([...baseAssetOptions]);
+  const [hardwareAssetOptions, setHardwareAssetOptions] = useState<string[]>([...baseAssetOptions]);
+  const [informationResourceAssetOptions, setInformationResourceAssetOptions] = useState<string[]>([...baseAssetOptions]);
+  const [icsToolAssetOptions, setIcsToolAssetOptions] = useState<string[]>([...baseAssetOptions]);
 
   const { toast } = useToast();
 
@@ -391,23 +375,32 @@ export default function ReportingPage() {
     name: "targetProfileDetails.identifiers",
   });
 
-  const fetchAssets = useCallback(async () => {
+  const fetchAssetsForReport = useCallback(async () => {
     try {
       const assetsCollectionRef = collection(db, 'assets');
       const assetSnapshot = await getDocs(assetsCollectionRef);
       const assetsList = assetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
       
+      const sortAssets = (options: string[]) => options.sort((a, b) => {
+        if (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) {
+          return baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : -1;
+        }
+        return baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? 1 : a.localeCompare(b);
+      });
+
       const sw = assetsList.filter(a => a.type === 'Програмне забезпечення').map(a => a.name);
-      setSoftwareOptions(prev => [...new Set([...baseAssetOptions, ...sw])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+      setSoftwareAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...sw])]));
 
       const hw = assetsList.filter(a => a.type === 'Обладнання').map(a => a.name);
-      setHardwareOptions(prev => [...new Set([...baseAssetOptions, ...hw])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+      setHardwareAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...hw])]));
 
       const ir = assetsList.filter(a => a.type === 'Інформація').map(a => a.name);
-      setInformationResourceOptions(prev => [...new Set([...baseAssetOptions, ...ir])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
-
-      const ics = assetsList.filter(a => a.type === 'Обладнання' || a.type === 'Програмне забезпечення').map(a => a.name); 
-      setIcsToolOptions(prev => [...new Set([...baseAssetOptions, ...ics])].sort((a, b) => (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) ? (baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : 1) : (baseAssetOptions.includes(b as typeof baseAssetOptions[number])) ? -1 : a.localeCompare(b)));
+      setInformationResourceAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...ir])]));
+      
+      // For ICS tools, we might consider both hardware and software type assets that function as security tools.
+      // This is a simplification; a more robust system might have a specific 'ICS Tool' asset type or tag.
+      const ics = assetsList.filter(a => a.type === 'Програмне забезпечення' || a.type === 'Обладнання').map(a => a.name); 
+      setIcsToolAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...ics])]));
 
     } catch (error) {
       console.error("Error fetching assets for report: ", error);
@@ -416,27 +409,27 @@ export default function ReportingPage() {
   }, [toast]);
 
   useEffect(() => {
-    fetchAssets();
-  }, [fetchAssets]);
+    fetchAssetsForReport();
+  }, [fetchAssetsForReport]);
 
   const currentProfileDetailsWatch = useWatch({ control: form.control, name: 'currentProfileDetails' });
   useEffect(() => {
     currentProfileDetailsWatch.forEach((threat, index) => {
-      if (form.getValues(`currentProfileDetails.${index}.software`) === undefined) form.setValue(`currentProfileDetails.${index}.software`, '-', { shouldValidate: false });
-      if (form.getValues(`currentProfileDetails.${index}.hardware`) === undefined) form.setValue(`currentProfileDetails.${index}.hardware`, '-', { shouldValidate: false });
-      if (form.getValues(`currentProfileDetails.${index}.informationResource`) === undefined) form.setValue(`currentProfileDetails.${index}.informationResource`, '-', { shouldValidate: false });
-      if (form.getValues(`currentProfileDetails.${index}.icsTool`) === undefined) form.setValue(`currentProfileDetails.${index}.icsTool`, '-', { shouldValidate: false });
+      const pathPrefix = `currentProfileDetails.${index}` as const;
+      if (form.getValues(`${pathPrefix}.software`) === undefined) form.setValue(`${pathPrefix}.software`, '-', { shouldValidate: false });
+      if (form.getValues(`${pathPrefix}.hardware`) === undefined) form.setValue(`${pathPrefix}.hardware`, '-', { shouldValidate: false });
+      if (form.getValues(`${pathPrefix}.informationResource`) === undefined) form.setValue(`${pathPrefix}.informationResource`, '-', { shouldValidate: false });
+      if (form.getValues(`${pathPrefix}.icsTool`) === undefined) form.setValue(`${pathPrefix}.icsTool`, '-', { shouldValidate: false });
 
-      // Apply asset filtering if relatedThreat is already set (e.g. on initial load with defaults)
-      const relatedThreatValue = form.getValues(`currentProfileDetails.${index}.relatedThreat`);
-      if (relatedThreatValue) {
-        const details = threatDetailsMap[relatedThreatValue];
+      const selectedRiskValue = form.getValues(`${pathPrefix}.selectedRisk`);
+      if (selectedRiskValue) {
+        const details = threatDetailsMap[selectedRiskValue];
         if (details?.affectedAssetTypes && details.affectedAssetTypes.length > 0) {
             const affected = details.affectedAssetTypes;
-            if (!affected.includes('software') && form.getValues(`currentProfileDetails.${index}.software`) !== '-') form.setValue(`currentProfileDetails.${index}.software`, '-', { shouldDirty: true, shouldValidate: true });
-            if (!affected.includes('hardware') && form.getValues(`currentProfileDetails.${index}.hardware`) !== '-') form.setValue(`currentProfileDetails.${index}.hardware`, '-', { shouldDirty: true, shouldValidate: true });
-            if (!affected.includes('informationResource') && form.getValues(`currentProfileDetails.${index}.informationResource`) !== '-') form.setValue(`currentProfileDetails.${index}.informationResource`, '-', { shouldDirty: true, shouldValidate: true });
-            if (!affected.includes('icsTool') && form.getValues(`currentProfileDetails.${index}.icsTool`) !== '-') form.setValue(`currentProfileDetails.${index}.icsTool`, '-', { shouldDirty: true, shouldValidate: true });
+            if (!affected.includes('software') && form.getValues(`${pathPrefix}.software`) !== '-') form.setValue(`${pathPrefix}.software`, '-', { shouldDirty: true, shouldValidate: true });
+            if (!affected.includes('hardware') && form.getValues(`${pathPrefix}.hardware`) !== '-') form.setValue(`${pathPrefix}.hardware`, '-', { shouldDirty: true, shouldValidate: true });
+            if (!affected.includes('informationResource') && form.getValues(`${pathPrefix}.informationResource`) !== '-') form.setValue(`${pathPrefix}.informationResource`, '-', { shouldDirty: true, shouldValidate: true });
+            if (!affected.includes('icsTool') && form.getValues(`${pathPrefix}.icsTool`) !== '-') form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true, shouldValidate: true });
         }
       }
     });
@@ -475,25 +468,32 @@ export default function ReportingPage() {
     }
   };
 
-  const handleRelatedThreatChange = (value: string, threatIndex: number) => {
-    const details = threatDetailsMap[value];
+  const handleSelectedRiskChange = (selectedRiskKey: string, threatIndex: number) => {
+    const details = threatDetailsMap[selectedRiskKey];
+    const pathPrefix = `currentProfileDetails.${threatIndex}` as const;
+
     if (details) {
-      form.setValue(`currentProfileDetails.${threatIndex}.identifier`, details.identifier, { shouldDirty: true });
-      form.setValue(`currentProfileDetails.${threatIndex}.threatDescription`, details.threatDescription, { shouldDirty: true });
-      form.setValue(`currentProfileDetails.${threatIndex}.ttpDescription`, details.ttpDescription, { shouldDirty: true });
+      form.setValue(`${pathPrefix}.identifier`, details.identifier, { shouldDirty: true });
+      form.setValue(`${pathPrefix}.vulnerabilityDescription`, details.vulnerability, { shouldDirty: true });
+      form.setValue(`${pathPrefix}.ttpDescription`, details.ttp, { shouldDirty: true });
 
       if (details.affectedAssetTypes && details.affectedAssetTypes.length > 0) {
         const affected = details.affectedAssetTypes;
-        if (!affected.includes('software')) form.setValue(`currentProfileDetails.${threatIndex}.software`, '-', { shouldDirty: true });
-        if (!affected.includes('hardware')) form.setValue(`currentProfileDetails.${threatIndex}.hardware`, '-', { shouldDirty: true });
-        if (!affected.includes('informationResource')) form.setValue(`currentProfileDetails.${threatIndex}.informationResource`, '-', { shouldDirty: true });
-        if (!affected.includes('icsTool')) form.setValue(`currentProfileDetails.${threatIndex}.icsTool`, '-', { shouldDirty: true });
+        if (!affected.includes('software')) form.setValue(`${pathPrefix}.software`, '-', { shouldDirty: true });
+        if (!affected.includes('hardware')) form.setValue(`${pathPrefix}.hardware`, '-', { shouldDirty: true });
+        if (!affected.includes('informationResource')) form.setValue(`${pathPrefix}.informationResource`, '-', { shouldDirty: true });
+        if (!affected.includes('icsTool')) form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
+      } else { // If affectedAssetTypes is empty (e.g. "Інша загроза"), don't clear assets
+          // This allows manual selection for "Інша загроза"
       }
-      // If affectedAssetTypes is empty or not defined (e.g., for "Інше"), existing asset selections are preserved.
     }
   };
 
   const renderCurrentProfileThreatFields = (threatIndex: number) => {
+    const pathPrefix = `currentProfileDetails.${threatIndex}` as const;
+    const selectedRiskValue = form.watch(`${pathPrefix}.selectedRisk`);
+    const isOtherThreat = selectedRiskValue === "Інша загроза (потребує ручного опису)";
+
     return (
     <CardContent className="space-y-4 p-4 border rounded-md bg-card/80 shadow-sm mb-4 relative">
        <Button
@@ -506,23 +506,23 @@ export default function ReportingPage() {
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-      <h4 className="text-md font-semibold text-primary/90">Загроза #{threatIndex + 1}</h4>
+      <h4 className="text-md font-semibold text-primary/90">Поточна Загроза (Ризик) #{threatIndex + 1}</h4>
       <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.relatedThreat`}
+        name={`${pathPrefix}.selectedRisk`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Пов'язана вразливість</FormLabel>
+            <FormLabel>Оберіть Загрозу (Ризик)</FormLabel>
             <Select
               onValueChange={(value) => {
                 field.onChange(value);
-                handleRelatedThreatChange(value, threatIndex);
+                handleSelectedRiskChange(value, threatIndex);
               }}
               defaultValue={field.value}
             >
-              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть вразливість" /></SelectTrigger></FormControl>
+              <FormControl><SelectTrigger><SelectValue placeholder="Оберіть загрозу (ризик) зі списку" /></SelectTrigger></FormControl>
               <SelectContent>
-                {relatedThreatOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                {threatOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -531,7 +531,7 @@ export default function ReportingPage() {
       />
       <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.identifier`}
+        name={`${pathPrefix}.identifier`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Ідентифікатор (ID.AM-X)</FormLabel>
@@ -540,38 +540,38 @@ export default function ReportingPage() {
           </FormItem>
         )}
       />
-       <FormField
+      <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.threatDescription`}
+        name={`${pathPrefix}.vulnerabilityDescription`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Опис загрози (конкретний ризик)</FormLabel>
-            <FormControl><Textarea placeholder="Опис конкретного ризику, що виникає з вразливості..." {...field} className="min-h-[100px] font-code text-sm" /></FormControl>
+            <FormLabel>Опис Вразливості</FormLabel>
+            <FormControl><Textarea placeholder="Опис вразливості, що призводить до загрози..." {...field} className="min-h-[100px] font-code text-sm" readOnly={!isOtherThreat && !!threatDetailsMap[selectedRiskValue]?.vulnerability && threatDetailsMap[selectedRiskValue]?.vulnerability !== "Опишіть вразливість..."} /></FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
       <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.ttpDescription`}
+        name={`${pathPrefix}.ttpDescription`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Можливі дії зловмисника (TTP)</FormLabel>
-            <FormControl><Textarea placeholder="Опис тактик, технік та процедур зловмисника..." {...field} className="min-h-[100px] font-code text-sm" /></FormControl>
+            <FormControl><Textarea placeholder="Опис тактик, технік та процедур зловмисника..." {...field} className="min-h-[100px] font-code text-sm" readOnly={!isOtherThreat && !!threatDetailsMap[selectedRiskValue]?.ttp && threatDetailsMap[selectedRiskValue]?.ttp !== "Опишіть можливі дії зловмисника..."} /></FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
        <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.software`}
+        name={`${pathPrefix}.software`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Програмне забезпечення (Актив)</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'}>
+            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={isOtherThreat ? false : !threatDetailsMap[selectedRiskValue]?.affectedAssetTypes.includes('software')}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть ПЗ з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
-                {softwareOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                {softwareAssetOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -580,14 +580,14 @@ export default function ReportingPage() {
       />
       <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.hardware`}
+        name={`${pathPrefix}.hardware`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Апаратне забезпечення (Актив)</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'}>
+            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={isOtherThreat ? false : !threatDetailsMap[selectedRiskValue]?.affectedAssetTypes.includes('hardware')}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть апаратне забезпечення з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
-                {hardwareOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                {hardwareAssetOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -596,14 +596,14 @@ export default function ReportingPage() {
       />
       <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.informationResource`}
+        name={`${pathPrefix}.informationResource`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Інформаційний ресурс (Актив)</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'}>
+            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={isOtherThreat ? false : !threatDetailsMap[selectedRiskValue]?.affectedAssetTypes.includes('informationResource')}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть інформаційний ресурс з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
-                {informationResourceOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                {informationResourceAssetOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -612,14 +612,14 @@ export default function ReportingPage() {
       />
       <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.icsTool`}
+        name={`${pathPrefix}.icsTool`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Засіб ІКЗ (Актив)</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'}>
+            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={isOtherThreat ? false : !threatDetailsMap[selectedRiskValue]?.affectedAssetTypes.includes('icsTool')}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть засіб ІКЗ з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
-                {icsToolOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                {icsToolAssetOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -628,7 +628,7 @@ export default function ReportingPage() {
       />
       <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.implementationStatus`}
+        name={`${pathPrefix}.implementationStatus`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Статус реалізації контрзаходів</FormLabel>
@@ -644,7 +644,7 @@ export default function ReportingPage() {
       />
       <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.implementationLevel`}
+        name={`${pathPrefix}.implementationLevel`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Рівень впровадження контрзаходів (1-4)</FormLabel>
@@ -660,7 +660,7 @@ export default function ReportingPage() {
       />
        <FormField
         control={form.control}
-        name={`currentProfileDetails.${threatIndex}.comment`}
+        name={`${pathPrefix}.comment`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Коментар (вручну)</FormLabel>
@@ -785,9 +785,9 @@ export default function ReportingPage() {
         <FileText className="h-8 w-8 text-primary" />
       </div>
       <CardDescription>
-        Створіть звіт, що порівнює поточний та цільовий профілі безпеки, та отримайте рекомендації від ШІ.
-        Актуальні активи підтягуються з Реєстру активів. Вразливості та відповідні поля заповнюються автоматично.
-        При виборі вразливості, нерелевантні типи активів будуть автоматично очищені (встановлені в "-").
+        Створіть звіт, обравши Загрозу (Ризик), що автоматично заповнить Вразливість та TTP. 
+        Активи підтягуються з Реєстру активів. Нерелевантні типи активів будуть автоматично очищені (встановлені в "-") або деактивовані.
+        Ви можете редагувати авто-заповнені поля Вразливості та ТТР.
       </CardDescription>
 
       {!reportGenerated ? (
@@ -796,7 +796,7 @@ export default function ReportingPage() {
             <form onSubmit={form.handleSubmit(handleGenerateReport)}>
               <CardHeader>
                 <CardTitle>Створити звіт про безпеку</CardTitle>
-                <CardDescription>Заповніть деталі для поточного та цільового профілів. Поля "Ідентифікатор", "Опис загрози" та "Опис ТТР" заповняться автоматично при виборі "Пов'язаної вразливості".</CardDescription>
+                <CardDescription>Заповніть деталі для поточного та цільового профілів. Оберіть "Загрозу (Ризик)" для автоматичного заповнення полів "Ідентифікатор", "Опис Вразливості" та "Опис ТТР".</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
@@ -810,24 +810,29 @@ export default function ReportingPage() {
                     type="button"
                     variant="outline"
                     onClick={() => {
-                        const newThreatKey = relatedThreatOptions.find(opt => opt !== "Інше") || relatedThreatOptions[0];
-                        const newThreatDetails = threatDetailsMap[newThreatKey] || threatDetailsMap["Інше"];
+                        const newRiskKey = threatOptions.find(opt => !opt.startsWith("Інша")) || threatOptions[0];
+                        const newRiskDetails = threatDetailsMap[newRiskKey] || threatDetailsMap["Інша загроза (потребує ручного опису)"];
                         const newThreatToAdd: SingleCurrentProfileThreatValues = {
                             ...defaultThreatValues, 
                             id: Date.now().toString(),
-                            relatedThreat: newThreatKey,
-                            identifier: newThreatDetails.identifier,
-                            threatDescription: newThreatDetails.threatDescription,
-                            ttpDescription: newThreatDetails.ttpDescription,
+                            selectedRisk: newRiskKey,
+                            identifier: newRiskDetails.identifier,
+                            vulnerabilityDescription: newRiskDetails.vulnerability,
+                            ttpDescription: newRiskDetails.ttp,
                             comment: '', 
                         };
-                        // Manually apply asset filtering for the new threat based on its default vulnerability
-                        if (newThreatDetails.affectedAssetTypes && newThreatDetails.affectedAssetTypes.length > 0) {
-                            const affected = newThreatDetails.affectedAssetTypes;
-                            if (!affected.includes('software')) newThreatToAdd.software = '-';
-                            if (!affected.includes('hardware')) newThreatToAdd.hardware = '-';
-                            if (!affected.includes('informationResource')) newThreatToAdd.informationResource = '-';
-                            if (!affected.includes('icsTool')) newThreatToAdd.icsTool = '-';
+                        
+                        if (newRiskDetails.affectedAssetTypes && newRiskDetails.affectedAssetTypes.length > 0) {
+                            const affected = newRiskDetails.affectedAssetTypes;
+                            newThreatToAdd.software = affected.includes('software') ? (softwareAssetOptions.length > 2 ? softwareAssetOptions.find(o => o !== '-' && o !== 'Інше') || '-' : '-') : '-';
+                            newThreatToAdd.hardware = affected.includes('hardware') ? (hardwareAssetOptions.length > 2 ? hardwareAssetOptions.find(o => o !== '-' && o !== 'Інше') || '-' : '-') : '-';
+                            newThreatToAdd.informationResource = affected.includes('informationResource') ? (informationResourceAssetOptions.length > 2 ? informationResourceAssetOptions.find(o => o !== '-' && o !== 'Інше') || '-' : '-') : '-';
+                            newThreatToAdd.icsTool = affected.includes('icsTool') ? (icsToolAssetOptions.length > 2 ? icsToolAssetOptions.find(o => o !== '-' && o !== 'Інше') || '-' : '-') : '-';
+                        } else { // For "Інша загроза" or if no affected types, default to '-'
+                            newThreatToAdd.software = '-';
+                            newThreatToAdd.hardware = '-';
+                            newThreatToAdd.informationResource = '-';
+                            newThreatToAdd.icsTool = '-';
                         }
                         appendCurrentThreat(newThreatToAdd);
                     }}
@@ -877,7 +882,7 @@ export default function ReportingPage() {
       {reportGenerated && (
         <>
         <div className="flex justify-end gap-2 mb-4 print:hidden">
-            <Button variant="outline" onClick={() => { setReportGenerated(false); setError(null); setAiAnalysisResult(null); setIsLoading(false); }}>
+            <Button variant="outline" onClick={() => { setReportGenerated(false); setError(null); setAiAnalysisResult(null); setIsLoading(false); fetchAssetsForReport(); }}>
                 Створити новий звіт / Редагувати
             </Button>
             <Button onClick={handlePrint} disabled={isLoading}>
@@ -986,4 +991,6 @@ export default function ReportingPage() {
     </div>
   );
 }
+    
+
     
