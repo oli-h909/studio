@@ -169,7 +169,7 @@ export default function AssetsPage() {
   const [assetToManageWeakness, setAssetToManageWeakness] = useState<Asset | null>(null);
   const [currentCategory, setCurrentCategory] = useState<DisplayCategoryKey>(categoryKeys[0]);
   const { toast } = useToast();
-  const hasSeededRef = useRef(false); // Add ref to prevent re-seeding
+  const hasSeededRef = useRef(false);
 
   const assetForm = useForm<z.infer<typeof assetFormSchema>>({
     resolver: zodResolver(assetFormSchema),
@@ -187,26 +187,31 @@ export default function AssetsPage() {
       const assetsCollectionRef = collection(db, 'assets');
       const assetSnapshot = await getDocs(assetsCollectionRef);
       
-      if (assetSnapshot.empty && !forceRefresh && !hasSeededRef.current) {
-        hasSeededRef.current = true; // Prevent re-seeding
+      // If the DB is empty and we haven't tried seeding yet in this session
+      if (assetSnapshot.empty && !hasSeededRef.current) {
+        hasSeededRef.current = true; // Mark that we are attempting to seed
         const seededAssetsList = await seedInitialAssets();
         if (seededAssetsList) {
           setAssets(seededAssetsList);
           toast({ title: "Вітаємо!", description: "Додано приклади активів відповідно до тематики кіберзахисту." });
         } else {
-           setAssets([]); 
+           setAssets([]); // Seeding failed
         }
-      } else {
+      } else if (!assetSnapshot.empty) {
+        // If the DB is not empty, just load the assets.
         const assetsList = assetSnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Asset));
         setAssets(assetsList);
       }
+      // If the DB is empty but we have already tried to seed (hasSeededRef.current is true),
+      // do nothing. This handles the React Strict Mode double-effect call correctly,
+      // preventing the page from being wiped while the first seeding call is in flight.
     } catch (error) {
       console.error("Error fetching assets: ", error);
       toast({ title: "Помилка", description: "Не вдалося завантажити активи.", variant: "destructive" });
     } finally {
       setIsLoadingAssets(false);
     }
-  }, [toast]); 
+  }, [toast]);
 
   useEffect(() => {
     fetchAssets();
