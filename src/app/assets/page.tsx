@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import type { Asset, Weakness } from '@/lib/types';
 import { weaknessSeverities } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,6 @@ import { PlusCircle, Edit3, Trash2, ShieldAlert, ListChecks, Server, Laptop, Dat
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 
 const displayCategoryMap = {
@@ -47,119 +45,91 @@ const categoryIcons: Record<DisplayCategoryKey, React.ElementType> = {
   'Інформаційні ресурси': Database,
 };
 
-const seedInitialAssets = async (): Promise<Asset[] | null> => {
-  const batch = writeBatch(db);
-  const seededAssets: Asset[] = [];
+const staticAssetsData: Asset[] = [
+  // 1. Активи програмного забезпечення (Software Assets) - 2 examples
+  {
+    id: "sw_asset_1",
+    name: "Платформа аналізу загроз (TIP Core)",
+    type: "Програмне забезпечення",
+    description: "Центральний компонент, що агрегує, аналізує та корелює дані про кіберзагрози.",
+    version: "2.1.0",
+    installationDate: "2023-05-15",
+    lastUpdateDate: "2024-07-20",
+    weaknesses: [
+      { id: "sw_t_1", assetId: "sw_asset_1", description: "Вразливість: Недостатня валідація вхідних даних від зовнішніх джерел (feeds). Дії зловмисника: Виконання віддаленого коду (RCE), що дозволяє скомпрометувати систему збору розвідданих.", severity: "Критична" }
+    ]
+  },
+  {
+    id: "sw_asset_2",
+    name: "Система SIEM (Security Information and Event Management)",
+    type: "Програмне забезпечення",
+    description: "Система збору, моніторингу та аналізу логів безпеки з корпоративних систем.",
+    version: "5.4.2",
+    installationDate: "2022-11-01",
+    lastUpdateDate: "2024-06-28",
+    weaknesses: [
+      { id: "sw_t_2", assetId: "sw_asset_2", description: "Вразливість: Використання стандартних облікових даних для доступу до SIEM. Дії зловмисника: Отримання доступу до логів, приховування слідів або фабрикація подій.", severity: "Висока" }
+    ]
+  },
+
+  // 2. Активи апаратного забезпечення (Hardware Assets) - 2 examples
+  {
+    id: "hw_asset_1",
+    name: "Сервер аналізу загроз",
+    type: "Обладнання",
+    description: "Високопродуктивний сервер для обробки даних розвідки та запуску моделей ML.",
+    ipAddress: "10.0.1.15",
+    macAddress: "00:1A:2B:3C:4D:5E",
+    location: "Дата-центр Київ, Стійка А03",
+    weaknesses: [
+      { id: "hw_t_1", assetId: "hw_asset_1", description: "Вразливість: Недостатній фізичний захист серверної стійки. Дії зловмисника: Фізичний несанкціонований доступ, викрадення сервера, що призводить до втрати даних та зупинки аналітики.", severity: "Критична" }
+    ]
+  },
+  {
+    id: "hw_asset_2",
+    name: "Мережевий сенсор IDS/IPS",
+    type: "Обладнання",
+    description: "Пристрій для виявлення та запобігання вторгненням на периметрі мережі.",
+    ipAddress: "192.168.1.254",
+    macAddress: "00:AA:BB:CC:DD:EE",
+    location: "Головний маршрутизатор, DMZ",
+    weaknesses: [
+      { id: "hw_t_2", assetId: "hw_asset_2", description: "Вразливість: Неправильна конфігурація правил IDS/IPS. Дії зловмисника: Обхід системи виявлення (пропуск відомих атак) та проникнення в мережу.", severity: "Висока" }
+    ]
+  },
   
-  const initialAssetsData: Omit<Asset, 'id'>[] = [
-    // 1. Активи програмного забезпечення (Software Assets) - 2 examples
-    {
-      name: "Платформа аналізу загроз (TIP Core)",
-      type: "Програмне забезпечення",
-      description: "Центральний компонент, що агрегує, аналізує та корелює дані про кіберзагрози.",
-      version: "2.1.0",
-      installationDate: "2023-05-15",
-      lastUpdateDate: "2024-07-20",
-      weaknesses: [
-        { id: "sw_t_1", assetId: "AUTO_ID", description: "Вразливість: Недостатня валідація вхідних даних від зовнішніх джерел (feeds). Дії зловмисника: Виконання віддаленого коду (RCE), що дозволяє скомпрометувати систему збору розвідданих.", severity: "Критична" }
+  // 3. Активи інформаційних ресурсів (Information Assets) - 2 examples
+  {
+    id: "info_asset_1",
+    name: "База даних індикаторів компрометації (IoCs)",
+    type: "Інформація",
+    description: "Структурована інформація про відомі шкідливі файли, IP-адреси, домени.",
+    dataSensitivity: "Дуже висока",
+    storageLocation: "PostgreSQL Cluster (Main DB)",
+    creationDate: "2022-01-10",
+    lastAccessedDate: "2024-07-28",
+    weaknesses: [
+      { id: "info_t_1", assetId: "info_asset_1", description: "Вразливість: Неналежний контроль доступу до бази IoC. Дії зловмисника: Несанкціонована зміна (отруєння) даних в базі IoC (наприклад, додавання легітимних ресурсів як шкідливих), що може спричинити DoS важливих сервісів.", severity: "Висока" }
+    ]
+  },
+  {
+    id: "info_asset_2",
+    name: "Конфігураційні файли систем безпеки",
+    type: "Інформація",
+    description: "Файли з налаштуваннями правил, політик, інтеграцій SIEM, SOAR, Firewall.",
+    dataSensitivity: "Критична",
+    storageLocation: "Захищене сховище конфігурацій Vault",
+    creationDate: "2022-03-01",
+    lastAccessedDate: "2024-07-25",
+    weaknesses: [
+      { id: "info_t_3", assetId: "info_asset_2", description: "Вразливість: Зберігання паролів у відкритому вигляді в конфігураційних файлах системи. Дії зловмисника: Витік або несанкціоноване отримання цих паролів, що призводить до несанкціонованого доступу до систем та даних.", severity: "Критична" }
       ]
-    },
-    {
-      name: "Система SIEM (Security Information and Event Management)",
-      type: "Програмне забезпечення",
-      description: "Система збору, моніторингу та аналізу логів безпеки з корпоративних систем.",
-      version: "5.4.2",
-      installationDate: "2022-11-01",
-      lastUpdateDate: "2024-06-28",
-      weaknesses: [
-        { id: "sw_t_2", assetId: "AUTO_ID", description: "Вразливість: Використання стандартних облікових даних для доступу до SIEM. Дії зловмисника: Отримання доступу до логів, приховування слідів або фабрикація подій.", severity: "Висока" }
-      ]
-    },
-
-    // 2. Активи апаратного забезпечення (Hardware Assets) - 2 examples
-    {
-      name: "Сервер аналізу загроз",
-      type: "Обладнання",
-      description: "Високопродуктивний сервер для обробки даних розвідки та запуску моделей ML.",
-      ipAddress: "10.0.1.15",
-      macAddress: "00:1A:2B:3C:4D:5E",
-      location: "Дата-центр Київ, Стійка А03",
-      weaknesses: [
-        { id: "hw_t_1", assetId: "AUTO_ID", description: "Вразливість: Недостатній фізичний захист серверної стійки. Дії зловмисника: Фізичний несанкціонований доступ, викрадення сервера, що призводить до втрати даних та зупинки аналітики.", severity: "Критична" }
-      ]
-    },
-    {
-      name: "Мережевий сенсор IDS/IPS",
-      type: "Обладнання",
-      description: "Пристрій для виявлення та запобігання вторгненням на периметрі мережі.",
-      ipAddress: "192.168.1.254",
-      macAddress: "00:AA:BB:CC:DD:EE",
-      location: "Головний маршрутизатор, DMZ",
-      weaknesses: [
-        { id: "hw_t_2", assetId: "AUTO_ID", description: "Вразливість: Неправильна конфігурація правил IDS/IPS. Дії зловмисника: Обхід системи виявлення (пропуск відомих атак) та проникнення в мережу.", severity: "Висока" }
-      ]
-    },
-    
-    // 3. Активи інформаційних ресурсів (Information Assets) - 2 examples
-    {
-      name: "База даних індикаторів компрометації (IoCs)",
-      type: "Інформація",
-      description: "Структурована інформація про відомі шкідливі файли, IP-адреси, домени.",
-      dataSensitivity: "Дуже висока",
-      storageLocation: "PostgreSQL Cluster (Main DB)",
-      creationDate: "2022-01-10",
-      lastAccessedDate: "2024-07-28",
-      weaknesses: [
-        { id: "info_t_1", assetId: "AUTO_ID", description: "Вразливість: Неналежний контроль доступу до бази IoC. Дії зловмисника: Несанкціонована зміна (отруєння) даних в базі IoC (наприклад, додавання легітимних ресурсів як шкідливих), що може спричинити DoS важливих сервісів.", severity: "Висока" }
-      ]
-    },
-    {
-      name: "Конфігураційні файли систем безпеки",
-      type: "Інформація",
-      description: "Файли з налаштуваннями правил, політик, інтеграцій SIEM, SOAR, Firewall.",
-      dataSensitivity: "Критична",
-      storageLocation: "Захищене сховище конфігурацій Vault",
-      creationDate: "2022-03-01",
-      lastAccessedDate: "2024-07-25",
-      weaknesses: [
-        { id: "info_t_3", assetId: "AUTO_ID", description: "Вразливість: Зберігання паролів у відкритому вигляді в конфігураційних файлах системи. Дії зловмисника: Витік або несанкціоноване отримання цих паролів, що призводить до несанкціонованого доступу до систем та даних.", severity: "Критична" }
-      ]
-    },
-  ];
-
-  initialAssetsData.forEach(assetData => {
-    const assetRef = doc(collection(db, 'assets')); 
-    
-    const weaknessesWithActualAssetId = assetData.weaknesses?.map(w => ({
-      ...w,
-      assetId: assetRef.id 
-    })) || [];
-    
-    const newAsset: Asset = {
-        ...assetData,
-        id: assetRef.id,
-        weaknesses: weaknessesWithActualAssetId,
-    };
-
-    const dataToSet = { ...assetData, weaknesses: weaknessesWithActualAssetId };
-    batch.set(assetRef, dataToSet);
-    seededAssets.push(newAsset);
-  });
-
-  try {
-    await batch.commit();
-    console.log("Initial assets seeded successfully with updated cyber-intelligence themed data and additional details.");
-    return seededAssets; 
-  } catch (error) {
-    console.error("Error seeding initial assets: ", error);
-    return null; 
-  }
-};
+  },
+];
 
 
 export default function AssetsPage() {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [isLoadingAssets, setIsLoadingAssets] = useState(true);
+  const [assets, setAssets] = useState<Asset[]>(staticAssetsData);
   const [isSubmittingAsset, setIsSubmittingAsset] = useState(false);
   const [isSubmittingWeakness, setIsSubmittingWeakness] = useState(false);
   const [isAssetDialogOpen, setIsAssetDialogOpen] = useState(false);
@@ -169,8 +139,7 @@ export default function AssetsPage() {
   const [assetToManageWeakness, setAssetToManageWeakness] = useState<Asset | null>(null);
   const [currentCategory, setCurrentCategory] = useState<DisplayCategoryKey>(categoryKeys[0]);
   const { toast } = useToast();
-  const hasSeededRef = useRef(false);
-
+  
   const assetForm = useForm<z.infer<typeof assetFormSchema>>({
     resolver: zodResolver(assetFormSchema),
     defaultValues: { name: "", type: displayCategoryMap[currentCategory], description: "" },
@@ -180,42 +149,6 @@ export default function AssetsPage() {
     resolver: zodResolver(weaknessFormSchema),
     defaultValues: { description: "", severity: "Середня" },
   });
-
-  const fetchAssets = useCallback(async (forceRefresh = false) => {
-    setIsLoadingAssets(true);
-    try {
-      const assetsCollectionRef = collection(db, 'assets');
-      const assetSnapshot = await getDocs(assetsCollectionRef);
-      
-      // If the DB is empty and we haven't tried seeding yet in this session
-      if (assetSnapshot.empty && !hasSeededRef.current) {
-        hasSeededRef.current = true; // Mark that we are attempting to seed
-        const seededAssetsList = await seedInitialAssets();
-        if (seededAssetsList) {
-          setAssets(seededAssetsList);
-          toast({ title: "Вітаємо!", description: "Додано приклади активів відповідно до тематики кіберзахисту." });
-        } else {
-           setAssets([]); // Seeding failed
-        }
-      } else if (!assetSnapshot.empty) {
-        // If the DB is not empty, just load the assets.
-        const assetsList = assetSnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Asset));
-        setAssets(assetsList);
-      }
-      // If the DB is empty but we have already tried to seed (hasSeededRef.current is true),
-      // do nothing. This handles the React Strict Mode double-effect call correctly,
-      // preventing the page from being wiped while the first seeding call is in flight.
-    } catch (error) {
-      console.error("Error fetching assets: ", error);
-      toast({ title: "Помилка", description: "Не вдалося завантажити активи.", variant: "destructive" });
-    } finally {
-      setIsLoadingAssets(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchAssets();
-  }, [fetchAssets]);
 
   useEffect(() => {
     if (!editingAsset) {
@@ -229,7 +162,6 @@ export default function AssetsPage() {
     }
   }, [editingAsset, assetForm, currentCategory]);
 
-
   useEffect(() => {
     if (editingWeakness) {
       weaknessForm.reset(editingWeakness);
@@ -240,46 +172,40 @@ export default function AssetsPage() {
 
   const handleAssetSubmit = async (values: z.infer<typeof assetFormSchema>) => {
     setIsSubmittingAsset(true);
-    const assetDataToSave: Partial<Asset> = { ...values };
     
-    // Preserve existing additional fields if editing, or set defaults if adding
-    if (editingAsset) {
-        assetDataToSave.version = editingAsset.version;
-        assetDataToSave.installationDate = editingAsset.installationDate;
-        assetDataToSave.lastUpdateDate = editingAsset.lastUpdateDate;
-        assetDataToSave.ipAddress = editingAsset.ipAddress;
-        assetDataToSave.macAddress = editingAsset.macAddress;
-        assetDataToSave.location = editingAsset.location;
-        assetDataToSave.dataSensitivity = editingAsset.dataSensitivity;
-        assetDataToSave.storageLocation = editingAsset.storageLocation;
-        assetDataToSave.creationDate = editingAsset.creationDate;
-        assetDataToSave.lastAccessedDate = editingAsset.lastAccessedDate;
-    } else {
-      // Set some defaults or leave undefined if not applicable to the type
-      if (values.type === "Програмне забезпечення") {
-        assetDataToSave.version = "1.0.0";
-        assetDataToSave.installationDate = new Date().toISOString().split('T')[0];
-        assetDataToSave.lastUpdateDate = new Date().toISOString().split('T')[0];
-      } else if (values.type === "Обладнання") {
-        assetDataToSave.ipAddress = "N/A";
-      } else if (values.type === "Інформація") {
-         assetDataToSave.creationDate = new Date().toISOString().split('T')[0];
-         assetDataToSave.lastAccessedDate = new Date().toISOString().split('T')[0];
-         assetDataToSave.dataSensitivity = "Середня";
-      }
-    }
-
+    // Simulate async operation
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     try {
       if (editingAsset) {
-        const assetDocRef = doc(db, "assets", editingAsset.id);
-        await updateDoc(assetDocRef, assetDataToSave);
+        // Update existing asset in the state
+        const updatedAsset = { ...editingAsset, ...values };
+        setAssets(prevAssets => prevAssets.map(a => a.id === editingAsset.id ? updatedAsset : a));
         toast({ title: "Успіх", description: "Актив оновлено." });
       } else {
-        await addDoc(collection(db, "assets"), { ...assetDataToSave, weaknesses: [] });
+        // Add new asset to the state
+        const newAsset: Asset = {
+            ...values,
+            id: `new_asset_${Date.now()}`,
+            weaknesses: [],
+        };
+        
+        // Add default fields based on type
+        if (newAsset.type === "Програмне забезпечення") {
+            newAsset.version = "1.0.0";
+            newAsset.installationDate = new Date().toISOString().split('T')[0];
+            newAsset.lastUpdateDate = new Date().toISOString().split('T')[0];
+        } else if (newAsset.type === "Обладнання") {
+            newAsset.ipAddress = "N/A";
+        } else if (newAsset.type === "Інформація") {
+            newAsset.creationDate = new Date().toISOString().split('T')[0];
+            newAsset.lastAccessedDate = new Date().toISOString().split('T')[0];
+            newAsset.dataSensitivity = "Середня";
+        }
+        
+        setAssets(prevAssets => [...prevAssets, newAsset]);
         toast({ title: "Успіх", description: "Актив додано." });
       }
-      await fetchAssets(true); 
       setIsAssetDialogOpen(false);
       setEditingAsset(null);
     } catch (error) {
@@ -293,34 +219,40 @@ export default function AssetsPage() {
   const handleWeaknessSubmit = async (values: z.infer<typeof weaknessFormSchema>) => {
     if (!assetToManageWeakness) return;
     setIsSubmittingWeakness(true);
+
+    // Simulate async operation
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     try {
-      const assetDocRef = doc(db, "assets", assetToManageWeakness.id);
-      if (editingWeakness) { 
-        const weaknessToRemove = assetToManageWeakness.weaknesses?.find(w => w.id === editingWeakness.id);
-        
-        const batchOp = writeBatch(db);
-        if (weaknessToRemove) {
-           batchOp.update(assetDocRef, { weaknesses: arrayRemove(weaknessToRemove) });
-        }
-        const updatedWeakness = { ...editingWeakness, ...values }; 
-        batchOp.update(assetDocRef, { weaknesses: arrayUnion(updatedWeakness) });
-        await batchOp.commit();
+        setAssets(prevAssets => prevAssets.map(asset => {
+            if (asset.id !== assetToManageWeakness.id) {
+                return asset;
+            }
 
-        toast({ title: "Успіх", description: "Загрозу оновлено." });
-      } else { 
-        const newWeakness: Weakness = { 
-            ...values, 
-            id: doc(collection(db, 'weakness_ids')).id, 
-            assetId: assetToManageWeakness.id 
-        };
-        await updateDoc(assetDocRef, { weaknesses: arrayUnion(newWeakness) });
-        toast({ title: "Успіх", description: "Загрозу додано." });
-      }
-      await fetchAssets(true); 
-      setIsWeaknessDialogOpen(false);
-      setEditingWeakness(null);
-      setAssetToManageWeakness(null); 
+            let updatedWeaknesses: Weakness[];
+            if (editingWeakness) {
+                // Edit existing weakness
+                updatedWeaknesses = asset.weaknesses?.map(w => 
+                    w.id === editingWeakness.id ? { ...w, ...values } : w
+                ) || [];
+                toast({ title: "Успіх", description: "Загрозу оновлено." });
+            } else {
+                // Add new weakness
+                const newWeakness: Weakness = { 
+                    ...values, 
+                    id: `new_weakness_${Date.now()}`,
+                    assetId: assetToManageWeakness.id 
+                };
+                updatedWeaknesses = [...(asset.weaknesses || []), newWeakness];
+                toast({ title: "Успіх", description: "Загрозу додано." });
+            }
+            
+            return { ...asset, weaknesses: updatedWeaknesses };
+        }));
+
+        setIsWeaknessDialogOpen(false);
+        setEditingWeakness(null);
+        setAssetToManageWeakness(null); 
     } catch (error) {
       console.error("Error submitting weakness: ", error);
       toast({ title: "Помилка", description: "Не вдалося зберегти загрозу.", variant: "destructive" });
@@ -350,14 +282,12 @@ export default function AssetsPage() {
     const assetToDelete = assets.find(a => a.id === assetId);
     const message = `Ви впевнені, що хочете видалити актив "${assetToDelete?.name || assetId}"? Цю дію не можна буде скасувати.`;
     if (!confirm(message)) return;
-    try {
-      await deleteDoc(doc(db, "assets", assetId));
-      toast({ title: "Успіх", description: `Актив "${assetToDelete?.name || assetId}" видалено.` });
-      await fetchAssets(true);
-    } catch (error) {
-      console.error("Error deleting asset: ", error);
-      toast({ title: "Помилка", description: "Не вдалося видалити актив.", variant: "destructive" });
-    }
+
+    // Simulate async operation
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    setAssets(prevAssets => prevAssets.filter(a => a.id !== assetId));
+    toast({ title: "Успіх", description: `Актив "${assetToDelete?.name || assetId}" видалено.` });
   };
   
   const openAddWeaknessDialog = (asset: Asset) => {
@@ -382,16 +312,18 @@ export default function AssetsPage() {
     }
     const message = `Ви впевнені, що хочете видалити загрозу "${weaknessToDelete.description}" для активу "${targetAsset.name}"?`;
     if (!confirm(message)) return;
-    
-    try {
-        const assetRef = doc(db, "assets", targetAsset.id);
-        await updateDoc(assetRef, { weaknesses: arrayRemove(weaknessToDelete) });
-        toast({ title: "Успіх", description: "Загрозу видалено." });
-        await fetchAssets(true); 
-    } catch (error) {
-        console.error("Error deleting weakness: ", error);
-        toast({ title: "Помилка", description: "Не вдалося видалити загрозу.", variant: "destructive" });
-    }
+
+    // Simulate async operation
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    setAssets(prevAssets => prevAssets.map(asset => {
+        if (asset.id === targetAsset.id) {
+            const updatedWeaknesses = asset.weaknesses?.filter(w => w.id !== weaknessId) ?? [];
+            return { ...asset, weaknesses: updatedWeaknesses };
+        }
+        return asset;
+    }));
+    toast({ title: "Успіх", description: "Загрозу видалено." });
   };
 
   const severityBadgeColor = (severity: Weakness['severity']) => {
@@ -415,7 +347,7 @@ export default function AssetsPage() {
       <CardDescription>
         Каталогізуйте обладнання, програмне забезпечення та інформаційні активи вашої системи кіберзахисту.
         Визначте потенційні загрози (вразливість + дії зловмисника) для кожного активу.
-        Дані зберігаються у Firestore та оновлюються в реальному часі.
+        Дані зберігаються локально на цій сторінці.
       </CardDescription>
 
       <div className="flex space-x-2 mb-6 border-b pb-2">
@@ -443,12 +375,7 @@ export default function AssetsPage() {
         <Button onClick={openAddAssetDialog}><PlusCircle className="mr-2 h-4 w-4" /> Додати до "{currentCategory}"</Button>
       </div>
 
-      {isLoadingAssets ? (
-        <div className="flex justify-center items-center py-12">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="ml-4 text-lg">Завантаження активів...</p>
-        </div>
-      ) : displayedAssets.length === 0 ? (
+      {displayedAssets.length === 0 ? (
         <Card className="text-center py-12">
           <CardHeader>
             <ListChecks className="mx-auto h-12 w-12 text-muted-foreground" />
