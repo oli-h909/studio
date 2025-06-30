@@ -32,111 +32,66 @@ type AssetCategoryKey = 'software' | 'hardware' | 'informationResource' | 'icsTo
 
 
 const threatDetailsMap: Record<string, { identifier: string; vulnerability: string; ttp: string; affectedAssetTypes: AssetCategoryKey[] }> = {
-  // ID.AM-1 (Hardware)
-  "Недоступність сервісу для користувачів": {
-    identifier: 'ID.AM-1',
-    vulnerability: "DoS-атака на портал",
-    ttp: "Перевантаження сервера запитами",
-    affectedAssetTypes: ['hardware', 'software']
+  "Викрадення персональних та державних даних": {
+    identifier: "ID.AM-3",
+    vulnerability: "CVE-2020-0796 (SMBGhost)",
+    ttp: "Використання експлойта для обходу автентифікації та доступу до файлової системи.",
+    affectedAssetTypes: ["software", "informationResource"],
   },
-
-  // ID.AM-2 (Software)
-  "Інфікування робочих станцій або серверів, втрата контролю над системою": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Атака через шкідливі вкладення",
-    ttp: "Відкриття вкладення, інфікування систем шкідливим ПЗ",
-    affectedAssetTypes: ['software', 'hardware', 'informationResource']
+  "Несанкціоноване змінення інформації у базі даних": {
+    identifier: "ID.AM-3",
+    vulnerability: "CVE-2019-8451 (Microsoft SQL Server)",
+    ttp: "Використання автоматизованих скриптів для масового виконання SQL-ін'єкцій.",
+    affectedAssetTypes: ["software", "informationResource"],
   },
-  "Юридичні проблеми, втрата контролю над системою (через ліцензування)": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Незахищене ліцензування CRM",
-    ttp: "Викрадення ліцензійних ключів, використання піратських копій",
-    affectedAssetTypes: ['software']
+  "Викрадення сесій та облікових даних користувачів": {
+    identifier: "ID.AM-3",
+    vulnerability: "CVE-2018-1000525 (Drupal XSS)",
+    ttp: "Перехоплення НТТР-трафіку для отримання сесійних токенів.",
+    affectedAssetTypes: ["software", "informationResource"],
   },
-  "Несанкціонований доступ, компрометація систем (через обхід автентифікації)": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Обхід автентифікації",
-    ttp: "Використання вразливостей для обходу перевірки ідентичності",
-    affectedAssetTypes: ['software', 'informationResource']
+  "Отримання прав адміністратора": {
+    identifier: "ID.AM-2",
+    vulnerability: "CVE-2020-0601 (Windows CryptoAPI)",
+    ttp: "Виконання локального експлойта для підвищення привілеїв.",
+    affectedAssetTypes: ["software", "hardware"],
   },
-  "Компрометація користувацьких акаунтів, втручання у роботу CRM": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Фішинг-посилання у CRM",
-    ttp: "Впровадження шкідливих посилань в CRM",
-    affectedAssetTypes: ['software', 'informationResource']
+  "Перенаправлення користувачів на підроблений сайт": {
+    identifier: "ID.AM-5",
+    vulnerability: "CVE-2021-21972 (VMware vCenter)",
+    ttp: "Фішинг, створення підроблених сайтів, збір облікових даних користувачів.",
+    affectedAssetTypes: ["software"],
   },
-  "Пошкодження систем, крадіжка даних, відмова у обслуговуванні (через шкідливе ПЗ)": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Шкідливе програмне забезпечення",
-    ttp: "Інсталяція, поширення шкідливих модулів",
-    affectedAssetTypes: ['software', 'hardware']
+  "Відмова в обслуговуванні через блокування DNS": {
+    identifier: "ID.AM-1",
+    vulnerability: "CVE-2016-5696 (Linux Kernel TCP Spoofing)",
+    ttp: "Відправлення спеціально сформованих НТТР-запитів для запуску шкідливого коду.",
+    affectedAssetTypes: ["hardware", "software"],
   },
-
-  // ID.AM-3 (Information)
-  "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Використання уразливого компонента CMS",
-    ttp: "Експлуатація вразливості, запуск шкідливого коду",
-    affectedAssetTypes: ['software', 'informationResource']
+  "Виконання довільного коду через RCE": {
+    identifier: "ID.AM-2",
+    vulnerability: "CVE-2017-0144 (EternalBlue SMBv1)",
+    ttp: "Віддалене виконання коду, встановлення бекдорів, контроль над сервером.",
+    affectedAssetTypes: ["software", "hardware"],
   },
-  "Втрата конфіденційної інформації, репутаційні й фінансові збитки": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Витік даних",
-    ttp: "Несанкціонований доступ, копіювання, передача інформації",
-    affectedAssetTypes: ['informationResource']
+  "Фальсифікація результатів експертизи": {
+    identifier: "ID.AM-3",
+    vulnerability: "CVE-2019-0708 (RDP BlueKeep)",
+    ttp: "Впровадження фальшивих результатів через АРІ системи.",
+    affectedAssetTypes: ["software", "informationResource"],
   },
-  "Несанкціонований доступ до систем і сервісів (через витік паролів)": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Збереження паролів у відкритому вигляді",
-    ttp: "Викрадення або витік паролів",
-    affectedAssetTypes: ['software', 'informationResource']
+  "Повторні запити і підміна даних заяв": {
+    identifier: "ID.AM-3",
+    vulnerability: "CVE-2020-1472 (Netlogon Elevation of Privilege)",
+    ttp: "Використання автоматизованих ботів для масового подання фальшивих заяв.",
+    affectedAssetTypes: ["software", "informationResource"],
   },
-  "Порушення цілісності, витік даних, саботаж систем": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Недостатній контроль доступу",
-    ttp: "Несанкціонований вхід, підміна прав користувачів",
-    affectedAssetTypes: ['software', 'hardware', 'informationResource']
+  "Викрадення сесійних токенів": {
+    identifier: "ID.AM-3",
+    vulnerability: "CVE-2019-11043 (PHP-FPM)",
+    ttp: "Викрадення токенів через впровадження XSS-скриптів.",
+    affectedAssetTypes: ["software", "informationResource"],
   },
-  "Викрадення персональних даних, порушення аутентифікації": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Несанкціонований доступ до бази користувачів",
-    ttp: "Викрадення або модифікація даних користувачів",
-    affectedAssetTypes: ['software', 'informationResource']
-  },
-  "Викрадення, модифікація або видалення даних у базі": {
-    identifier: 'ID.AM-3',
-    vulnerability: "SQL Injection на сервері бази даних",
-    ttp: "Вставка шкідливого SQL-коду",
-    affectedAssetTypes: ['software', 'informationResource']
-  },
-  "збої, відмова у роботі, втручання у цілісність і конфіденційність (через XSS)": {
-    identifier: 'ID.AM-3',
-    vulnerability: "XSS у WordPress",
-    ttp: "Впровадження шкідливого JavaScript-коду",
-    affectedAssetTypes: ['software', 'informationResource']
-  },
-
-  // ID.AM-5 (People/Process)
-  "Підвищений ризик інцидентів, внутрішні загрози": {
-    identifier: 'ID.AM-5',
-    vulnerability: "Порушення політики безпеки",
-    ttp: "Несанкціоновані зміни, ігнорування правил",
-    affectedAssetTypes: ['software', 'hardware', 'informationResource']
-  },
-  "Витік інформації, компрометація облікових даних (через соцінженерію)": {
-    identifier: 'ID.AM-5',
-    vulnerability: "Соціальна інженерія",
-    ttp: "Обман співробітників для отримання доступу",
-    affectedAssetTypes: []
-  },
-  "Крадіжка облікових даних, несанкціонований доступ (через фішинг)": {
-    identifier: 'ID.AM-5',
-    vulnerability: "Фішинг",
-    ttp: "Розсилання підробних листів для отримання даних",
-    affectedAssetTypes: []
-  },
-
-  // Other
   "Інша загроза (потребує ручного опису)": {
     identifier: 'N/A',
     vulnerability: "Опишіть вразливість...",
@@ -1086,11 +1041,14 @@ export default function ReportingPage() {
             
             <section className="print:break-before-page">
               <h3 className="text-xl font-headline mb-2 border-b pb-1 print:text-lg print:border-gray-400 print:text-black">Аналіз Розривів та Рекомендації</h3>
-                <div className="text-sm text-black">
+                <div className="text-sm">
                     {renderRecommendationsSection(currentProfileForDisplay, targetProfileForDisplay)}
                 </div>
             </section>
           </CardContent>
+          <CardFooter className="print:hidden">
+            
+          </CardFooter>
         </Card>
         </>
       )}
