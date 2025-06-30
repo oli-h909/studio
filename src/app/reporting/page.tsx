@@ -38,101 +38,65 @@ interface ThreatDetailValue {
 }
 
 const threatDetailsMap: Record<string, ThreatDetailValue> = {
-  "Інфікування робочих станцій або серверів, втрата контролю над системою": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Атака через шкідливі вкладення",
-    ttp: "Відкриття вкладення, інфікування систем шкідливим ПЗ",
-    affectedAssetTypes: ['software', 'hardware']
+  "Викрадення персональних та державних даних": {
+    identifier: 'Z001',
+    vulnerability: "CVE-2020-0796 (SMBGhost)",
+    ttp: "Використання експлойта для обходу автентифікації та доступу до файлової системи.",
+    affectedAssetTypes: ['hardware', 'informationResource', 'software']
   },
-  "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Використання уразливого компонента CMS",
-    ttp: "Експлуатація вразливості, запуск шкідливого коду",
-    affectedAssetTypes: ['software']
-  },
-  "Втрата конфіденційної інформації, репутаційні й фінансові збитки": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Витік даних",
-    ttp: "Несанкціонований доступ, копіювання, передача інформації",
-    affectedAssetTypes: ['informationResource']
-  },
-  "Несанкціонований доступ до систем і сервісів через викрадені паролі": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Збереження паролів у відкритому вигляді",
-    ttp: "Викрадення або витік паролів",
-    affectedAssetTypes: ['informationResource', 'software']
-  },
-  "Порушення цілісності, витік даних, саботаж систем через недостатній контроль доступу": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Недостатній контроль доступу",
-    ttp: "Несанкціонований вхід, підміна прав користувачів",
-    affectedAssetTypes: ['informationResource', 'software', 'hardware']
-  },
-  "Юридичні проблеми, втрата контролю над системою CRM через ліцензування": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Незахищене ліцензування CRM",
-    ttp: "Викрадення ліцензійних ключів, використання піратських копій",
-    affectedAssetTypes: ['software']
-  },
-  "Викрадення персональних даних, порушення аутентифікації через доступ до бази користувачів": {
-    identifier: 'ID.AM-3',
-    vulnerability: "Несанкціонований доступ до бази користувачів",
-    ttp: "Викрадення або модифікація даних користувачів",
-    affectedAssetTypes: ['informationResource']
-  },
-  "Несанкціонований доступ, компрометація систем через обхід автентифікації": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Обхід автентифікації",
-    ttp: "Використання вразливостей для обходу перевірки ідентичності",
-    affectedAssetTypes: ['software']
-  },
-  "Підвищений ризик інцидентів, внутрішні загрози через порушення політики": {
-    identifier: 'ID.AM-5',
-    vulnerability: "Порушення політики безпеки",
-    ttp: "Несанкціоновані зміни, ігнорування правил",
-    affectedAssetTypes: ['software', 'hardware', 'informationResource']
-  },
-  "Витік інформації, компрометація облікових даних через соціальну інженерію": {
-    identifier: 'ID.AM-5',
-    vulnerability: "Соціальна інженерія",
-    ttp: "Обман співробітників для отримання доступу",
-    affectedAssetTypes: ['informationResource']
-  },
-  "Крадіжка облікових даних, несанкціонований доступ через фішинг": {
-    identifier: 'ID.AM-5',
-    vulnerability: "Фішинг",
-    ttp: "Розсилання підробних листів для отримання даних",
-    affectedAssetTypes: ['informationResource', 'software']
-  },
-  "Компрометація користувацьких акаунтів, втручання у роботу CRM через фішинг-посилання": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Фішинг-посилання у CRM",
-    ttp: "Впровадження шкідливих посилань в CRM",
-    affectedAssetTypes: ['software']
-  },
-  "Пошкодження систем, крадіжка даних, відмова у обслуговуванні через шкідливе ПЗ": {
-    identifier: 'ID.AM-2',
-    vulnerability: "Шкідливе програмне забезпечення",
-    ttp: "Інсталяція, поширення шкідливих модулів",
-    affectedAssetTypes: ['software', 'hardware']
-  },
-  "Недоступність сервісу для користувачів через DoS-атаку": {
-    identifier: 'ID.AM-2',
-    vulnerability: "DoS-атака на портал",
-    ttp: "Перевантаження сервера запитами",
-    affectedAssetTypes: ['software', 'hardware']
-  },
-  "Викрадення, модифікація або видалення даних у базі через SQL Injection": {
-    identifier: 'ID.AM-2',
-    vulnerability: "SQL Injection на сервері бази даних",
-    ttp: "Вставка шкідливого SQL-коду",
+  "Несанкціоноване змінення інформації у базі даних": {
+    identifier: 'Z002',
+    vulnerability: "CVE-2019-8451 (Microsoft SQL Server)",
+    ttp: "Використання автоматизованих скриптів для масового виконання SQL-ін'єкцій.",
     affectedAssetTypes: ['software', 'informationResource']
   },
-  "Збої, відмова у роботі, втручання у цілісність і конфіденційність через XSS": {
-    identifier: 'ID.AM-2',
-    vulnerability: "XSS у WordPress",
-    ttp: "Впровадження шкідливого JavaScript-коду",
-    affectedAssetTypes: ['software']
+  "Викрадення сесій та облікових даних користувачів": {
+    identifier: 'Z003',
+    vulnerability: "CVE-2018-1000525 (Drupal XSS)",
+    ttp: "Перехоплення НТТР-трафіку для отримання сесійних токенів.",
+    affectedAssetTypes: ['software', 'informationResource']
+  },
+  "Отримання прав адміністратора": {
+    identifier: 'Z004',
+    vulnerability: "CVE-2020-0601 (Windows CryptoAPI)",
+    ttp: "Виконання локального експлойта для підвищення привілеїв.",
+    affectedAssetTypes: ['software', 'hardware']
+  },
+  "Перенаправлення користувачів на підроблений сайт": {
+    identifier: 'Z005',
+    vulnerability: "CVE-2021-21972 (VMware vCenter)",
+    ttp: "Фішинг, створення підроблених сайтів, збір облікових даних користувачів.",
+    affectedAssetTypes: ['software', 'informationResource']
+  },
+  "Відмова в обслуговуванні через блокування DNS": {
+    identifier: 'Z006',
+    vulnerability: "CVE-2016-5696 (Linux Kernel TCP Spoof)",
+    ttp: "Відправлення спеціально сформованих НТТР-запитів для запуску шкідливого коду.",
+    affectedAssetTypes: ['hardware', 'software']
+  },
+  "Виконання довільного коду через RCE": {
+    identifier: 'Z007',
+    vulnerability: "CVE-2017-0144 (EternalBlue SMBv1)",
+    ttp: "Віддалене виконання коду, встановлення бекдорів, контроль над сервером.",
+    affectedAssetTypes: ['hardware', 'software']
+  },
+  "Фальсифікація результатів експертизи": {
+    identifier: 'Z008',
+    vulnerability: "CVE-2019-0708 (RDP BlueKeep)",
+    ttp: "Впровадження фальшивих результатів через АРІ системи.",
+    affectedAssetTypes: ['software', 'hardware']
+  },
+  "Повторні запити і підміна даних заяв": {
+    identifier: 'Z009',
+    vulnerability: "CVE-2020-1472 (Netlogon Elevation)",
+    ttp: "Використання автоматизованих ботів для масового подання фальшивих заяв.",
+    affectedAssetTypes: ['software', 'hardware']
+  },
+  "Викрадення сесійних токенів": {
+    identifier: 'Z010',
+    vulnerability: "CVE-2019-11043 (PHP-FPM)",
+    ttp: "Викрадення токенів через впровадження XSS-скриптів.",
+    affectedAssetTypes: ['software', 'informationResource']
   },
   "Інша загроза (потребує ручного опису)": {
     identifier: 'N/A',
@@ -141,6 +105,7 @@ const threatDetailsMap: Record<string, ThreatDetailValue> = {
     affectedAssetTypes: []
   }
 };
+
 
 const threatOptions = Object.keys(threatDetailsMap).sort((a, b) => a.startsWith("Інша") ? 1 : b.startsWith("Інша") ? -1 : a.localeCompare(b)) as [string, ...string[]];
 const baseAssetOptions = ["-", "Інше"] as const;
@@ -281,30 +246,29 @@ const renderRecommendationsSection = (
         );
 
         return (
-            <div key={targetIdObj.id} className="mb-6 p-4 border rounded-md border-gray-300 bg-white">
-                <h4 className="text-lg font-semibold mb-2">
+            <div key={targetIdObj.id} className="mb-6 p-4 border rounded-md border-black bg-white">
+                <h4 className="text-lg font-semibold mb-2 text-black">
                     Рекомендації для досягнення: {targetIdObj.value}
                 </h4>
                 {recommendation ? (
                     <>
-                        <p className="font-medium mb-1">{recommendation.title}</p>
-                        <p className="mb-1"><strong>Рекомендовані засоби та заходи:</strong></p>
-                        <ul className="list-disc list-inside text-sm space-y-1 mb-3">
+                        <p className="font-medium mb-1 text-black"><strong>Рекомендовані засоби та заходи:</strong></p>
+                        <ul className="list-disc list-inside text-sm space-y-1 mb-3 text-black">
                             {recommendation.measures.map((measure, index) => (
                                 <li key={index}>{measure}</li>
                             ))}
                         </ul>
                     </>
                 ) : (
-                    <p className="text-sm mb-3">
+                    <p className="text-sm mb-3 text-black">
                         Для ідентифікатора "{targetIdObj.value}" немає попередньо визначених рекомендацій.
                     </p>
                 )}
 
                 {relevantCurrentThreats.length > 0 && (
                     <>
-                        <p className="mb-1"><strong>Пов'язані загрози з поточного профілю, що потребують уваги для досягнення "{baseId}":</strong></p>
-                        <ul className="list-disc list-inside text-sm space-y-1">
+                        <p className="mb-1 text-black"><strong>Пов'язані загрози з поточного профілю, що потребують уваги для досягнення "{baseId}":</strong></p>
+                        <ul className="list-disc list-inside text-sm space-y-1 text-black">
                             {relevantCurrentThreats.map(threat => {
                                 const affectedAssetsList = [
                                     threat.software && threat.software !== '-' && `ПЗ: ${threat.software}`,
@@ -326,12 +290,12 @@ const renderRecommendationsSection = (
                     </>
                 )}
                 {relevantCurrentThreats.length === 0 && recommendation && (
-                    <p className="text-sm">
+                    <p className="text-sm text-black">
                         Загроз з поточного профілю, що прямо відповідають ідентифікатору "{baseId}", не знайдено. Перегляньте загальний список загроз.
                     </p>
                 )}
                  {!recommendation && relevantCurrentThreats.length === 0 && (
-                    <p className="text-sm">
+                    <p className="text-sm text-black">
                         Для цього цільового ідентифікатора не визначено ані специфічних рекомендацій, ані пов'язаних поточних загроз.
                     </p>
                 )}
@@ -348,12 +312,12 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
   return (
     <div ref={ref} className="p-8 font-sans bg-white text-black">
       <header className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Звіт про безпеку "КіберСтраж"</h1>
-        <p className="text-sm">Згенеровано: {new Date().toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' })} {new Date().toLocaleTimeString('uk-UA')}</p>
+        <h1 className="text-3xl font-bold mb-2 text-black">Звіт про безпеку "КіберСтраж"</h1>
+        <p className="text-sm text-black">Згенеровано: {new Date().toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' })} {new Date().toLocaleTimeString('uk-UA')}</p>
       </header>
 
       <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2">1. Поточний профіль безпеки</h2>
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2 text-black">1. Поточний профіль безпеки</h2>
         {currentProfileData && currentProfileData.length > 0 ? (
           <Table className="text-xs">
             <TableHeader>
@@ -374,26 +338,26 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
             <TableBody>
               {currentProfileData.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="max-w-[120px] break-words">{item.selectedRisk}</TableCell>
-                  <TableCell className="max-w-[120px] break-words">{item.vulnerabilityDescription}</TableCell>
-                  <TableCell className="max-w-[120px] break-words">{item.ttpDescription}</TableCell>
-                  <TableCell>{item.identifier}</TableCell>
-                  <TableCell>{item.software}</TableCell>
-                  <TableCell>{item.hardware}</TableCell>
-                  <TableCell>{item.informationResource}</TableCell>
-                  <TableCell className="max-w-[100px] break-words">{icsToolOptionsList.find(opt => opt.value === item.icsTool)?.label || item.icsTool}</TableCell>
-                  <TableCell>{item.implementationStatus}</TableCell>
-                  <TableCell>{item.implementationLevel}</TableCell>
-                  <TableCell className="max-w-[120px] break-words">{item.comment}</TableCell>
+                  <TableCell className="max-w-[120px] break-words text-black">{item.selectedRisk}</TableCell>
+                  <TableCell className="max-w-[120px] break-words text-black">{item.vulnerabilityDescription}</TableCell>
+                  <TableCell className="max-w-[120px] break-words text-black">{item.ttpDescription}</TableCell>
+                  <TableCell className="text-black">{item.identifier}</TableCell>
+                  <TableCell className="text-black">{item.software}</TableCell>
+                  <TableCell className="text-black">{item.hardware}</TableCell>
+                  <TableCell className="text-black">{item.informationResource}</TableCell>
+                  <TableCell className="max-w-[100px] break-words text-black">{icsToolOptionsList.find(opt => opt.value === item.icsTool)?.label || item.icsTool}</TableCell>
+                  <TableCell className="text-black">{item.implementationStatus}</TableCell>
+                  <TableCell className="text-black">{item.implementationLevel}</TableCell>
+                  <TableCell className="max-w-[120px] break-words text-black">{item.comment}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        ) : <p className="text-sm">Інформація не надана.</p>}
+        ) : <p className="text-sm text-black">Інформація не надана.</p>}
       </section>
 
       <section className="mb-8 page-break-before">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2">2. Цільовий профіль безпеки</h2>
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2 text-black">2. Цільовий профіль безпеки</h2>
          {targetProfileData ? (
             <Table className="text-xs">
                  <TableHeader>
@@ -408,24 +372,24 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
                 </TableHeader>
                 <TableBody>
                     <TableRow>
-                        <TableCell>{targetProfileData.identifiers.map(id => id.value).join(', ')}</TableCell>
-                        <TableCell>{targetProfileData.implementationLevel}</TableCell>
-                        <TableCell>{targetProfileData.appliesToSoftware ? 'Так' : 'Ні'}</TableCell>
-                        <TableCell>{targetProfileData.appliesToHardware ? 'Так' : 'Ні'}</TableCell>
-                        <TableCell>{targetProfileData.appliesToInformationResource ? 'Так' : 'Ні'}</TableCell>
-                        <TableCell>{targetProfileData.appliesToIcsTool ? 'Так' : 'Ні'}</TableCell>
+                        <TableCell className="text-black">{targetProfileData.identifiers.map(id => id.value).join(', ')}</TableCell>
+                        <TableCell className="text-black">{targetProfileData.implementationLevel}</TableCell>
+                        <TableCell className="text-black">{targetProfileData.appliesToSoftware ? 'Так' : 'Ні'}</TableCell>
+                        <TableCell className="text-black">{targetProfileData.appliesToHardware ? 'Так' : 'Ні'}</TableCell>
+                        <TableCell className="text-black">{targetProfileData.appliesToInformationResource ? 'Так' : 'Ні'}</TableCell>
+                        <TableCell className="text-black">{targetProfileData.appliesToIcsTool ? 'Так' : 'Ні'}</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
-         ) : <p className="text-sm">Інформація не надана.</p>}
+         ) : <p className="text-sm text-black">Інформація не надана.</p>}
       </section>
       
       <section className="mb-8 page-break-before">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2">3. Аналіз Розривів та Рекомендації</h2>
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2 text-black">3. Аналіз Розривів та Рекомендації</h2>
         {renderRecommendationsSection(currentProfileData, targetProfileData)}
       </section>
 
-       <footer className="mt-12 pt-4 border-t text-center text-xs">
+       <footer className="mt-12 pt-4 border-t border-black text-center text-xs text-black">
         КіберСтраж - Захист вашої інфраструктури
       </footer>
     </div>
@@ -744,7 +708,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Засіб ІКЗ</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!isOtherThreat && !affectedForCurrentThreat.includes('icsTool')}>
+            <Select onValueChange={field.onChange} value={field.value || '-'}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть засіб ІКЗ" /></SelectTrigger></FormControl>
               <SelectContent>
                 {icsToolOptionsList.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
@@ -962,7 +926,7 @@ export default function ReportingPage() {
                             software: autoSelectOrDash('software', softwareAssetOptions),
                             hardware: autoSelectOrDash('hardware', hardwareAssetOptions),
                             informationResource: autoSelectOrDash('informationResource', informationResourceAssetOptions),
-                            icsTool: isOtherNew ? '-' : (affectedForNew.includes('icsTool') ? (icsToolOptionsList.find(opt=>opt.value !=="-")?.value || '-') : '-'),
+                            icsTool: '-', 
                             comment: '', 
                         };
                         appendCurrentThreat(newThreatToAdd);
@@ -1112,6 +1076,8 @@ export default function ReportingPage() {
     </div>
   );
 }
+    
+
     
 
     
