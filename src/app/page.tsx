@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Archive, Activity, Calculator, FileText, ArrowRight } from 'lucide-react';
+import { Archive, Activity, Calculator, FileText, ArrowRight, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 
 const featureCards = [
@@ -14,7 +14,8 @@ const featureCards = [
 export default function DashboardPage() {
   return (
     <div className="space-y-8">
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden relative">
+        <ShieldCheck className="absolute top-4 right-4 h-24 w-24 text-primary/10" />
         <div className="md:flex">
           <div className="md:w-1/2 p-8 flex flex-col justify-center">
             <h1 className="text-4xl font-bold tracking-tight text-primary">Ласкаво просимо до КіберСтраж</h1>
