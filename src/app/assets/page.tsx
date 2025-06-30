@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Asset, Weakness } from '@/lib/types';
 import { weaknessSeverities } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -47,10 +47,10 @@ const categoryIcons: Record<DisplayCategoryKey, React.ElementType> = {
   'Інформаційні ресурси': Database,
 };
 
-const seedInitialAssets = async () => {
+const seedInitialAssets = async (): Promise<Asset[] | null> => {
   const batch = writeBatch(db);
-  const assetsCollectionRef = collection(db, 'assets');
-
+  const seededAssets: Asset[] = [];
+  
   const initialAssetsData: Omit<Asset, 'id'>[] = [
     // 1. Активи програмного забезпечення (Software Assets) - 2 examples
     {
@@ -127,7 +127,6 @@ const seedInitialAssets = async () => {
     },
   ];
 
-
   initialAssetsData.forEach(assetData => {
     const assetRef = doc(collection(db, 'assets')); 
     
@@ -135,17 +134,25 @@ const seedInitialAssets = async () => {
       ...w,
       assetId: assetRef.id 
     })) || [];
+    
+    const newAsset: Asset = {
+        ...assetData,
+        id: assetRef.id,
+        weaknesses: weaknessesWithActualAssetId,
+    };
 
-    batch.set(assetRef, { ...assetData, weaknesses: weaknessesWithActualAssetId });
+    const dataToSet = { ...assetData, weaknesses: weaknessesWithActualAssetId };
+    batch.set(assetRef, dataToSet);
+    seededAssets.push(newAsset);
   });
 
   try {
     await batch.commit();
     console.log("Initial assets seeded successfully with updated cyber-intelligence themed data and additional details.");
-    return true; 
+    return seededAssets; 
   } catch (error) {
     console.error("Error seeding initial assets: ", error);
-    return false; 
+    return null; 
   }
 };
 
@@ -162,6 +169,7 @@ export default function AssetsPage() {
   const [assetToManageWeakness, setAssetToManageWeakness] = useState<Asset | null>(null);
   const [currentCategory, setCurrentCategory] = useState<DisplayCategoryKey>(categoryKeys[0]);
   const { toast } = useToast();
+  const hasSeededRef = useRef(false); // Add ref to prevent re-seeding
 
   const assetForm = useForm<z.infer<typeof assetFormSchema>>({
     resolver: zodResolver(assetFormSchema),
@@ -179,12 +187,11 @@ export default function AssetsPage() {
       const assetsCollectionRef = collection(db, 'assets');
       const assetSnapshot = await getDocs(assetsCollectionRef);
       
-      if (assetSnapshot.empty && !forceRefresh) { 
-        const seeded = await seedInitialAssets();
-        if (seeded) {
-          const newSnapshot = await getDocs(assetsCollectionRef);
-          const assetsList = newSnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Asset));
-          setAssets(assetsList);
+      if (assetSnapshot.empty && !forceRefresh && !hasSeededRef.current) {
+        hasSeededRef.current = true; // Prevent re-seeding
+        const seededAssetsList = await seedInitialAssets();
+        if (seededAssetsList) {
+          setAssets(seededAssetsList);
           toast({ title: "Вітаємо!", description: "Додано приклади активів відповідно до тематики кіберзахисту." });
         } else {
            setAssets([]); 
@@ -658,4 +665,3 @@ export default function AssetsPage() {
     </div>
   );
 }
-
