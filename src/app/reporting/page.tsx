@@ -30,74 +30,113 @@ const implementationLevelOptions = ["1", "2", "3", "4"] as const;
 
 type AssetCategoryKey = 'software' | 'hardware' | 'informationResource' | 'icsTool';
 
-interface ThreatDetailValue {
-  identifier: string;
-  vulnerability: string;
-  ttp: string;
-  affectedAssetTypes: AssetCategoryKey[];
-}
 
-const threatDetailsMap: Record<string, ThreatDetailValue> = {
-  "Викрадення персональних та державних даних": {
-    identifier: 'Z001',
-    vulnerability: "CVE-2020-0796 (SMBGhost)",
-    ttp: "Використання експлойта для обходу автентифікації та доступу до файлової системи.",
-    affectedAssetTypes: ['hardware', 'informationResource', 'software']
-  },
-  "Несанкціоноване змінення інформації у базі даних": {
-    identifier: 'Z002',
-    vulnerability: "CVE-2019-8451 (Microsoft SQL Server)",
-    ttp: "Використання автоматизованих скриптів для масового виконання SQL-ін'єкцій.",
-    affectedAssetTypes: ['software', 'informationResource']
-  },
-  "Викрадення сесій та облікових даних користувачів": {
-    identifier: 'Z003',
-    vulnerability: "CVE-2018-1000525 (Drupal XSS)",
-    ttp: "Перехоплення НТТР-трафіку для отримання сесійних токенів.",
-    affectedAssetTypes: ['software', 'informationResource']
-  },
-  "Отримання прав адміністратора": {
-    identifier: 'Z004',
-    vulnerability: "CVE-2020-0601 (Windows CryptoAPI)",
-    ttp: "Виконання локального експлойта для підвищення привілеїв.",
-    affectedAssetTypes: ['software', 'hardware']
-  },
-  "Перенаправлення користувачів на підроблений сайт": {
-    identifier: 'Z005',
-    vulnerability: "CVE-2021-21972 (VMware vCenter)",
-    ttp: "Фішинг, створення підроблених сайтів, збір облікових даних користувачів.",
-    affectedAssetTypes: ['software', 'informationResource']
-  },
-  "Відмова в обслуговуванні через блокування DNS": {
-    identifier: 'Z006',
-    vulnerability: "CVE-2016-5696 (Linux Kernel TCP Spoof)",
-    ttp: "Відправлення спеціально сформованих НТТР-запитів для запуску шкідливого коду.",
+const threatDetailsMap: Record<string, { identifier: string; vulnerability: string; ttp: string; affectedAssetTypes: AssetCategoryKey[] }> = {
+  // ID.AM-1 (Hardware)
+  "Недоступність сервісу для користувачів": {
+    identifier: 'ID.AM-1',
+    vulnerability: "DoS-атака на портал",
+    ttp: "Перевантаження сервера запитами",
     affectedAssetTypes: ['hardware', 'software']
   },
-  "Виконання довільного коду через RCE": {
-    identifier: 'Z007',
-    vulnerability: "CVE-2017-0144 (EternalBlue SMBv1)",
-    ttp: "Віддалене виконання коду, встановлення бекдорів, контроль над сервером.",
-    affectedAssetTypes: ['hardware', 'software']
+
+  // ID.AM-2 (Software)
+  "Інфікування робочих станцій або серверів, втрата контролю над системою": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Атака через шкідливі вкладення",
+    ttp: "Відкриття вкладення, інфікування систем шкідливим ПЗ",
+    affectedAssetTypes: ['software', 'hardware', 'informationResource']
   },
-  "Фальсифікація результатів експертизи": {
-    identifier: 'Z008',
-    vulnerability: "CVE-2019-0708 (RDP BlueKeep)",
-    ttp: "Впровадження фальшивих результатів через АРІ системи.",
-    affectedAssetTypes: ['software', 'hardware']
+  "Юридичні проблеми, втрата контролю над системою (через ліцензування)": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Незахищене ліцензування CRM",
+    ttp: "Викрадення ліцензійних ключів, використання піратських копій",
+    affectedAssetTypes: ['software']
   },
-  "Повторні запити і підміна даних заяв": {
-    identifier: 'Z009',
-    vulnerability: "CVE-2020-1472 (Netlogon Elevation)",
-    ttp: "Використання автоматизованих ботів для масового подання фальшивих заяв.",
-    affectedAssetTypes: ['software', 'hardware']
-  },
-  "Викрадення сесійних токенів": {
-    identifier: 'Z010',
-    vulnerability: "CVE-2019-11043 (PHP-FPM)",
-    ttp: "Викрадення токенів через впровадження XSS-скриптів.",
+  "Несанкціонований доступ, компрометація систем (через обхід автентифікації)": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Обхід автентифікації",
+    ttp: "Використання вразливостей для обходу перевірки ідентичності",
     affectedAssetTypes: ['software', 'informationResource']
   },
+  "Компрометація користувацьких акаунтів, втручання у роботу CRM": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Фішинг-посилання у CRM",
+    ttp: "Впровадження шкідливих посилань в CRM",
+    affectedAssetTypes: ['software', 'informationResource']
+  },
+  "Пошкодження систем, крадіжка даних, відмова у обслуговуванні (через шкідливе ПЗ)": {
+    identifier: 'ID.AM-2',
+    vulnerability: "Шкідливе програмне забезпечення",
+    ttp: "Інсталяція, поширення шкідливих модулів",
+    affectedAssetTypes: ['software', 'hardware']
+  },
+
+  // ID.AM-3 (Information)
+  "Несанкціоноване виконання коду, крадіжка даних, порушення роботи сайту": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Використання уразливого компонента CMS",
+    ttp: "Експлуатація вразливості, запуск шкідливого коду",
+    affectedAssetTypes: ['software', 'informationResource']
+  },
+  "Втрата конфіденційної інформації, репутаційні й фінансові збитки": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Витік даних",
+    ttp: "Несанкціонований доступ, копіювання, передача інформації",
+    affectedAssetTypes: ['informationResource']
+  },
+  "Несанкціонований доступ до систем і сервісів (через витік паролів)": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Збереження паролів у відкритому вигляді",
+    ttp: "Викрадення або витік паролів",
+    affectedAssetTypes: ['software', 'informationResource']
+  },
+  "Порушення цілісності, витік даних, саботаж систем": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Недостатній контроль доступу",
+    ttp: "Несанкціонований вхід, підміна прав користувачів",
+    affectedAssetTypes: ['software', 'hardware', 'informationResource']
+  },
+  "Викрадення персональних даних, порушення аутентифікації": {
+    identifier: 'ID.AM-3',
+    vulnerability: "Несанкціонований доступ до бази користувачів",
+    ttp: "Викрадення або модифікація даних користувачів",
+    affectedAssetTypes: ['software', 'informationResource']
+  },
+  "Викрадення, модифікація або видалення даних у базі": {
+    identifier: 'ID.AM-3',
+    vulnerability: "SQL Injection на сервері бази даних",
+    ttp: "Вставка шкідливого SQL-коду",
+    affectedAssetTypes: ['software', 'informationResource']
+  },
+  "збої, відмова у роботі, втручання у цілісність і конфіденційність (через XSS)": {
+    identifier: 'ID.AM-3',
+    vulnerability: "XSS у WordPress",
+    ttp: "Впровадження шкідливого JavaScript-коду",
+    affectedAssetTypes: ['software', 'informationResource']
+  },
+
+  // ID.AM-5 (People/Process)
+  "Підвищений ризик інцидентів, внутрішні загрози": {
+    identifier: 'ID.AM-5',
+    vulnerability: "Порушення політики безпеки",
+    ttp: "Несанкціоновані зміни, ігнорування правил",
+    affectedAssetTypes: ['software', 'hardware', 'informationResource']
+  },
+  "Витік інформації, компрометація облікових даних (через соцінженерію)": {
+    identifier: 'ID.AM-5',
+    vulnerability: "Соціальна інженерія",
+    ttp: "Обман співробітників для отримання доступу",
+    affectedAssetTypes: []
+  },
+  "Крадіжка облікових даних, несанкціонований доступ (через фішинг)": {
+    identifier: 'ID.AM-5',
+    vulnerability: "Фішинг",
+    ttp: "Розсилання підробних листів для отримання даних",
+    affectedAssetTypes: []
+  },
+
+  // Other
   "Інша загроза (потребує ручного опису)": {
     identifier: 'N/A',
     vulnerability: "Опишіть вразливість...",
@@ -235,7 +274,7 @@ const renderRecommendationsSection = (
     targetProfileData: ReportPageFormValues['targetProfileDetails']
 ) => {
     if (!targetProfileData || targetProfileData.identifiers.length === 0) {
-        return <p className="text-sm">Цільові ідентифікатори не вказані.</p>;
+        return <p className="text-sm text-black">Цільові ідентифікатори не вказані.</p>;
     }
 
     return targetProfileData.identifiers.map(targetIdObj => {
@@ -274,7 +313,7 @@ const renderRecommendationsSection = (
                                     threat.software && threat.software !== '-' && `ПЗ: ${threat.software}`,
                                     threat.hardware && threat.hardware !== '-' && `Обладнання: ${threat.hardware}`,
                                     threat.informationResource && threat.informationResource !== '-' && `Інформаційний ресурс: ${threat.informationResource}`,
-                                    threat.icsTool && threat.icsTool !== '-' && `Засіб ІКЗ: ${icsToolOptionsList.find(opt => opt.value === threat.icsTool)?.label || threat.icsTool}`,
+                                    threat.icsTool && icsToolOptionsList.find(opt => opt.value === threat.icsTool)?.label || threat.icsTool,
                                 ].filter(Boolean);
                                 
                                 const affectedAssetsString = affectedAssetsList.length > 0 ? ` Активи: ${affectedAssetsList.join('; ')}.` : ' Активи не вказані або нерелевантні.';
@@ -322,33 +361,33 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
           <Table className="text-xs">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-black">Загроза</TableHead>
-                <TableHead className="text-black">Вразливість</TableHead>
-                <TableHead className="text-black">ТТП</TableHead>
-                <TableHead className="text-black">ID</TableHead>
-                <TableHead className="text-black">ПЗ</TableHead>
-                <TableHead className="text-black">Обладнання</TableHead>
-                <TableHead className="text-black">Інфо.Рес.</TableHead>
-                <TableHead className="text-black">Засіб ІКЗ</TableHead>
-                <TableHead className="text-black">Статус</TableHead>
-                <TableHead className="text-black">Рівень</TableHead>
-                <TableHead className="text-black">Коментар</TableHead>
+                <TableHead className="text-black border-black border">Загроза</TableHead>
+                <TableHead className="text-black border-black border">Вразливість</TableHead>
+                <TableHead className="text-black border-black border">ТТП</TableHead>
+                <TableHead className="text-black border-black border">ID</TableHead>
+                <TableHead className="text-black border-black border">ПЗ</TableHead>
+                <TableHead className="text-black border-black border">Обладнання</TableHead>
+                <TableHead className="text-black border-black border">Інфо.Рес.</TableHead>
+                <TableHead className="text-black border-black border">Засіб ІКЗ</TableHead>
+                <TableHead className="text-black border-black border">Статус</TableHead>
+                <TableHead className="text-black border-black border">Рівень</TableHead>
+                <TableHead className="text-black border-black border">Коментар</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {currentProfileData.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="max-w-[120px] break-words text-black">{item.selectedRisk}</TableCell>
-                  <TableCell className="max-w-[120px] break-words text-black">{item.vulnerabilityDescription}</TableCell>
-                  <TableCell className="max-w-[120px] break-words text-black">{item.ttpDescription}</TableCell>
-                  <TableCell className="text-black">{item.identifier}</TableCell>
-                  <TableCell className="text-black">{item.software}</TableCell>
-                  <TableCell className="text-black">{item.hardware}</TableCell>
-                  <TableCell className="text-black">{item.informationResource}</TableCell>
-                  <TableCell className="max-w-[100px] break-words text-black">{icsToolOptionsList.find(opt => opt.value === item.icsTool)?.label || item.icsTool}</TableCell>
-                  <TableCell className="text-black">{item.implementationStatus}</TableCell>
-                  <TableCell className="text-black">{item.implementationLevel}</TableCell>
-                  <TableCell className="max-w-[120px] break-words text-black">{item.comment}</TableCell>
+                  <TableCell className="max-w-[120px] break-words text-black border-black border">{item.selectedRisk}</TableCell>
+                  <TableCell className="max-w-[120px] break-words text-black border-black border">{item.vulnerabilityDescription}</TableCell>
+                  <TableCell className="max-w-[120px] break-words text-black border-black border">{item.ttpDescription}</TableCell>
+                  <TableCell className="text-black border-black border">{item.identifier}</TableCell>
+                  <TableCell className="text-black border-black border">{item.software}</TableCell>
+                  <TableCell className="text-black border-black border">{item.hardware}</TableCell>
+                  <TableCell className="text-black border-black border">{item.informationResource}</TableCell>
+                  <TableCell className="max-w-[100px] break-words text-black border-black border">{icsToolOptionsList.find(opt => opt.value === item.icsTool)?.label || item.icsTool}</TableCell>
+                  <TableCell className="text-black border-black border">{item.implementationStatus}</TableCell>
+                  <TableCell className="text-black border-black border">{item.implementationLevel}</TableCell>
+                  <TableCell className="max-w-[120px] break-words text-black border-black border">{item.comment}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -362,22 +401,22 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
             <Table className="text-xs">
                  <TableHeader>
                     <TableRow>
-                        <TableHead className="text-black">Цільові Ідентифікатори</TableHead>
-                        <TableHead className="text-black">Бажаний рівень впровадження</TableHead>
-                        <TableHead className="text-black">Застосовується до ПЗ</TableHead>
-                        <TableHead className="text-black">Застосовується до Обладнання</TableHead>
-                        <TableHead className="text-black">Застосовується до Інфо.Ресурсів</TableHead>
-                        <TableHead className="text-black">Застосовується до Засобів ІКЗ</TableHead>
+                        <TableHead className="text-black border-black border">Цільові Ідентифікатори</TableHead>
+                        <TableHead className="text-black border-black border">Бажаний рівень впровадження</TableHead>
+                        <TableHead className="text-black border-black border">Застосовується до ПЗ</TableHead>
+                        <TableHead className="text-black border-black border">Застосовується до Обладнання</TableHead>
+                        <TableHead className="text-black border-black border">Застосовується до Інфо.Ресурсів</TableHead>
+                        <TableHead className="text-black border-black border">Застосовується до Засобів ІКЗ</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow>
-                        <TableCell className="text-black">{targetProfileData.identifiers.map(id => id.value).join(', ')}</TableCell>
-                        <TableCell className="text-black">{targetProfileData.implementationLevel}</TableCell>
-                        <TableCell className="text-black">{targetProfileData.appliesToSoftware ? 'Так' : 'Ні'}</TableCell>
-                        <TableCell className="text-black">{targetProfileData.appliesToHardware ? 'Так' : 'Ні'}</TableCell>
-                        <TableCell className="text-black">{targetProfileData.appliesToInformationResource ? 'Так' : 'Ні'}</TableCell>
-                        <TableCell className="text-black">{targetProfileData.appliesToIcsTool ? 'Так' : 'Ні'}</TableCell>
+                        <TableCell className="text-black border-black border">{targetProfileData.identifiers.map(id => id.value).join(', ')}</TableCell>
+                        <TableCell className="text-black border-black border">{targetProfileData.implementationLevel}</TableCell>
+                        <TableCell className="text-black border-black border">{targetProfileData.appliesToSoftware ? 'Так' : 'Ні'}</TableCell>
+                        <TableCell className="text-black border-black border">{targetProfileData.appliesToHardware ? 'Так' : 'Ні'}</TableCell>
+                        <TableCell className="text-black border-black border">{targetProfileData.appliesToInformationResource ? 'Так' : 'Ні'}</TableCell>
+                        <TableCell className="text-black border-black border">{targetProfileData.appliesToIcsTool ? 'Так' : 'Ні'}</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
@@ -423,7 +462,7 @@ export default function ReportingPage() {
         logging: false,
       });
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdf = new jsPDF('p', 'mm', 'a4', true);
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -435,13 +474,13 @@ export default function ReportingPage() {
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pdfHeight;
 
       while (heightLeft > 0) {
         position = -imgHeight + heightLeft + (imgHeight - pdfHeight);
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pdfHeight;
       }
       
@@ -513,12 +552,9 @@ export default function ReportingPage() {
   }, [fetchAssetsForReport]);
 
 
- const getFirstAvailableAsset = (assetOptions: string[], preferredType: AssetCategoryKey, affectedTypes: AssetCategoryKey[]): string => {
-    if (affectedTypes.includes(preferredType)) {
-        const firstRealAsset = assetOptions.find(opt => !baseAssetOptions.includes(opt as any));
-        if (firstRealAsset) return firstRealAsset;
-    }
-    return '-';
+ const getFirstAvailableAsset = (assetOptions: string[]): string => {
+    const firstRealAsset = assetOptions.find(opt => !baseAssetOptions.includes(opt as any));
+    return firstRealAsset || '-';
   };
 
   const handleSelectedRiskChange = (selectedRiskKey: string, threatIndex: number) => {
@@ -534,25 +570,20 @@ export default function ReportingPage() {
       const isOther = selectedRiskKey === "Інша загроза (потребує ручного опису)";
       
       const autoSelectOrDash = (assetType: AssetCategoryKey, options: string[]) => {
-        if (isOther || affected.includes(assetType)) {
-            const firstRealAsset = options.find(opt => !baseAssetOptions.includes(opt as any));
-            return firstRealAsset || '-';
+        if (!isOther && !affected.includes(assetType)) {
+          return '-';
         }
-        return '-';
+        return getFirstAvailableAsset(options);
       };
 
       form.setValue(`${pathPrefix}.software`, autoSelectOrDash('software', softwareAssetOptions), { shouldDirty: true });
       form.setValue(`${pathPrefix}.hardware`, autoSelectOrDash('hardware', hardwareAssetOptions), { shouldDirty: true });
       form.setValue(`${pathPrefix}.informationResource`, autoSelectOrDash('informationResource', informationResourceAssetOptions), { shouldDirty: true });
       
+      // Don't auto-select ICS tool, let user choose.
       if (!isOther && !affected.includes('icsTool')) {
         form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
-      } else if (isOther && !form.getValues(`${pathPrefix}.icsTool`)) {
-         form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
-      } else if (!form.getValues(`${pathPrefix}.icsTool`)) {
-         form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
       }
-
 
     } else { 
         form.setValue(`${pathPrefix}.identifier`, 'N/A', { shouldDirty: true });
@@ -874,7 +905,7 @@ export default function ReportingPage() {
       </div>
       <CardDescription>
         Створіть звіт, обравши Загрозу, що автоматично заповнить Вразливість, ТТП та Ідентифікатор. 
-        Активи (ПЗ, Обладнання, Інфо.Ресурс) підтягуються з Реєстру активів. Деякі можуть бути автоматично встановлені в "-" або деактивовані для вибору, якщо нерелевантні для обраної загрози.
+        Активи (ПЗ, Обладнання, Інфо.Ресурс) підтягуються з Реєстру активів і можуть бути автоматично обрані або деактивовані для вибору, якщо нерелевантні для обраної загрози.
         Засіб ІКЗ обирається зі списку. Поля Вразливості, ТТП та Коментар можна редагувати вручну.
       </CardDescription>
 
@@ -900,16 +931,11 @@ export default function ReportingPage() {
                     onClick={() => {
                         const newRiskKey = threatOptions.find(opt => !opt.startsWith("Інша")) || threatOptions[0];
                         const newRiskDetails = threatDetailsMap[newRiskKey] || threatDetailsMap["Інша загроза (потребує ручного опису)"];
-                        const affectedForNew = newRiskDetails.affectedAssetTypes;
-                        const isOtherNew = newRiskKey === "Інша загроза (потребує ручного опису)";
                         
-                        const autoSelectOrDash = (assetType: AssetCategoryKey, options: string[]) => {
-                            if (isOtherNew || affectedForNew.includes(assetType)) {
-                                const firstRealAsset = options.find(opt => !baseAssetOptions.includes(opt as any));
-                                return firstRealAsset || '-';
-                            }
-                            return '-';
-                          };
+                        const getAsset = (assetType: AssetCategoryKey, options: string[]) => {
+                           if (!newRiskDetails.affectedAssetTypes.includes(assetType)) return '-';
+                           return getFirstAvailableAsset(options);
+                        }
 
                         const newThreatToAdd: SingleCurrentProfileThreatValues = {
                             id: Date.now().toString(),
@@ -919,9 +945,9 @@ export default function ReportingPage() {
                             ttpDescription: newRiskDetails.ttp,
                             implementationStatus: 'Реалізовано',
                             implementationLevel: '3',
-                            software: autoSelectOrDash('software', softwareAssetOptions),
-                            hardware: autoSelectOrDash('hardware', hardwareAssetOptions),
-                            informationResource: autoSelectOrDash('informationResource', informationResourceAssetOptions),
+                            software: getAsset('software', softwareAssetOptions),
+                            hardware: getAsset('hardware', hardwareAssetOptions),
+                            informationResource: getAsset('informationResource', informationResourceAssetOptions),
                             icsTool: '-', 
                             comment: '', 
                         };
@@ -1060,20 +1086,17 @@ export default function ReportingPage() {
             
             <section className="print:break-before-page">
               <h3 className="text-xl font-headline mb-2 border-b pb-1 print:text-lg print:border-gray-400 print:text-black">Аналіз Розривів та Рекомендації</h3>
-                {renderRecommendationsSection(currentProfileForDisplay, targetProfileForDisplay)}
+                <div className="text-sm text-black">
+                    {renderRecommendationsSection(currentProfileForDisplay, targetProfileForDisplay)}
+                </div>
             </section>
           </CardContent>
-           <CardFooter>
-              
-           </CardFooter>
         </Card>
         </>
       )}
     </div>
   );
 }
-    
-
     
 
     
