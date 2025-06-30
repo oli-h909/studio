@@ -4,8 +4,6 @@
 import * as React from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Asset } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,73 +22,196 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-
 const implementationStatusOptions = ["Реалізовано", "Не реалізовано", "Частково реалізовано", "Не застосовується"] as const;
 const implementationLevelOptions = ["1", "2", "3", "4"] as const;
 
 type AssetCategoryKey = 'software' | 'hardware' | 'informationResource' | 'icsTool';
 
+const staticAssetsData: Asset[] = [
+  // 1. Активи програмного забезпечення (Software Assets) - 2 examples
+  {
+    id: "sw_asset_1",
+    name: "Платформа аналізу загроз (TIP Core)",
+    type: "Програмне забезпечення",
+    description: "Центральний компонент, що агрегує, аналізує та корелює дані про кіберзагрози.",
+    version: "2.1.0",
+    installationDate: "2023-05-15",
+    lastUpdateDate: "2024-07-20",
+    weaknesses: [
+      { id: "sw_t_1", assetId: "sw_asset_1", description: "Вразливість: Недостатня валідація вхідних даних від зовнішніх джерел (feeds). Дії зловмисника: Виконання віддаленого коду (RCE), що дозволяє скомпрометувати систему збору розвідданих.", severity: "Критична" }
+    ]
+  },
+  {
+    id: "sw_asset_2",
+    name: "Система SIEM (Security Information and Event Management)",
+    type: "Програмне забезпечення",
+    description: "Система збору, моніторингу та аналізу логів безпеки з корпоративних систем.",
+    version: "5.4.2",
+    installationDate: "2022-11-01",
+    lastUpdateDate: "2024-06-28",
+    weaknesses: [
+      { id: "sw_t_2", assetId: "sw_asset_2", description: "Вразливість: Використання стандартних облікових даних для доступу до SIEM. Дії зловмисника: Отримання доступу до логів, приховування слідів або фабрикація подій.", severity: "Висока" }
+    ]
+  },
+
+  // 2. Активи апаратного забезпечення (Hardware Assets) - 2 examples
+  {
+    id: "hw_asset_1",
+    name: "Сервер аналізу загроз",
+    type: "Обладнання",
+    description: "Високопродуктивний сервер для обробки даних розвідки та запуску моделей ML.",
+    ipAddress: "10.0.1.15",
+    macAddress: "00:1A:2B:3C:4D:5E",
+    location: "Дата-центр Київ, Стійка А03",
+    weaknesses: [
+      { id: "hw_t_1", assetId: "hw_asset_1", description: "Вразливість: Недостатній фізичний захист серверної стійки. Дії зловмисника: Фізичний несанкціонований доступ, викрадення сервера, що призводить до втрати даних та зупинки аналітики.", severity: "Критична" }
+    ]
+  },
+  {
+    id: "hw_asset_2",
+    name: "Мережевий сенсор IDS/IPS",
+    type: "Обладнання",
+    description: "Пристрій для виявлення та запобігання вторгненням на периметрі мережі.",
+    ipAddress: "192.168.1.254",
+    macAddress: "00:AA:BB:CC:DD:EE",
+    location: "Головний маршрутизатор, DMZ",
+    weaknesses: [
+      { id: "hw_t_2", assetId: "hw_asset_2", description: "Вразливість: Неправильна конфігурація правил IDS/IPS. Дії зловмисника: Обхід системи виявлення (пропуск відомих атак) та проникнення в мережу.", severity: "Висока" }
+    ]
+  },
+  
+  // 3. Активи інформаційних ресурсів (Information Assets) - 2 examples
+  {
+    id: "info_asset_1",
+    name: "База даних індикаторів компрометації (IoCs)",
+    type: "Інформація",
+    description: "Структурована інформація про відомі шкідливі файли, IP-адреси, домени.",
+    dataSensitivity: "Дуже висока",
+    storageLocation: "PostgreSQL Cluster (Main DB)",
+    creationDate: "2022-01-10",
+    lastAccessedDate: "2024-07-28",
+    weaknesses: [
+      { id: "info_t_1", assetId: "info_asset_1", description: "Вразливість: Неналежний контроль доступу до бази IoC. Дії зловмисника: Несанкціонована зміна (отруєння) даних в базі IoC (наприклад, додавання легітимних ресурсів як шкідливих), що може спричинити DoS важливих сервісів.", severity: "Висока" }
+    ]
+  },
+  {
+    id: "info_asset_2",
+    name: "Конфігураційні файли систем безпеки",
+    type: "Інформація",
+    description: "Файли з налаштуваннями правил, політик, інтеграцій SIEM, SOAR, Firewall.",
+    dataSensitivity: "Критична",
+    storageLocation: "Захищене сховище конфігурацій Vault",
+    creationDate: "2022-03-01",
+    lastAccessedDate: "2024-07-25",
+    weaknesses: [
+      { id: "info_t_3", assetId: "info_asset_2", description: "Вразливість: Зберігання паролів у відкритому вигляді в конфігураційних файлах системи. Дії зловмисника: Витік або несанкціоноване отримання цих паролів, що призводить до несанкціонованого доступу до систем та даних.", severity: "Критична" }
+      ]
+  },
+];
+
 
 const threatDetailsMap: Record<string, { identifier: string; vulnerability: string; ttp: string; affectedAssetTypes: AssetCategoryKey[] }> = {
   "Викрадення персональних та державних даних": {
     identifier: "ID.AM-2",
-    vulnerability: "CVE-2020-0796 (SMBGhost)",
+    vulnerability: "Недостатній контроль доступу",
     ttp: "Використання експлойта для обходу автентифікації та доступу до файлової системи (T1078).",
     affectedAssetTypes: ["software"],
   },
   "Несанкціоноване змінення інформації у базі даних": {
-    identifier: "ID.AM-2",
-    vulnerability: "CVE-2019-8451 (Microsoft SQL Server)",
+    identifier: "ID.AM-3",
+    vulnerability: "SQL Injection на сервері бази даних",
     ttp: "Використання автоматизованих скриптів для масового виконання SQL-ін'єкцій (T1190).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Викрадення сесій та облікових даних користувачів": {
     identifier: "ID.AM-3",
-    vulnerability: "CVE-2018-1000525 (Drupal XSS)",
+    vulnerability: "XSS у WordPress",
     ttp: "Перехоплення НТТР-трафіку для отримання сесійних токенів (T1539).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Отримання прав адміністратора": {
     identifier: "ID.AM-2",
-    vulnerability: "CVE-2020-0601 (Windows CryptoAPI)",
+    vulnerability: "Обхід автентифікації",
     ttp: "Виконання локального експлойта для підвищення привілеїв (T1068).",
     affectedAssetTypes: ["software"],
   },
   "Перенаправлення користувачів на підроблений сайт": {
     identifier: "ID.AM-3",
-    vulnerability: "CVE-2021-21972 (VMware vCenter)",
+    vulnerability: "Фішинг",
     ttp: "Фішинг, створення підроблених сайтів, збір облікових даних користувачів (T1566).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Відмова в обслуговуванні через блокування DNS": {
     identifier: "ID.AM-1",
-    vulnerability: "CVE-2016-5696 (Linux Kernel TCP Spoofing)",
+    vulnerability: "DoS-атака на портал",
     ttp: "Відправлення спеціально сформованих НТТР-запитів для блокування доступу (T1499).",
     affectedAssetTypes: ["hardware"],
   },
   "Виконання довільного коду через RCE": {
     identifier: "ID.AM-1",
-    vulnerability: "CVE-2017-0144 (EternalBlue SMBv1)",
+    vulnerability: "Використання уразливого компонента CMS",
     ttp: "Віддалене виконання коду, встановлення бекдорів, контроль над сервером (T1203).",
     affectedAssetTypes: ["hardware", "software"],
   },
   "Фальсифікація результатів експертизи": {
-    identifier: "ID.AM-2",
-    vulnerability: "CVE-2019-0708 (RDP BlueKeep)",
+    identifier: "ID.AM-3",
+    vulnerability: "Несанкціонований доступ до бази користувачів",
     ttp: "Впровадження фальшивих результатів через АРІ системи (T1070.004).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Повторні запити і підміна даних заяв": {
     identifier: "ID.AM-3",
-    vulnerability: "CVE-2020-1472 (Netlogon Elevation of Privilege)",
+    vulnerability: "Соціальна інженерія",
     ttp: "Використання автоматизованих ботів для масового подання фальшивих заяв (T1110).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Викрадення сесійних токенів": {
     identifier: "ID.AM-3",
-    vulnerability: "CVE-2019-11043 (PHP-FPM)",
+    vulnerability: "Фішинг-посилання у CRM",
     ttp: "Викрадення токенів через впровадження XSS-скриптів (T1539).",
     affectedAssetTypes: ["software", "informationResource"],
+  },
+  "Інфікування робочих станцій або серверів": {
+    identifier: "ID.AM-2",
+    vulnerability: "Атака через шкідливі вкладення",
+    ttp: "Поширення шкідливого ПЗ через фішингові листи (T1566.001).",
+    affectedAssetTypes: ["software", "hardware"],
+  },
+  "Втрата конфіденційної інформації": {
+    identifier: "ID.AM-3",
+    vulnerability: "Витік даних",
+    ttp: "Ексфільтрація даних через незахищені канали (T1567).",
+    affectedAssetTypes: ["informationResource"],
+  },
+  "Несанкціонований доступ до систем": {
+    identifier: "ID.AM-3",
+    vulnerability: "Збереження паролів у відкритому вигляді",
+    ttp: "Використання викрадених облікових даних (T1078).",
+    affectedAssetTypes: ["informationResource"],
+  },
+  "Втрата контролю над CRM": {
+    identifier: "ID.AM-2",
+    vulnerability: "Незахищене ліцензування CRM",
+    ttp: "Експлуатація вразливостей в механізмі ліцензування (T1616).",
+    affectedAssetTypes: ["software"],
+  },
+  "Порушення цілісності та витік даних": {
+    identifier: "ID.AM-3",
+    vulnerability: "Недостатній контроль доступу",
+    ttp: "Зловмисники отримують доступ до ресурсів, до яких не повинні мати доступу (T1078).",
+    affectedAssetTypes: ["informationResource", "software"],
+  },
+  "Підвищений ризик інцидентів": {
+    identifier: "ID.AM-5",
+    vulnerability: "Порушення політики безпеки",
+    ttp: "Співробітники або системи не дотримуються встановлених правил безпеки (T1548).",
+    affectedAssetTypes: ["software", "hardware", "informationResource"],
+  },
+  "Пошкодження систем та крадіжка даних": {
+    identifier: "ID.AM-2",
+    vulnerability: "Шкідливе програмне забезпечення",
+    ttp: "Встановлення та виконання шкідливого коду на системах (T1204).",
+    affectedAssetTypes: ["software", "hardware"],
   },
   "Інша загроза (потребує ручного опису)": {
     identifier: 'N/A',
@@ -474,37 +595,26 @@ export default function ReportingPage() {
     name: "targetProfileDetails.identifiers",
   });
 
-  const fetchAssetsForReport = useCallback(async () => {
-    try {
-      const assetsCollectionRef = collection(db, 'assets');
-      const assetSnapshot = await getDocs(assetsCollectionRef);
-      const assetsList = assetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
-      
-      const sortAssets = (options: string[]) => options.sort((a, b) => {
-        if (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) {
-          return baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : -1;
-        }
-        return baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? 1 : a.localeCompare(b);
-      });
-
-      const sw = assetsList.filter(a => a.type === 'Програмне забезпечення').map(a => a.name);
-      setSoftwareAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...sw])]));
-
-      const hw = assetsList.filter(a => a.type === 'Обладнання').map(a => a.name);
-      setHardwareAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...hw])]));
-
-      const ir = assetsList.filter(a => a.type === 'Інформація').map(a => a.name);
-      setInformationResourceAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...ir])]));
-      
-    } catch (error) {
-      console.error("Error fetching assets for report: ", error);
-      toast({ title: "Помилка", description: "Не вдалося завантажити активи для звітів.", variant: "destructive" });
-    }
-  }, [toast]);
-
   useEffect(() => {
-    fetchAssetsForReport();
-  }, [fetchAssetsForReport]);
+    const assetsList = staticAssetsData;
+    
+    const sortAssets = (options: string[]) => options.sort((a, b) => {
+      if (baseAssetOptions.includes(a as typeof baseAssetOptions[number])) {
+        return baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? a.localeCompare(b) : -1;
+      }
+      return baseAssetOptions.includes(b as typeof baseAssetOptions[number]) ? 1 : a.localeCompare(b);
+    });
+
+    const sw = assetsList.filter(a => a.type === 'Програмне забезпечення').map(a => a.name);
+    setSoftwareAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...sw])]));
+
+    const hw = assetsList.filter(a => a.type === 'Обладнання').map(a => a.name);
+    setHardwareAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...hw])]));
+
+    const ir = assetsList.filter(a => a.type === 'Інформація').map(a => a.name);
+    setInformationResourceAssetOptions(sortAssets([...new Set([...baseAssetOptions, ...ir])]));
+    
+  }, []);
 
 
  const getFirstAvailableAsset = (assetOptions: string[]): string => {
@@ -938,7 +1048,7 @@ export default function ReportingPage() {
       {reportGenerated && currentProfileForDisplay && targetProfileForDisplay && (
         <>
         <div className="flex justify-end gap-2 mb-4 print:hidden">
-            <Button variant="outline" onClick={() => { setReportGenerated(false); setCurrentProfileForDisplay(null); setTargetProfileForDisplay(null); fetchAssetsForReport(); form.reset({ currentProfileDetails: [defaultThreatValues], targetProfileDetails: { identifiers: [defaultTargetIdentifierValue], implementationLevel: '4', appliesToSoftware: true, appliesToHardware: true, appliesToInformationResource: true, appliesToIcsTool: true } }); }}>
+            <Button variant="outline" onClick={() => { setReportGenerated(false); setCurrentProfileForDisplay(null); setTargetProfileForDisplay(null); form.reset({ currentProfileDetails: [defaultThreatValues], targetProfileDetails: { identifiers: [defaultTargetIdentifierValue], implementationLevel: '4', appliesToSoftware: true, appliesToHardware: true, appliesToInformationResource: true, appliesToIcsTool: true } }); }}>
                 Створити новий звіт / Редагувати
             </Button>
             <Button onClick={handleDirectDownloadPdf} disabled={isGeneratingReport}>
