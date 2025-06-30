@@ -33,63 +33,63 @@ type AssetCategoryKey = 'software' | 'hardware' | 'informationResource' | 'icsTo
 
 const threatDetailsMap: Record<string, { identifier: string; vulnerability: string; ttp: string; affectedAssetTypes: AssetCategoryKey[] }> = {
   "Викрадення персональних та державних даних": {
-    identifier: "ID.AM-3",
+    identifier: "ID.AM-2",
     vulnerability: "CVE-2020-0796 (SMBGhost)",
-    ttp: "Використання експлойта для обходу автентифікації та доступу до файлової системи.",
-    affectedAssetTypes: ["software", "informationResource"],
+    ttp: "Використання експлойта для обходу автентифікації та доступу до файлової системи (T1078).",
+    affectedAssetTypes: ["software"],
   },
   "Несанкціоноване змінення інформації у базі даних": {
-    identifier: "ID.AM-3",
+    identifier: "ID.AM-2",
     vulnerability: "CVE-2019-8451 (Microsoft SQL Server)",
-    ttp: "Використання автоматизованих скриптів для масового виконання SQL-ін'єкцій.",
+    ttp: "Використання автоматизованих скриптів для масового виконання SQL-ін'єкцій (T1190).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Викрадення сесій та облікових даних користувачів": {
     identifier: "ID.AM-3",
     vulnerability: "CVE-2018-1000525 (Drupal XSS)",
-    ttp: "Перехоплення НТТР-трафіку для отримання сесійних токенів.",
+    ttp: "Перехоплення НТТР-трафіку для отримання сесійних токенів (T1539).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Отримання прав адміністратора": {
     identifier: "ID.AM-2",
     vulnerability: "CVE-2020-0601 (Windows CryptoAPI)",
-    ttp: "Виконання локального експлойта для підвищення привілеїв.",
-    affectedAssetTypes: ["software", "hardware"],
+    ttp: "Виконання локального експлойта для підвищення привілеїв (T1068).",
+    affectedAssetTypes: ["software"],
   },
   "Перенаправлення користувачів на підроблений сайт": {
-    identifier: "ID.AM-5",
+    identifier: "ID.AM-3",
     vulnerability: "CVE-2021-21972 (VMware vCenter)",
-    ttp: "Фішинг, створення підроблених сайтів, збір облікових даних користувачів.",
-    affectedAssetTypes: ["software"],
+    ttp: "Фішинг, створення підроблених сайтів, збір облікових даних користувачів (T1566).",
+    affectedAssetTypes: ["software", "informationResource"],
   },
   "Відмова в обслуговуванні через блокування DNS": {
     identifier: "ID.AM-1",
     vulnerability: "CVE-2016-5696 (Linux Kernel TCP Spoofing)",
-    ttp: "Відправлення спеціально сформованих НТТР-запитів для запуску шкідливого коду.",
-    affectedAssetTypes: ["hardware", "software"],
+    ttp: "Відправлення спеціально сформованих НТТР-запитів для блокування доступу (T1499).",
+    affectedAssetTypes: ["hardware"],
   },
   "Виконання довільного коду через RCE": {
-    identifier: "ID.AM-2",
+    identifier: "ID.AM-1",
     vulnerability: "CVE-2017-0144 (EternalBlue SMBv1)",
-    ttp: "Віддалене виконання коду, встановлення бекдорів, контроль над сервером.",
-    affectedAssetTypes: ["software", "hardware"],
+    ttp: "Віддалене виконання коду, встановлення бекдорів, контроль над сервером (T1203).",
+    affectedAssetTypes: ["hardware", "software"],
   },
   "Фальсифікація результатів експертизи": {
-    identifier: "ID.AM-3",
+    identifier: "ID.AM-2",
     vulnerability: "CVE-2019-0708 (RDP BlueKeep)",
-    ttp: "Впровадження фальшивих результатів через АРІ системи.",
+    ttp: "Впровадження фальшивих результатів через АРІ системи (T1070.004).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Повторні запити і підміна даних заяв": {
     identifier: "ID.AM-3",
     vulnerability: "CVE-2020-1472 (Netlogon Elevation of Privilege)",
-    ttp: "Використання автоматизованих ботів для масового подання фальшивих заяв.",
+    ttp: "Використання автоматизованих ботів для масового подання фальшивих заяв (T1110).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Викрадення сесійних токенів": {
     identifier: "ID.AM-3",
     vulnerability: "CVE-2019-11043 (PHP-FPM)",
-    ttp: "Викрадення токенів через впровадження XSS-скриптів.",
+    ttp: "Викрадення токенів через впровадження XSS-скриптів (T1539).",
     affectedAssetTypes: ["software", "informationResource"],
   },
   "Інша загроза (потребує ручного опису)": {
@@ -535,7 +535,6 @@ export default function ReportingPage() {
       form.setValue(`${pathPrefix}.hardware`, autoSelectOrDash('hardware', hardwareAssetOptions), { shouldDirty: true });
       form.setValue(`${pathPrefix}.informationResource`, autoSelectOrDash('informationResource', informationResourceAssetOptions), { shouldDirty: true });
       
-      // Don't auto-select ICS tool, let user choose.
       if (!isOther && !affected.includes('icsTool')) {
         form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
       }
@@ -642,7 +641,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Програмне забезпечення (Актив)</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!isOtherThreat && !affectedForCurrentThreat.includes('software')}>
+            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={isOtherThreat ? false : !affectedForCurrentThreat.includes('software')}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть ПЗ з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
                 {softwareAssetOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -658,7 +657,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Апаратне забезпечення (Актив)</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!isOtherThreat && !affectedForCurrentThreat.includes('hardware')}>
+            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={isOtherThreat ? false : !affectedForCurrentThreat.includes('hardware')}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть апаратне забезпечення з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
                 {hardwareAssetOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -674,7 +673,7 @@ export default function ReportingPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Інформаційний ресурс (Актив)</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={!isOtherThreat && !affectedForCurrentThreat.includes('informationResource')}>
+            <Select onValueChange={field.onChange} value={field.value || '-'} disabled={isOtherThreat ? false : !affectedForCurrentThreat.includes('informationResource')}>
               <FormControl><SelectTrigger><SelectValue placeholder="Оберіть інформаційний ресурс з реєстру" /></SelectTrigger></FormControl>
               <SelectContent>
                 {informationResourceAssetOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -860,7 +859,7 @@ export default function ReportingPage() {
       </div>
       <CardDescription>
         Створіть звіт, обравши Загрозу, що автоматично заповнить Вразливість, ТТП та Ідентифікатор. 
-        Активи (ПЗ, Обладнання, Інфо.Ресурс) підтягуються з Реєстру активів і можуть бути автоматично обрані або деактивовані для вибору, якщо нерелевантні для обраної загрози.
+        Залежно від Ідентифікатора, буде активовано відповідний список активів (ПЗ, Обладнання, Інфо.Ресурс), які підтягуються з Реєстру.
         Засіб ІКЗ обирається зі списку. Поля Вразливості, ТТП та Коментар можна редагувати вручну.
       </CardDescription>
 
@@ -1055,6 +1054,8 @@ export default function ReportingPage() {
     </div>
   );
 }
+    
+
     
 
     
