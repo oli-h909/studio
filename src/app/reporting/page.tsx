@@ -16,7 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, FileText, Download, PlusCircle, Trash2 } from 'lucide-react'; // Changed Printer to Download
+import { Loader2, FileText, Download, PlusCircle, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from "@/hooks/use-toast";
@@ -56,79 +56,79 @@ const threatDetailsMap: Record<string, ThreatDetailValue> = {
     ttp: "Несанкціонований доступ, копіювання, передача інформації",
     affectedAssetTypes: ['informationResource']
   },
-  "Несанкціонований доступ до систем і сервісів через викрадені паролі": { // Key changed to be more specific
-    identifier: 'ID.AM-3', // Assuming this relates to information assets (passwords)
+  "Несанкціонований доступ до систем і сервісів через викрадені паролі": {
+    identifier: 'ID.AM-3',
     vulnerability: "Збереження паролів у відкритому вигляді",
     ttp: "Викрадення або витік паролів",
     affectedAssetTypes: ['informationResource', 'software']
   },
-  "Порушення цілісності, витік даних, саботаж систем через недостатній контроль доступу": { // Key changed
-    identifier: 'ID.AM-3', // General access control issue
+  "Порушення цілісності, витік даних, саботаж систем через недостатній контроль доступу": {
+    identifier: 'ID.AM-3',
     vulnerability: "Недостатній контроль доступу",
     ttp: "Несанкціонований вхід, підміна прав користувачів",
     affectedAssetTypes: ['informationResource', 'software', 'hardware']
   },
-  "Юридичні проблеми, втрата контролю над системою CRM через ліцензування": { // Key changed
+  "Юридичні проблеми, втрата контролю над системою CRM через ліцензування": {
     identifier: 'ID.AM-2',
     vulnerability: "Незахищене ліцензування CRM",
     ttp: "Викрадення ліцензійних ключів, використання піратських копій",
     affectedAssetTypes: ['software']
   },
-  "Викрадення персональних даних, порушення аутентифікації через доступ до бази користувачів": { // Key changed
+  "Викрадення персональних даних, порушення аутентифікації через доступ до бази користувачів": {
     identifier: 'ID.AM-3',
     vulnerability: "Несанкціонований доступ до бази користувачів",
     ttp: "Викрадення або модифікація даних користувачів",
     affectedAssetTypes: ['informationResource']
   },
-  "Несанкціонований доступ, компрометація систем через обхід автентифікації": { // Key changed
+  "Несанкціонований доступ, компрометація систем через обхід автентифікації": {
     identifier: 'ID.AM-2',
     vulnerability: "Обхід автентифікації",
     ttp: "Використання вразливостей для обходу перевірки ідентичності",
     affectedAssetTypes: ['software']
   },
-  "Підвищений ризик інцидентів, внутрішні загрози через порушення політики": { // Key changed
+  "Підвищений ризик інцидентів, внутрішні загрози через порушення політики": {
     identifier: 'ID.AM-5',
     vulnerability: "Порушення політики безпеки",
     ttp: "Несанкціоновані зміни, ігнорування правил",
     affectedAssetTypes: ['software', 'hardware', 'informationResource']
   },
-  "Витік інформації, компрометація облікових даних через соціальну інженерію": { // Key changed
+  "Витік інформації, компрометація облікових даних через соціальну інженерію": {
     identifier: 'ID.AM-5',
     vulnerability: "Соціальна інженерія",
     ttp: "Обман співробітників для отримання доступу",
     affectedAssetTypes: ['informationResource']
   },
-  "Крадіжка облікових даних, несанкціонований доступ через фішинг": { // Key changed
+  "Крадіжка облікових даних, несанкціонований доступ через фішинг": {
     identifier: 'ID.AM-5',
     vulnerability: "Фішинг",
     ttp: "Розсилання підробних листів для отримання даних",
     affectedAssetTypes: ['informationResource', 'software']
   },
-  "Компрометація користувацьких акаунтів, втручання у роботу CRM через фішинг-посилання": { // Key changed
+  "Компрометація користувацьких акаунтів, втручання у роботу CRM через фішинг-посилання": {
     identifier: 'ID.AM-2',
     vulnerability: "Фішинг-посилання у CRM",
     ttp: "Впровадження шкідливих посилань в CRM",
     affectedAssetTypes: ['software']
   },
-  "Пошкодження систем, крадіжка даних, відмова у обслуговуванні через шкідливе ПЗ": { // Key changed
+  "Пошкодження систем, крадіжка даних, відмова у обслуговуванні через шкідливе ПЗ": {
     identifier: 'ID.AM-2',
     vulnerability: "Шкідливе програмне забезпечення",
     ttp: "Інсталяція, поширення шкідливих модулів",
     affectedAssetTypes: ['software', 'hardware']
   },
-  "Недоступність сервісу для користувачів через DoS-атаку": { // Key changed
-    identifier: 'ID.AM-2', // Could also be AM-3 if data availability is compromised
+  "Недоступність сервісу для користувачів через DoS-атаку": {
+    identifier: 'ID.AM-2',
     vulnerability: "DoS-атака на портал",
     ttp: "Перевантаження сервера запитами",
     affectedAssetTypes: ['software', 'hardware']
   },
-  "Викрадення, модифікація або видалення даних у базі через SQL Injection": { // Key changed
-    identifier: 'ID.AM-2', // Related to software (application vulnerability)
+  "Викрадення, модифікація або видалення даних у базі через SQL Injection": {
+    identifier: 'ID.AM-2',
     vulnerability: "SQL Injection на сервері бази даних",
     ttp: "Вставка шкідливого SQL-коду",
     affectedAssetTypes: ['software', 'informationResource']
   },
-  "Збої, відмова у роботі, втручання у цілісність і конфіденційність через XSS": { // Key changed
+  "Збої, відмова у роботі, втручання у цілісність і конфіденційність через XSS": {
     identifier: 'ID.AM-2',
     vulnerability: "XSS у WordPress",
     ttp: "Впровадження шкідливого JavaScript-коду",
@@ -138,7 +138,7 @@ const threatDetailsMap: Record<string, ThreatDetailValue> = {
     identifier: 'N/A',
     vulnerability: "Опишіть вразливість...",
     ttp: "Опишіть можливі дії зловмисника...",
-    affectedAssetTypes: [] // All asset types potentially applicable
+    affectedAssetTypes: []
   }
 };
 
@@ -210,7 +210,7 @@ const identifierRecommendations: Record<string, { title: string; measures: strin
 
 const singleCurrentProfileThreatSchema = z.object({
   id: z.string(),
-  selectedRisk: z.string().min(1, "Необхідно обрати загрозу"), // This is the "Загроза (конкретний ризик)"
+  selectedRisk: z.string().min(1, "Необхідно обрати загрозу"),
   identifier: z.string().optional(),
   vulnerabilityDescription: z.string().min(1, "Опис вразливості обов'язковий"),
   ttpDescription: z.string().min(1, "Опис TTP обов'язковий"),
@@ -270,7 +270,7 @@ const renderRecommendationsSection = (
     targetProfileData: ReportPageFormValues['targetProfileDetails']
 ) => {
     if (!targetProfileData || targetProfileData.identifiers.length === 0) {
-        return <p className="text-sm text-muted-foreground">Цільові ідентифікатори не вказані.</p>;
+        return <p className="text-sm">Цільові ідентифікатори не вказані.</p>;
     }
 
     return targetProfileData.identifiers.map(targetIdObj => {
@@ -281,30 +281,30 @@ const renderRecommendationsSection = (
         );
 
         return (
-            <div key={targetIdObj.id} className="mb-6 p-4 border rounded-md bg-muted/10 print:bg-white print:border-gray-300">
-                <h4 className="text-lg font-semibold text-primary mb-2 print:text-black">
+            <div key={targetIdObj.id} className="mb-6 p-4 border rounded-md border-gray-300 bg-white">
+                <h4 className="text-lg font-semibold mb-2">
                     Рекомендації для досягнення: {targetIdObj.value}
                 </h4>
                 {recommendation ? (
                     <>
-                        <p className="font-medium mb-1 print:text-gray-700">{recommendation.title}</p>
-                        <p className="mb-1 print:text-gray-700"><strong>Рекомендовані засоби та заходи:</strong></p>
-                        <ul className="list-disc list-inside text-sm space-y-1 mb-3 print:text-gray-600">
+                        <p className="font-medium mb-1">{recommendation.title}</p>
+                        <p className="mb-1"><strong>Рекомендовані засоби та заходи:</strong></p>
+                        <ul className="list-disc list-inside text-sm space-y-1 mb-3">
                             {recommendation.measures.map((measure, index) => (
                                 <li key={index}>{measure}</li>
                             ))}
                         </ul>
                     </>
                 ) : (
-                    <p className="text-sm text-muted-foreground mb-3 print:text-gray-500">
+                    <p className="text-sm mb-3">
                         Для ідентифікатора "{targetIdObj.value}" немає попередньо визначених рекомендацій.
                     </p>
                 )}
 
                 {relevantCurrentThreats.length > 0 && (
                     <>
-                        <p className="mb-1 print:text-gray-700"><strong>Пов'язані загрози з поточного профілю, що потребують уваги для досягнення "{baseId}":</strong></p>
-                        <ul className="list-disc list-inside text-sm space-y-1 print:text-gray-600">
+                        <p className="mb-1"><strong>Пов'язані загрози з поточного профілю, що потребують уваги для досягнення "{baseId}":</strong></p>
+                        <ul className="list-disc list-inside text-sm space-y-1">
                             {relevantCurrentThreats.map(threat => {
                                 const affectedAssetsList = [
                                     threat.software && threat.software !== '-' && `ПЗ: ${threat.software}`,
@@ -326,12 +326,12 @@ const renderRecommendationsSection = (
                     </>
                 )}
                 {relevantCurrentThreats.length === 0 && recommendation && (
-                    <p className="text-sm text-muted-foreground print:text-gray-500">
+                    <p className="text-sm">
                         Загроз з поточного профілю, що прямо відповідають ідентифікатору "{baseId}", не знайдено. Перегляньте загальний список загроз.
                     </p>
                 )}
                  {!recommendation && relevantCurrentThreats.length === 0 && (
-                    <p className="text-sm text-muted-foreground print:text-gray-500">
+                    <p className="text-sm">
                         Для цього цільового ідентифікатора не визначено ані специфічних рекомендацій, ані пов'язаних поточних загроз.
                     </p>
                 )}
@@ -346,29 +346,29 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
   targetProfileData: ReportPageFormValues['targetProfileDetails'];
 }>(({ currentProfileData, targetProfileData }, ref) => {
   return (
-    <div ref={ref} className="p-8 print:p-4 font-sans bg-white"> {/* Ensure white background for PDF generation */}
-      <header className="text-center mb-8 print:mb-6">
-        <h1 className="text-3xl font-bold text-primary mb-2 print:text-2xl print:text-black">Звіт про безпеку "КіберСтраж"</h1>
-        <p className="text-sm text-muted-foreground print:text-xs print:text-gray-500">Згенеровано: {new Date().toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' })} {new Date().toLocaleTimeString('uk-UA')}</p>
+    <div ref={ref} className="p-8 font-sans bg-white text-black">
+      <header className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">Звіт про безпеку "КіберСтраж"</h1>
+        <p className="text-sm">Згенеровано: {new Date().toLocaleDateString('uk-UA', { year: 'numeric', month: 'long', day: 'numeric' })} {new Date().toLocaleTimeString('uk-UA')}</p>
       </header>
 
-      <section className="mb-8 print:mb-6">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2 print:text-xl print:border-gray-400 print:text-black">1. Поточний профіль безпеки</h2>
+      <section className="mb-8">
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2">1. Поточний профіль безпеки</h2>
         {currentProfileData && currentProfileData.length > 0 ? (
-          <Table className="text-xs print:text-[10px]">
+          <Table className="text-xs">
             <TableHeader>
               <TableRow>
-                <TableHead>Загроза</TableHead>
-                <TableHead>Вразливість</TableHead>
-                <TableHead>ТТП</TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>ПЗ</TableHead>
-                <TableHead>Обладнання</TableHead>
-                <TableHead>Інфо.Рес.</TableHead>
-                <TableHead>Засіб ІКЗ</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Рівень</TableHead>
-                <TableHead>Коментар</TableHead>
+                <TableHead className="text-black">Загроза</TableHead>
+                <TableHead className="text-black">Вразливість</TableHead>
+                <TableHead className="text-black">ТТП</TableHead>
+                <TableHead className="text-black">ID</TableHead>
+                <TableHead className="text-black">ПЗ</TableHead>
+                <TableHead className="text-black">Обладнання</TableHead>
+                <TableHead className="text-black">Інфо.Рес.</TableHead>
+                <TableHead className="text-black">Засіб ІКЗ</TableHead>
+                <TableHead className="text-black">Статус</TableHead>
+                <TableHead className="text-black">Рівень</TableHead>
+                <TableHead className="text-black">Коментар</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -389,21 +389,21 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
               ))}
             </TableBody>
           </Table>
-        ) : <p className="text-sm text-muted-foreground print:text-gray-500">Інформація не надана.</p>}
+        ) : <p className="text-sm">Інформація не надана.</p>}
       </section>
 
-      <section className="mb-8 print:mb-6 page-break-before">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2 print:text-xl print:border-gray-400 print:text-black">2. Цільовий профіль безпеки</h2>
+      <section className="mb-8 page-break-before">
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2">2. Цільовий профіль безпеки</h2>
          {targetProfileData ? (
-            <Table className="text-xs print:text-[10px]">
+            <Table className="text-xs">
                  <TableHeader>
                     <TableRow>
-                        <TableHead>Цільові Ідентифікатори</TableHead>
-                        <TableHead>Бажаний рівень впровадження</TableHead>
-                        <TableHead>Застосовується до ПЗ</TableHead>
-                        <TableHead>Застосовується до Обладнання</TableHead>
-                        <TableHead>Застосовується до Інфо.Ресурсів</TableHead>
-                        <TableHead>Застосовується до Засобів ІКЗ</TableHead>
+                        <TableHead className="text-black">Цільові Ідентифікатори</TableHead>
+                        <TableHead className="text-black">Бажаний рівень впровадження</TableHead>
+                        <TableHead className="text-black">Застосовується до ПЗ</TableHead>
+                        <TableHead className="text-black">Застосовується до Обладнання</TableHead>
+                        <TableHead className="text-black">Застосовується до Інфо.Ресурсів</TableHead>
+                        <TableHead className="text-black">Застосовується до Засобів ІКЗ</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -417,15 +417,15 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
                     </TableRow>
                 </TableBody>
             </Table>
-         ) : <p className="text-sm text-muted-foreground print:text-gray-500">Інформація не надана.</p>}
+         ) : <p className="text-sm">Інформація не надана.</p>}
       </section>
       
-      <section className="mb-8 print:mb-6 page-break-before">
-        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-primary pb-2 print:text-xl print:border-gray-400 print:text-black">3. Аналіз Розривів та Рекомендації</h2>
+      <section className="mb-8 page-break-before">
+        <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2">3. Аналіз Розривів та Рекомендації</h2>
         {renderRecommendationsSection(currentProfileData, targetProfileData)}
       </section>
 
-       <footer className="mt-12 pt-4 border-t text-center text-xs text-muted-foreground print:text-[8px] print:text-gray-400 print:mt-8">
+       <footer className="mt-12 pt-4 border-t text-center text-xs">
         КіберСтраж - Захист вашої інфраструктури
       </footer>
     </div>
@@ -457,13 +457,13 @@ export default function ReportingPage() {
     setIsGeneratingReport(true);
     try {
       const canvas = await html2canvas(element, {
-        scale: 2, // Improves quality
-        useCORS: true, // If you have external images
-        backgroundColor: '#ffffff', // Ensure background is white for PDF
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
         logging: false,
       });
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4'); // A4 portrait
+      const pdf = new jsPDF('p', 'mm', 'a4');
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -479,7 +479,7 @@ export default function ReportingPage() {
       heightLeft -= pdfHeight;
 
       while (heightLeft > 0) {
-        position = -imgHeight + heightLeft + (imgHeight - pdfHeight); // Adjust position for subsequent pages
+        position = -imgHeight + heightLeft + (imgHeight - pdfHeight);
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
         heightLeft -= pdfHeight;
@@ -585,12 +585,11 @@ export default function ReportingPage() {
       form.setValue(`${pathPrefix}.hardware`, autoSelectOrDash('hardware', hardwareAssetOptions), { shouldDirty: true });
       form.setValue(`${pathPrefix}.informationResource`, autoSelectOrDash('informationResource', informationResourceAssetOptions), { shouldDirty: true });
       
-      // ICS Tool is manually selected, set to '-' if not specifically affected for non-other threats.
       if (!isOther && !affected.includes('icsTool')) {
         form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
       } else if (isOther && !form.getValues(`${pathPrefix}.icsTool`)) {
          form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
-      } else if (!form.getValues(`${pathPrefix}.icsTool`)) { // For cases where it's affected but not set
+      } else if (!form.getValues(`${pathPrefix}.icsTool`)) {
          form.setValue(`${pathPrefix}.icsTool`, '-', { shouldDirty: true });
       }
 
@@ -1008,7 +1007,6 @@ export default function ReportingPage() {
             </Button>
         </div>
 
-        {/* This hidden div is used as source for html2canvas */}
         <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '210mm' }}> 
           <PrintableReport
             ref={reportPrintRef}
@@ -1106,7 +1104,7 @@ export default function ReportingPage() {
             </section>
           </CardContent>
            <CardFooter>
-              {/* Footer can be empty or have a small note if needed, removed the previous text */}
+              
            </CardFooter>
         </Card>
         </>
