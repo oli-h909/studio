@@ -388,10 +388,6 @@ const PrintableReport = React.forwardRef<HTMLDivElement, {
         <h2 className="text-2xl font-semibold mb-3 border-b-2 border-black pb-2 text-black">3. Аналіз Розривів та Рекомендації</h2>
         {renderRecommendationsSection(currentProfileData, targetProfileData)}
       </section>
-
-       <footer className="mt-12 pt-4 border-t border-black text-center text-xs text-black">
-        КіберСтраж - Захист вашої інфраструктури
-      </footer>
     </div>
   );
 });
